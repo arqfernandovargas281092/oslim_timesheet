@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSLIM - Control de Asistencia GPS Nube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS para Mapas -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary-color: #1a365d;
+        }
+        body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .navbar-custom { background-color: var(--primary-color); }
+        .card-header-custom { background-color: var(--primary-color); color: white; font-weight: 600; }
+        .btn-custom { background-color: var(--primary-color); color: white; }
+        .btn-custom:hover { background-color: #2c5282; color: white; }
+        .table-weekly th, .table-weekly td { vertical-align: middle; text-align: center; font-size: 0.9rem; }
+        .table-weekly td.worker-info { text-align: left; }
+        .hidden { display: none !important; }
+        #map, #entryMap { height: 420px; width: 100%; border-radius: 8px; }
+        .record-row { cursor: pointer; transition: background-color 0.2s; }
+        .record-row:hover { background-color: #e2e8f0 !important; }
+        .record-row.table-active { background-color: #cbd5e1 !important; }
+        
+        @media print {
+            @page { size: letter landscape; margin: 0.4in; }
+            body { background: white; font-size: 10pt; }
+            .no-print { display: none !important; }
+            .container, .container-fluid { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .card-body { padding: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- PANTALLA DE ACCESO (LOGIN) -->
+<div class="container mt-5" id="login-screen" style="max-width: 450px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-header card-header-custom text-center py-3">
+            <h4 class="m-0"><i class="fa-solid fa-lock me-2"></i>Acceso al Sistema</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Usuario</label>
+                <input type="text" class="form-control" id="loginUser" placeholder="Ej. fernando, juan">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Contraseña</label>
+                <input type="password" class="form-control" id="loginPass" placeholder="••••••••">
+            </div>
+            <button type="button" class="btn btn-custom w-100 py-2 fw-bold" onclick="iniciarSesion()"><i class="fa-solid fa-right-to-bracket me-1"></i>Ingresar</button>
+            <div id="loginError" class="alert alert-danger mt-3 py-2 text-center hidden" style="font-size: 0.9rem;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- APLICACIÓN PRINCIPAL -->
+<div id="main-app-container" class="hidden">
+    <nav class="navbar navbar-dark navbar-custom no-print mb-4 shadow-sm">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1"><i class="fa-solid fa-clock me-2"></i>OSLIM — Control de Horarios GPS</span>
+            <div id="nav-buttons-container">
+                <button type="button" class="btn btn-outline-light btn-sm me-2" onclick="showTab('entry-tab')"><i class="fa-solid fa-user-plus me-1"></i>Registrar Asistencia</button>
+                <button type="button" class="btn btn-outline-light btn-sm me-2" onclick="showTab('weekly-tab'); loadWeeklySummary();"><i class="fa-solid fa-calendar-week me-1"></i>Resumen Semanal</button>
+                
+                <!-- Botones exclusivos para Administrador -->
+                <button type="button" id="admin-daily-btn" class="btn btn-outline-light btn-sm me-2 hidden" onclick="showTab('daily-tab'); loadDailyRecords();"><i class="fa-solid fa-list-check me-1"></i>Registros por Día y Mapa</button>
+                <button type="button" id="admin-logs-btn" class="btn btn-outline-light btn-sm me-2 hidden" onclick="showTab('logs-tab'); loadDailyLogs();"><i class="fa-solid fa-pen-to-square me-1"></i>Edición de Horas</button>
+                <button type="button" id="admin-users-btn" class="btn btn-warning btn-sm me-2 hidden" onclick="showTab('admin-users-tab'); loadUserManagement();"><i class="fa-solid fa-users-gear me-1"></i>Usuarios</button>
+                <button type="button" id="admin-projects-btn" class="btn btn-info btn-sm me-2 hidden text-white" onclick="showTab('admin-projects-tab'); loadProjectsManagement();"><i class="fa-solid fa-building me-1"></i>Proyectos</button>
+                <button type="button" id="admin-trades-btn" class="btn btn-secondary btn-sm me-2 hidden" onclick="showTab('admin-trades-tab'); loadTradesManagement();"><i class="fa-solid fa-briefcase me-1"></i>Funciones</button>
+                <button type="button" id="admin-directory-btn" class="btn btn-light btn-sm me-2 hidden" onclick="showTab('directory-tab'); loadDirectory();"><i class="fa-solid fa-address-book me-1"></i>Agenda</button>
+                
+                <button type="button" class="btn btn-danger btn-sm" onclick="cerrarSesion()"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- TAB 1: REGISTRO DIARIO DE ASISTENCIA CON VALIDACIÓN GEOFENCING 100M Y MAPA -->
+    <div class="container mb-5 tab-content-section" id="entry-tab">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
+                        <span><i class="fa-solid fa-user-clock me-2"></i>Registro de Asistencia y Validación por Mapa (100m)</span>
+                        <span class="badge bg-light text-dark" id="loggedUserBadge">Usuario</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="alert alert-secondary d-flex align-items-center mb-3" id="gpsStatusAlert" role="alert">
+                                    <i class="fa-solid fa-location-dot fa-2x me-3 text-primary"></i>
+                                    <div>
+                                        <h6 class="alert-heading m-0 fw-bold">Estado del GPS</h6>
+                                        <p class="mb-0 small" id="gpsCoordsText">Obteniendo coordenadas de ubicación actuales...</p>
+                                    </div>
+                                </div>
+
+                                <form id="timesheetForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold mb-1">Seleccionar Proyecto:</label>
+                                        <select class="form-select" id="entryJob" required onchange="actualizarMapaProyectoSeleccionado()">
+                                            <!-- Dinámico -->
+                                        </select>
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold mb-1">Trabajador:</label>
+                                            <input type="text" class="form-control bg-white fw-bold text-primary" id="loggedWorkerName" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold mb-1">Función:</label>
+                                            <input type="text" class="form-control bg-white" id="loggedWorkerTrade" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-warning text-center small mb-3">
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Debes estar a <b>menos de 100 metros</b> del proyecto para fichar.
+                                    </div>
+
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <button type="button" class="btn btn-success px-4" onclick="registrarAsistenciaConGeocerca('ENTRADA')">
+                                            <i class="fa-solid fa-right-to-bracket me-1"></i>Entrada
+                                        </button>
+                                        <button type="button" class="btn btn-danger px-4" onclick="registrarAsistenciaConGeocerca('SALIDA')">
+                                            <i class="fa-solid fa-right-from-bracket me-1"></i>Salida
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1"><i class="fa-solid fa-map me-1"></i>Ubicación de Obra y Tu Posición:</label>
+                                <div id="entryMap"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: RESUMEN SEMANAL -->
+    <div class="container-fluid px-4 mb-5 tab-content-section" id="weekly-tab" style="display:none;">
+        <div class="card shadow-sm border-0">
+            <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
+                <span><i class="fa-solid fa-calendar-week me-2"></i>Resumen Semanal de Horas (Lunes a Domingo)[cite: 1]</span>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light me-2" onclick="exportWeeklyCSV()"><i class="fa-solid fa-file-csv me-1"></i>Exportar Excel</button>
+                    <button type="button" class="btn btn-sm btn-outline-light" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border no-print">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-1">Seleccionar Semana:</label>
+                        <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-1">Filtrar por Proyecto:</label>
+                        <select class="form-select" id="projectFilter" onchange="loadWeeklySummary()">
+                            <option value="ALL">🌐 Todos los Proyectos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">Rango:</div>
+                        <div class="fw-bold text-primary" id="weekRangeLabel">-</div>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <span class="badge bg-primary fs-6" id="totalWeeklyHoursBadge">Total: 0.0 hrs</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-weekly align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 22%;" class="text-start">Trabajador</th>
+                                <th style="width: 15%;" class="text-start">Función / Trade</th>
+                                <th style="width: 8%;">Lun</th>
+                                <th style="width: 8%;">Mar</th>
+                                <th style="width: 8%;">Mié</th>
+                                <th style="width: 8%;">Jue</th>
+                                <th style="width: 8%;">Vie</th>
+                                <th style="width: 8%;">Sáb</th>
+                                <th style="width: 8%;">Dom</th>
+                                <th style="width: 11%;" class="bg-success text-white">Total Horas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="weeklyTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS CON SELECCIÓN -->
+    <div class="container mb-5 no-print tab-content-section" id="daily-tab" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-map-location-dot me-2"></i>Registros Individuales por Día, Usuario y Mapa GPS (Haz clic en un registro para ubicarlo)</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Filtrar por Fecha:</label>
+                                <input type="date" class="form-control" id="mapDateFilter" onchange="loadDailyRecords()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Filtrar por Usuario:</label>
+                                <select class="form-select" id="mapUserFilter" onchange="loadDailyRecords()">
+                                    <option value="ALL">🌐 Todos los Usuarios</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                                    <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Hora</th>
+                                                <th>Trabajador</th>
+                                                <th>Tipo</th>
+                                                <th>Proyecto</th>
+                                                <th>GPS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dailyRecordsTbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold mb-1"><i class="fa-solid fa-map me-1"></i>Mapa de Coordenadas de Asistencia:</label>
+                                <div id="map"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: EDICIÓN DE HORAS CON EXTRAS Y DOBLES -->
+    <div class="container mb-5 no-print tab-content-section" id="logs-tab" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-pen-to-square me-2"></i>Panel de Edición de Jornadas, Comida, Extras y Dobles (Solo Administrador)</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle m-0" style="font-size: 0.8rem;">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Proyecto</th>
+                                        <th>Trabajador</th>
+                                        <th>Entrada</th>
+                                        <th>Salida</th>
+                                        <th>Comida</th>
+                                        <th>Netas</th>
+                                        <th>H. Extras</th>
+                                        <th>H. Dobles</th>
+                                        <th>Total a Pagar</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: GESTIÓN DE USUARIOS, ROLES Y CONTACTO -->
+    <div class="container mb-5 no-print tab-content-section" id="admin-users-tab" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-warning text-dark fw-bold" id="userFormHeader">
+                        <i class="fa-solid fa-user-gear me-2"></i>Crear o Editar Usuario del Sistema
+                    </div>
+                    <div class="card-body">
+                        <form onsubmit="guardarOEditarUsuarioSistema(event)">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nombre del Trabajador / Usuario:</label>
+                                <input type="text" class="form-control" id="adminNewUser" placeholder="Ej. Juan Pérez" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Contraseña:</label>
+                                <input type="password" class="form-control" id="adminNewPass" placeholder="••••••••" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Número de Teléfono / Contacto:</label>
+                                <input type="tel" class="form-control" id="adminNewPhone" placeholder="Ej. +1 (305) 000-0000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Función / Especialidad (Trade):</label>
+                                <select class="form-select" id="adminNewTrade">
+                                    <!-- Dinámico -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Rol en el Sistema:</label>
+                                <select class="form-select" id="adminNewRol">
+                                    <option value="trabajador">Usuario Normal (Trabajador)</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100 fw-bold" id="saveUserBtn"><i class="fa-solid fa-user-plus me-1"></i>Guardar Usuario</button>
+                            <button type="button" class="btn btn-secondary w-100 mt-2 hidden" id="cancelEditUserBtn" onclick="resetUserForm()">Cancelar Edición</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white">
+                        <span><i class="fa-solid fa-users me-2"></i>Usuarios Registrados y Roles</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle m-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Contacto</th>
+                                    <th>Función</th>
+                                    <th>Rol</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="systemUsersTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 6: GESTIÓN DE PROYECTOS -->
+    <div class="container mb-5 no-print tab-content-section" id="admin-projects-tab" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-info text-white fw-bold" id="projectFormHeader">
+                        <i class="fa-solid fa-building me-2"></i>Agregar o Editar Proyecto
+                    </div>
+                    <div class="card-body">
+                        <form onsubmit="guardarOEditarProyecto(event)">
+                            <input type="hidden" id="editProjectOldName">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Nombre del Proyecto:</label>
+                                    <input type="text" class="form-control" id="newProjectName" placeholder="Ej. Bay Harbor" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Dirección:</label>
+                                    <input type="text" class="form-control" id="newProjectAddress" placeholder="Ej. 9290 Bay Harbor Dr" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Latitud GPS:</label>
+                                    <input type="number" step="any" class="form-control" id="newProjectLat" placeholder="Ej. 25.8885" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Longitud GPS:</label>
+                                    <input type="number" step="any" class="form-control" id="newProjectLng" placeholder="Ej. -80.1285" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-info text-white fw-bold w-100 mt-3" id="saveProjectBtn"><i class="fa-solid fa-plus me-1"></i>Guardar Proyecto</button>
+                            <button type="button" class="btn btn-secondary w-100 mt-2 hidden" id="cancelEditProjectBtn" onclick="resetProjectForm()">Cancelar Edición</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white">
+                        <span><i class="fa-solid fa-list me-2"></i>Lista de Proyectos Activos (Geocercas de 100m)</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Proyecto</th>
+                                    <th>Dirección</th>
+                                    <th>Coordenadas (Lat, Lng)</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 7: GESTIÓN DE FUNCIONES (TRADES) -->
+    <div class="container mb-5 no-print tab-content-section" id="admin-trades-tab" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-secondary text-white fw-bold" id="tradeFormHeader">
+                        <i class="fa-solid fa-briefcase me-2"></i>Agregar o Editar Función / Especialidad
+                    </div>
+                    <div class="card-body">
+                        <form onsubmit="guardarOEditarTrade(event)">
+                            <input type="hidden" id="editTradeOldName">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="newTradeName" placeholder="Nombre de la función..." required>
+                                <button type="submit" class="btn btn-secondary fw-bold" id="saveTradeBtn"><i class="fa-solid fa-plus me-1"></i>Añadir</button>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary w-100 mt-2 hidden" id="cancelEditTradeBtn" onclick="resetTradeForm()">Cancelar Edición</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white">
+                        <span><i class="fa-solid fa-list me-2"></i>Lista de Funciones Disponibles</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle m-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre de la Función</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tradesTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 8: AGENDA / DIRECTORIO DE CONTACTO -->
+    <div class="container mb-5 no-print tab-content-section" id="directory-tab" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-address-book me-2"></i>Agenda y Directorio Telefónico del Personal</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle m-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Trabajador</th>
+                                        <th>Número de Contacto</th>
+                                        <th>Función / Especialidad</th>
+                                        <th>Rol</th>
+                                        <th class="text-end">Llamar / Enviar Mensaje</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="directoryTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDK Realtime Database (Módulo) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD8NxJentfvFZL29U4sswq2_779vXtsbuk",
+    authDomain: "oslim-timesheet.firebaseapp.com",
+    databaseURL: "https://oslim-timesheet-default-rtdb.firebaseio.com",
+    projectId: "oslim-timesheet",
+    storageBucket: "oslim-timesheet.appspot.com",
+    messagingSenderId: "420399163728",
+    appId: "1:420399163728:web:c07e7b2e3a8ccf6ee4e455"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Exponer herramientas globalmente para que funcionen las funciones de la app
+  window.db = db;
+  window.dbRef = ref;
+  window.dbSet = set;
+  window.dbPush = push;
+  window.dbUpdate = update;
+  window.dbRemove = remove;
+
+  // Sincronización en tiempo real de Jornadas y Catálogos en la nube
+  window.registrosGlobales = [];
+  onValue(ref(db, 'jornadas'), (snapshot) => {
+      const data = snapshot.val();
+      window.registrosGlobales = data ? Object.values(data) : [];
+      if (typeof loadWeeklySummary === 'function') loadWeeklySummary();
+      if (typeof loadDailyRecords === 'function') loadDailyRecords();
+      if (typeof loadDailyLogs === 'function') loadDailyLogs();
+  });
+
+  onValue(ref(db, 'config/usuariosSistema'), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+          window.usuariosSistemaNube = data;
+          if (typeof loadUserManagement === 'function') loadUserManagement();
+      }
+  });
+
+  onValue(ref(db, 'config/listaProyectos'), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+          window.listaProyectosNube = data;
+          if (typeof poblarSelectsDinamicos === 'function') poblarSelectsDinamicos();
+      }
+  });
+
+  onValue(ref(db, 'config/listaTrades'), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+          window.listaTradesNube = data;
+          if (typeof poblarSelectsDinamicos === 'function') poblarSelectsDinamicos();
+      }
+  });
+</script>
+
+<!-- Leaflet JS para Mapas -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Datos por defecto si la nube está vacía
+    let usuariosSistemaDefault = {
+        'fernando': { pass: 'r1234', phone: '+1 (305) 555-0199', trade: 'Supervisión', rol: 'admin' },
+        'juan': { pass: 'j1234', phone: '+1 (305) 555-0142', trade: 'Carpintero (Carpenter)', rol: 'trabajador' }
+    };
+
+    let listaProyectosDefault = [
+        { name: "Bay Harbor Islands", address: "9290 Bay Harbor Dr, Miami", lat: 25.8885, lng: -80.1285 },
+        { name: "Torre Balam", address: "Av. Constitución, Monterrey", lat: 25.6866, lng: -100.3161 },
+        { name: "Garage West Palm", address: "Clematis St, West Palm Beach", lat: 26.7153, lng: -80.0534 }
+    ];
+
+    let listaTradesDefault = [
+        "Carpintero (Carpenter)",
+        "Fierrero (Rodbuster)",
+        "Peón (Laborer)",
+        "Acabador (Finisher)",
+        "Capataz (Foreman)",
+        "Supervisión"
+    ];
+
+    let usuarioActual = null;
+    let currentCoords = { lat: 25.7617, lng: -80.1918 };
+    let map = null;
+    let markersLayer = null;
+    let entryMap = null;
+    let entryMarker = null;
+    let projectCircle = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setInitialWeek();
+        obtenerGPSReal();
+        // Inicializar datos en nube si no existen
+        setTimeout(() => {
+            if(!window.usuariosSistemaNube) {
+                window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), usuariosSistemaDefault);
+            }
+            if(!window.listaProyectosNube) {
+                window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), listaProyectosDefault);
+            }
+            if(!window.listaTradesNube) {
+                window.dbSet(window.dbRef(window.db, 'config/listaTrades'), listaTradesDefault);
+            }
+            poblarSelectsDinamicos();
+        }, 1000);
+        document.getElementById('mapDateFilter').valueAsDate = new Date();
+    });
+
+    function getUsuarios() { return window.usuariosSistemaNube || usuariosSistemaDefault; }
+    function getProyectos() { return window.listaProyectosNube || listaProyectosDefault; }
+    function getTrades() { return window.listaTradesNube || listaTradesDefault; }
+
+    function poblarSelectsDinamicos() {
+        const entryJob = document.getElementById('entryJob');
+        let proyectos = getProyectos();
+        if (entryJob) {
+            entryJob.innerHTML = '';
+            proyectos.forEach(p => {
+                entryJob.innerHTML += `<option value="${p.name}">${p.name} (${p.address})</option>`;
+            });
+        }
+
+        const adminNewTrade = document.getElementById('adminNewTrade');
+        let trades = getTrades();
+        if (adminNewTrade) {
+            adminNewTrade.innerHTML = '';
+            trades.forEach(t => {
+                adminNewTrade.innerHTML += `<option value="${t}">${t}</option>`;
+            });
+        }
+    }
+
+    function obtenerGPSReal() {
+        const gpsText = document.getElementById('gpsCoordsText');
+        if (!navigator.geolocation) {
+            gpsText.innerText = "❌ Tu navegador no soporta geolocalización.";
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                gpsText.innerHTML = `✅ GPS Activo — Lat: <b>${currentCoords.lat.toFixed(5)}</b>, Lng: <b>${currentCoords.lng.toFixed(5)}</b>`;
+                if (entryMap) actualizarMapaProyectoSeleccionado();
+            },
+            (err) => {
+                gpsText.innerHTML = "⚠️ No se pudo obtener la posición GPS.";
+            },
+            { enableHighAccuracy: true }
+        );
+    }
+
+    function iniciarSesion() {
+        const u = document.getElementById('loginUser').value.trim();
+        const p = document.getElementById('loginPass').value.trim();
+        const errDiv = document.getElementById('loginError');
+
+        let usuarios = getUsuarios();
+        const matchedKey = Object.keys(usuarios).find(key => key.toLowerCase() === u.toLowerCase());
+
+        if (!matchedKey || usuarios[matchedKey].pass !== p) {
+            errDiv.classList.remove('hidden');
+            errDiv.innerText = "Usuario o contraseña incorrectos.";
+            return;
+        }
+
+        usuarioActual = matchedKey;
+        let datosUser = usuarios[usuarioActual];
+
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('main-app-container').classList.remove('hidden');
+        document.getElementById('loggedUserBadge').innerText = `Usuario: ${usuarioActual}`;
+
+        document.getElementById('loggedWorkerName').value = usuarioActual;
+        document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
+
+        if (datosUser.rol === 'admin') {
+            document.getElementById('admin-daily-btn').classList.remove('hidden');
+            document.getElementById('admin-logs-btn').classList.remove('hidden');
+            document.getElementById('admin-users-btn').classList.remove('hidden');
+            document.getElementById('admin-projects-btn').classList.remove('hidden');
+            document.getElementById('admin-trades-btn').classList.remove('hidden');
+            document.getElementById('admin-directory-btn').classList.remove('hidden');
+        } else {
+            document.getElementById('admin-daily-btn').classList.add('hidden');
+            document.getElementById('admin-logs-btn').classList.add('hidden');
+            document.getElementById('admin-users-btn').classList.add('hidden');
+            document.getElementById('admin-projects-btn').classList.add('hidden');
+            document.getElementById('admin-trades-btn').classList.add('hidden');
+            document.getElementById('admin-directory-btn').classList.add('hidden');
+        }
+
+        poblarSelectsDinamicos();
+        showTab('entry-tab');
+        loadWeeklySummary();
+    }
+
+    function cerrarSesion() {
+        usuarioActual = null;
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginError').classList.add('hidden');
+        document.getElementById('main-app-container').classList.add('hidden');
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content-section').forEach(sec => sec.style.display = 'none');
+        const target = document.getElementById(tabId);
+        if (target) target.style.display = 'block';
+
+        if (tabId === 'entry-tab') {
+            setTimeout(() => { initEntryMap(); }, 200);
+        }
+        if (tabId === 'weekly-tab') {
+            updateProjectFilterDropdowns();
+            loadWeeklySummary();
+        }
+        if (tabId === 'daily-tab') {
+            updateMapUserFilterDropdown();
+            setTimeout(() => {
+                initMap();
+                loadDailyRecords();
+            }, 250);
+        }
+        if (tabId === 'logs-tab') loadDailyLogs();
+        if (tabId === 'admin-users-tab') loadUserManagement();
+        if (tabId === 'admin-projects-tab') loadProjectsManagement();
+        if (tabId === 'admin-trades-tab') loadTradesManagement();
+        if (tabId === 'directory-tab') loadDirectory();
+    }
+
+    function initEntryMap() {
+        if (!entryMap) {
+            entryMap = L.map('entryMap').setView([currentCoords.lat, currentCoords.lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(entryMap);
+        } else {
+            entryMap.invalidateSize();
+        }
+        actualizarMapaProyectoSeleccionado();
+    }
+
+    function actualizarMapaProyectoSeleccionado() {
+        if (!entryMap) return;
+        const selectedProjectName = document.getElementById('entryJob').value;
+        let proyectos = getProyectos();
+        let proyectoObj = proyectos.find(p => p.name === selectedProjectName);
+        if (!proyectoObj) return;
+
+        if (entryMarker) entryMap.removeLayer(entryMarker);
+        if (projectCircle) entryMap.removeLayer(projectCircle);
+
+        entryMarker = L.marker([currentCoords.lat, currentCoords.lng]).addTo(entryMap)
+            .bindPopup("<b>Tu Ubicación GPS Actual</b>").openPopup();
+
+        projectCircle = L.circle([proyectoObj.lat, proyectoObj.lng], {
+            color: 'blue',
+            fillColor: '#3023ae',
+            fillOpacity: 0.2,
+            radius: 100
+        }).addTo(entryMap).bindPopup(`<b>Proyecto: ${proyectoObj.name}</b><br>Geocerca de 100m`);
+
+        entryMap.setView([proyectoObj.lat, proyectoObj.lng], 15);
+    }
+
+    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    function registrarAsistenciaConGeocerca(tipo) {
+        const workerName = document.getElementById('loggedWorkerName').value;
+        const trade = document.getElementById('loggedWorkerTrade').value;
+        const selectedProjectName = document.getElementById('entryJob').value;
+        
+        let proyectos = getProyectos();
+        let proyectoObj = proyectos.find(p => p.name === selectedProjectName);
+        if (!proyectoObj) return alert("Seleccione un proyecto válido.");
+
+        let distancia = calcularDistanciaMetros(currentCoords.lat, currentCoords.lng, proyectoObj.lat, proyectoObj.lng);
+
+        if (distancia > 100) {
+            alert(`❌ No puedes registrar asistencia. Estás a ${Math.round(distancia)} metros del proyecto "${proyectoObj.name}". Debes estar a menos de 100 metros.`);
+            return;
+        }
+
+        const ahora = new Date();
+        const fechaStr = ahora.toISOString().split('T')[0];
+        const horaStr = ahora.toTimeString().split(' ')[0].substring(0, 5);
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+        let registros = window.registrosGlobales || [];
+        let jornadaHoy = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === selectedProjectName);
+
+        if (!jornadaHoy) {
+            jornadaHoy = {
+                id: Date.now(),
+                workerName: workerName,
+                trade: trade,
+                date: fechaStr,
+                dayName: days[ahora.getDay()],
+                job: selectedProjectName,
+                timeIn: (tipo === 'ENTRADA') ? horaStr : '-',
+                timeOut: (tipo === 'SALIDA') ? horaStr : '-',
+                lunch: 0.5,
+                overtime: 0,
+                doubletime: 0,
+                coordsIn: (tipo === 'ENTRADA') ? { lat: currentCoords.lat, lng: currentCoords.lng } : null,
+                coordsOut: (tipo === 'SALIDA') ? { lat: currentCoords.lat, lng: currentCoords.lng } : null
+            };
+            const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
+            jornadaHoy.firebaseKey = newRef.key;
+            window.dbSet(newRef, jornadaHoy);
+        } else {
+            if (tipo === 'ENTRADA') {
+                jornadaHoy.timeIn = horaStr;
+                jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
+            }
+            if (tipo === 'SALIDA') {
+                jornadaHoy.timeOut = horaStr;
+                jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
+            }
+            if(jornadaHoy.firebaseKey) {
+                window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
+            }
+        }
+
+        alert(`✅ ¡${tipo} registrada en la nube con éxito! Estás a ${Math.round(distancia)}m del proyecto.`);
+        showTab('weekly-tab');
+    }
+
+    function loadDirectory() {
+        const tbody = document.getElementById('directoryTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        let usuarios = getUsuarios();
+        Object.keys(usuarios).sort().forEach(user => {
+            let info = usuarios[user];
+            let phone = info.phone || 'S/N';
+            let rolBadge = (info.rol === 'admin') ? '<span class="badge bg-danger">Administrador</span>' : '<span class="badge bg-secondary">Trabajador</span>';
+            let callBtn = phone !== 'S/N' ? `<a href="tel:${phone}" class="btn btn-sm btn-success me-1"><i class="fa-solid fa-phone me-1"></i>Llamar</a> <a href="sms:${phone}" class="btn btn-sm btn-primary"><i class="fa-solid fa-comment me-1"></i>SMS</a>` : '<span class="text-muted">Sin número</span>';
+
+            tbody.innerHTML += `<tr>
+                <td class="fw-bold">${user}</td>
+                <td><code>${phone}</code></td>
+                <td><span class="text-muted">${info.trade || 'Carpintero'}</span></td>
+                <td>${rolBadge}</td>
+                <td class="text-end">${callBtn}</td>
+            </tr>`;
+        });
+    }
+
+    function guardarOEditarProyecto(e) {
+        e.preventDefault();
+        const name = document.getElementById('newProjectName').value.trim();
+        const address = document.getElementById('newProjectAddress').value.trim();
+        const lat = parseFloat(document.getElementById('newProjectLat').value);
+        const lng = parseFloat(document.getElementById('newProjectLng').value);
+        const oldName = document.getElementById('editProjectOldName').value;
+
+        if (!name || isNaN(lat) || isNaN(lng)) return;
+
+        let proyectos = [...getProyectos()];
+        if (oldName) {
+            let idx = proyectos.findIndex(p => p.name === oldName);
+            if (idx !== -1) proyectos[idx] = { name, address, lat, lng };
+        } else {
+            if (proyectos.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                alert("Ya existe un proyecto con ese nombre.");
+                return;
+            }
+            proyectos.push({ name, address, lat, lng });
+        }
+
+        window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), proyectos);
+        alert("¡Proyecto guardado en la nube!");
+        resetProjectForm();
+        loadProjectsManagement();
+    }
+
+    function editarProyecto(name) {
+        let proyectos = getProyectos();
+        let p = proyectos.find(item => item.name === name);
+        if (!p) return;
+
+        document.getElementById('newProjectName').value = p.name;
+        document.getElementById('editProjectOldName').value = p.name;
+        document.getElementById('newProjectAddress').value = p.address || '';
+        document.getElementById('newProjectLat').value = p.lat || '';
+        document.getElementById('newProjectLng').value = p.lng || '';
+
+        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building-pen me-2"></i>Editando Proyecto: ${p.name}`;
+        document.getElementById('saveProjectBtn').innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Actualizar Proyecto`;
+        document.getElementById('cancelEditProjectBtn').classList.remove('hidden');
+    }
+
+    function resetProjectForm() {
+        document.getElementById('newProjectName').value = '';
+        document.getElementById('editProjectOldName').value = '';
+        document.getElementById('newProjectAddress').value = '';
+        document.getElementById('newProjectLat').value = '';
+        document.getElementById('newProjectLng').value = '';
+        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building me-2"></i>Agregar o Editar Proyecto`;
+        document.getElementById('saveProjectBtn').innerHTML = `<i class="fa-solid fa-plus me-1"></i>Guardar Proyecto`;
+        document.getElementById('cancelEditProjectBtn').classList.add('hidden');
+    }
+
+    function loadProjectsManagement() {
+        const tbody = document.getElementById('projectsTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        let proyectos = getProyectos();
+        proyectos.forEach((p) => {
+            let deleteBtn = (proyectos.length > 1) ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarProyecto('${p.name}')"><i class="fa-solid fa-trash"></i></button>` : '';
+            tbody.innerHTML += `<tr>
+                <td class="fw-bold">${p.name}</td>
+                <td>${p.address || 'S/D'}</td>
+                <td><code>${p.lat}, ${p.lng}</code></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarProyecto('${p.name}')"><i class="fa-solid fa-pen"></i></button>
+                    ${deleteBtn}
+                </td>
+            </tr>`;
+        });
+    }
+
+    function eliminarProyecto(name) {
+        if (confirm("¿Eliminar este proyecto?")) {
+            let proyectos = getProyectos().filter(p => p.name !== name);
+            window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), proyectos);
+            loadProjectsManagement();
+        }
+    }
+
+    function guardarOEditarTrade(e) {
+        e.preventDefault();
+        const tName = document.getElementById('newTradeName').value.trim();
+        const oldName = document.getElementById('editTradeOldName').value;
+
+        if (!tName) return;
+
+        let trades = [...getTrades()];
+        if (oldName) {
+            let idx = trades.indexOf(oldName);
+            if (idx !== -1) trades[idx] = tName;
+        } else {
+            if (trades.includes(tName)) {
+                alert("La función ya existe.");
+                return;
+            }
+            trades.push(tName);
+        }
+
+        window.dbSet(window.dbRef(window.db, 'config/listaTrades'), trades);
+        alert("¡Función guardada en la nube!");
+        resetTradeForm();
+        loadTradesManagement();
+    }
+
+    function editarTrade(tName) {
+        document.getElementById('newTradeName').value = tName;
+        document.getElementById('editTradeOldName').value = tName;
+        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2"></i>Editando Función: ${tName}`;
+        document.getElementById('saveTradeBtn').innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Actualizar`;
+        document.getElementById('cancelEditTradeBtn').classList.remove('hidden');
+    }
+
+    function resetTradeForm() {
+        document.getElementById('newTradeName').value = '';
+        document.getElementById('editTradeOldName').value = '';
+        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2"></i>Agregar o Editar Función / Especialidad`;
+        document.getElementById('saveTradeBtn').innerHTML = `<i class="fa-solid fa-plus me-1"></i>Añadir`;
+        document.getElementById('cancelEditTradeBtn').classList.add('hidden');
+    }
+
+    function loadTradesManagement() {
+        const tbody = document.getElementById('tradesTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        let trades = getTrades();
+        trades.forEach((t) => {
+            let deleteBtn = (trades.length > 1) ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarTrade('${t}')"><i class="fa-solid fa-trash"></i></button>` : '';
+            tbody.innerHTML += `<tr>
+                <td class="fw-bold">${t}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTrade('${t}')"><i class="fa-solid fa-pen"></i></button>
+                    ${deleteBtn}
+                </td>
+            </tr>`;
+        });
+    }
+
+    function eliminarTrade(tName) {
+        if (confirm("¿Eliminar esta función?")) {
+            let trades = getTrades().filter(t => t !== tName);
+            window.dbSet(window.dbRef(window.db, 'config/listaTrades'), trades);
+            loadTradesManagement();
+        }
+    }
+
+    function guardarOEditarUsuarioSistema(e) {
+        e.preventDefault();
+        const userKey = document.getElementById('adminNewUser').value.trim();
+        const pass = document.getElementById('adminNewPass').value.trim();
+        const phone = document.getElementById('adminNewPhone').value.trim();
+        const trade = document.getElementById('adminNewTrade').value;
+        const rol = document.getElementById('adminNewRol').value;
+
+        if (!userKey || !pass) return;
+
+        let usuarios = {...getUsuarios()};
+        usuarios[userKey] = { pass, phone, trade, rol };
+
+        window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), usuarios);
+        alert(`¡Usuario "${userKey}" guardado en la nube!`);
+        resetUserForm();
+        loadUserManagement();
+    }
+
+    function editarUsuario(userKey) {
+        let usuarios = getUsuarios();
+        let info = usuarios[userKey];
+        if (!info) return;
+
+        document.getElementById('adminNewUser').value = userKey;
+        document.getElementById('adminNewUser').readOnly = true;
+        document.getElementById('adminNewPass').value = info.pass;
+        document.getElementById('adminNewPhone').value = info.phone || '';
+        document.getElementById('adminNewTrade').value = info.trade || getTrades()[0];
+        document.getElementById('adminNewRol').value = info.rol || 'trabajador';
+
+        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-pen me-2"></i>Editando Usuario: ${userKey}`;
+        document.getElementById('saveUserBtn').innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Actualizar Usuario`;
+        document.getElementById('cancelEditUserBtn').classList.remove('hidden');
+    }
+
+    function resetUserForm() {
+        document.getElementById('adminNewUser').value = '';
+        document.getElementById('adminNewUser').readOnly = false;
+        document.getElementById('adminNewPass').value = '';
+        document.getElementById('adminNewPhone').value = '';
+        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-gear me-2"></i>Crear o Editar Usuario del Sistema`;
+        document.getElementById('saveUserBtn').innerHTML = `<i class="fa-solid fa-user-plus me-1"></i>Guardar Usuario`;
+        document.getElementById('cancelEditUserBtn').classList.add('hidden');
+        loadUserManagement();
+    }
+
+    function loadUserManagement() {
+        const tbody = document.getElementById('systemUsersTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        let usuarios = getUsuarios();
+        Object.keys(usuarios).forEach(user => {
+            let info = usuarios[user];
+            let rolBadge = (info.rol === 'admin') ? '<span class="badge bg-danger">Administrador</span>' : '<span class="badge bg-secondary">Trabajador</span>';
+            let actions = `<button class="btn btn-sm btn-outline-primary me-1" onclick="editarUsuario('${user}')"><i class="fa-solid fa-pen"></i></button>`;
+            if (user.toLowerCase() !== 'fernando') {
+                actions += `<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuarioSistema('${user}')"><i class="fa-solid fa-trash"></i></button>`;
+            }
+            tbody.innerHTML += `<tr>
+                <td class="fw-bold">${user}</td>
+                <td><code>${info.phone || 'S/N'}</code></td>
+                <td><span class="text-muted">${info.trade || 'Carpintero'}</span></td>
+                <td>${rolBadge}</td>
+                <td class="text-end">${actions}</td>
+            </tr>`;
+        });
+    }
+
+    function eliminarUsuarioSistema(user) {
+        if (confirm(`¿Eliminar al usuario ${user}?`)) {
+            let usuarios = {...getUsuarios()};
+            delete usuarios[user];
+            window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), usuarios);
+            loadUserManagement();
+        }
+    }
+
+    function setInitialWeek() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const weekNum = getISOWeek(now);
+        const picker = document.getElementById('weekPicker');
+        if (picker) picker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
+    }
+
+    function getISOWeek(d) {
+        const date = new Date(d.getTime());
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+        const week1 = new Date(date.getFullYear(), 0, 4);
+        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    }
+
+    function getMonToSunRange(weekString) {
+        if (!weekString) return { mon: null, sun: null };
+        const partsWeek = weekString.split('-W');
+        if (partsWeek.length < 2) return { mon: null, sun: null };
+        const year = Number(partsWeek[0]);
+        const week = Number(partsWeek[1]);
+        
+        const simple = new Date(year, 0, 1 + (week - 1) * 7);
+        const dow = simple.getDay();
+        const ISOweekStart = new Date(simple.getTime());
+        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            
+        const mon = new Date(ISOweekStart);
+        const sun = new Date(mon);
+        sun.setDate(mon.getDate() + 6);
+        return { mon, sun };
+    }
+
+    function formatDateShort(d) {
+        return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+    }
+
+    function updateProjectFilterDropdowns() {
+        let selectWeekly = document.getElementById('projectFilter');
+        if(selectWeekly) {
+            let currentVal = selectWeekly.value;
+            selectWeekly.innerHTML = '<option value="ALL">🌐 Todos los Proyectos</option>';
+            let proyectos = getProyectos();
+            proyectos.forEach(proj => {
+                let sel = (proj.name === currentVal) ? 'selected' : '';
+                selectWeekly.innerHTML += `<option value="${proj.name}" ${sel}>${proj.name}</option>`;
+            });
+        }
+    }
+
+    function calcularTotalPagar(r) {
+        let net = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+        let ot = parseFloat(r.overtime) || 0;
+        let dt = parseFloat(r.doubletime) || 0;
+        return net + ot + dt;
+    }
+
+    function calcularHorasNetas(inTime, outTime, lunchHours) {
+        if (!inTime || !outTime || inTime === '-' || outTime === '-') return 0;
+        let [h1, m1] = inTime.split(':').map(Number);
+        let [h2, m2] = outTime.split(':').map(Number);
+        let minsIn = h1 * 60 + m1;
+        let minsOut = h2 * 60 + m2;
+        if (minsOut <= minsIn) return 0;
+        let netMins = (minsOut - minsIn) - (parseFloat(lunchHours) * 60);
+        return netMins > 0 ? netMins / 60 : 0;
+    }
+
+    function loadWeeklySummary() {
+        const weekPicker = document.getElementById('weekPicker');
+        const projectFilter = document.getElementById('projectFilter');
+        if (!weekPicker || !weekPicker.value) return;
+        
+        const weekVal = weekPicker.value;
+        const selectedProject = projectFilter ? projectFilter.value : 'ALL';
+        const { mon, sun } = getMonToSunRange(weekVal);
+        if (!mon || !sun) return;
+
+        document.getElementById('weekRangeLabel').innerText = `Semana del Lunes ${formatDateShort(mon)} al Domingo ${formatDateShort(sun)}`;
+
+        let registros = window.registrosGlobales || [];
+        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
+        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+
+        let usuarios = getUsuarios();
+        let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
+
+        const filtered = registros.filter(r => {
+            const parts = r.date.split('-');
+            if(parts.length < 3) return false;
+            const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+            let dateMatch = (rDate >= monTime && rDate <= sunTime);
+            let projMatch = (selectedProject === 'ALL' || (r.job && r.job.trim() === selectedProject));
+            let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
+            return dateMatch && projMatch && userMatch;
+        });
+
+        let workerSummary = {};
+        filtered.forEach(r => {
+            const key = r.workerName.toLowerCase().trim();
+            if (!workerSummary[key]) {
+                workerSummary[key] = {
+                    name: r.workerName,
+                    trade: r.trade,
+                    days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 },
+                    total: 0
+                };
+            }
+            let totalPagoJornada = calcularTotalPagar(r);
+            const parts = r.date.split('-');
+            const dObj = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+            const dayOfWeek = dObj.getDay();
+
+            workerSummary[key].days[dayOfWeek] += totalPagoJornada;
+            workerSummary[key].total += totalPagoJornada;
+        });
+
+        const tbody = document.getElementById('weeklyTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        let grandTotal = 0;
+        const keys = Object.keys(workerSummary);
+
+        if (keys.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted p-4">No hay registros en esta semana.</td></tr>';
+            document.getElementById('totalWeeklyHoursBadge').innerText = 'Total: 0.0 hrs';
+            return;
+        }
+
+        keys.sort().forEach(k => {
+            let w = workerSummary[k];
+            grandTotal += w.total;
+            tbody.innerHTML += `<tr>
+                <td class="worker-info fw-bold">${w.name}</td>
+                <td class="worker-info text-muted">${w.trade}</td>
+                <td>${w.days[1] > 0 ? w.days[1].toFixed(1) : '-'}</td>
+                <td>${w.days[2] > 0 ? w.days[2].toFixed(1) : '-'}</td>
+                <td>${w.days[3] > 0 ? w.days[3].toFixed(1) : '-'}</td>
+                <td>${w.days[4] > 0 ? w.days[4].toFixed(1) : '-'}</td>
+                <td>${w.days[5] > 0 ? w.days[5].toFixed(1) : '-'}</td>
+                <td>${w.days[6] > 0 ? w.days[6].toFixed(1) : '-'}</td>
+                <td>${w.days[0] > 0 ? w.days[0].toFixed(1) : '-'}</td>
+                <td class="fw-bold bg-light text-success">${w.total.toFixed(1)} hrs</td>
+            </tr>`;
+        });
+
+        document.getElementById('totalWeeklyHoursBadge').innerText = `Total: ${grandTotal.toFixed(1)} hrs`;
+    }
+
+    function initMap() {
+        if (!map) {
+            map = L.map('map').setView([25.7617, -80.1918], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            markersLayer = L.layerGroup().addTo(map);
+        } else {
+            map.invalidateSize();
+        }
+    }
+
+    function updateMapUserFilterDropdown() {
+        const select = document.getElementById('mapUserFilter');
+        if (!select) return;
+        let currentVal = select.value;
+        select.innerHTML = '<option value="ALL">🌐 Todos los Usuarios</option>';
+        let usuarios = getUsuarios();
+        Object.keys(usuarios).sort().forEach(user => {
+            let sel = (user === currentVal) ? 'selected' : '';
+            select.innerHTML += `<option value="${user}" ${sel}>${user}</option>`;
+        });
+    }
+
+    function loadDailyRecords() {
+        const dateFilter = document.getElementById('mapDateFilter').value;
+        const userFilter = document.getElementById('mapUserFilter').value;
+        let registros = window.registrosGlobales || [];
+        let tbody = document.getElementById('dailyRecordsTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (markersLayer) markersLayer.clearLayers();
+
+        let filtered = registros.filter(r => {
+            let dateMatch = (!dateFilter || r.date === dateFilter);
+            let userMatch = (userFilter === 'ALL' || r.workerName.toLowerCase() === userFilter.toLowerCase());
+            return dateMatch && userMatch;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">No hay registros para este filtro.</td></tr>';
+            return;
+        }
+
+        let bounds = [];
+
+        filtered.forEach(r => {
+            if (r.coordsIn && r.coordsIn.lat) {
+                let trIn = document.createElement('tr');
+                trIn.className = 'record-row';
+                trIn.innerHTML = `
+                    <td><b>${r.timeIn}</b> (Entrada)</td>
+                    <td>${r.workerName}</td>
+                    <td><span class="badge bg-success">ENTRADA</span></td>
+                    <td>${r.job}</td>
+                    <td><code>${r.coordsIn.lat.toFixed(3)}, ${r.coordsIn.lng.toFixed(3)}</code></td>
+                `;
+                trIn.onclick = () => seleccionarRegistroEnMapa(r.coordsIn.lat, r.coordsIn.lng, `${r.workerName} - Entrada: ${r.timeIn} (${r.job})`, trIn);
+                tbody.appendChild(trIn);
+
+                let markerIn = L.marker([r.coordsIn.lat, r.coordsIn.lng]).bindPopup(`<b>${r.workerName}</b><br>Entrada: ${r.timeIn}<br>${r.job}`);
+                markersLayer.addLayer(markerIn);
+                bounds.push([r.coordsIn.lat, r.coordsIn.lng]);
+            }
+
+            if (r.coordsOut && r.coordsOut.lat && r.timeOut !== '-') {
+                let trOut = document.createElement('tr');
+                trOut.className = 'record-row';
+                trOut.innerHTML = `
+                    <td><b>${r.timeOut}</b> (Salida)</td>
+                    <td>${r.workerName}</td>
+                    <td><span class="badge bg-danger">SALIDA</span></td>
+                    <td>${r.job}</td>
+                    <td><code>${r.coordsOut.lat.toFixed(3)}, ${r.coordsOut.lng.toFixed(3)}</code></td>
+                `;
+                trOut.onclick = () => seleccionarRegistroEnMapa(r.coordsOut.lat, r.coordsOut.lng, `${r.workerName} - Salida: ${r.timeOut} (${r.job})`, trOut);
+                tbody.appendChild(trOut);
+
+                let markerOut = L.marker([r.coordsOut.lat, r.coordsOut.lng]).bindPopup(`<b>${r.workerName}</b><br>Salida: ${r.timeOut}<br>${r.job}`);
+                markersLayer.addLayer(markerOut);
+                bounds.push([r.coordsOut.lat, r.coordsOut.lng]);
+            }
+        });
+
+        if (bounds.length > 0 && map) {
+            map.fitBounds(bounds, { maxZoom: 15 });
+        }
+    }
+
+    function seleccionarRegistroEnMapa(lat, lng, popupText, rowElement) {
+        document.querySelectorAll('.record-row').forEach(row => row.classList.remove('table-active'));
+        rowElement.classList.add('table-active');
+
+        if (map) {
+            map.setView([lat, lng], 17);
+            L.popup().setLatLng([lat, lng]).setContent(popupText).openOn(map);
+        }
+    }
+
+    function loadDailyLogs() {
+        let registros = window.registrosGlobales || [];
+        let tbody = document.getElementById('logsTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (registros.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas.</td></tr>';
+            return;
+        }
+
+        registros.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+            let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+            let ot = parseFloat(r.overtime) || 0;
+            let dt = parseFloat(r.doubletime) || 0;
+            let totalPago = netHours + ot + dt;
+
+            tbody.innerHTML += `<tr>
+                <td><strong>${r.date}</strong></td>
+                <td>${r.job}</td>
+                <td>${r.workerName}</td>
+                <td><input type="time" class="form-control form-control-sm" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="time" class="form-control form-control-sm" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center" id="lunch_${r.id}" value="${r.lunch}" style="width: 65px;" onchange="actualizarJornada(${r.id})"></td>
+                <td><span class="badge bg-secondary" id="net_${r.id}">${netHours.toFixed(2)}h</span></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold text-primary" id="ot_${r.id}" value="${ot}" style="width: 65px;" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold text-warning" id="dt_${r.id}" value="${dt}" style="width: 65px;" onchange="actualizarJornada(${r.id})"></td>
+                <td><span class="badge bg-success fs-6" id="total_${r.id}">${totalPago.toFixed(2)}h</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarJornada('${r.firebaseKey}')"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function actualizarJornada(id) {
+        let registros = window.registrosGlobales || [];
+        let r = registros.find(item => item.id === id);
+        if (!r || !r.firebaseKey) return;
+
+        r.timeIn = document.getElementById(`in_${id}`).value || '-';
+        r.timeOut = document.getElementById(`out_${id}`).value || '-';
+        r.lunch = parseFloat(document.getElementById(`lunch_${id}`).value) || 0.5;
+        r.overtime = parseFloat(document.getElementById(`ot_${id}`).value) || 0;
+        r.doubletime = parseFloat(document.getElementById(`dt_${id}`).value) || 0;
+
+        window.dbSet(window.dbRef(window.db, 'jornadas/' + r.firebaseKey), r);
+        
+        let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+        let totalPago = netHours + r.overtime + r.doubletime;
+
+        document.getElementById(`net_${id}`).innerText = `${netHours.toFixed(2)}h`;
+        document.getElementById(`total_${id}`).innerText = `${totalPago.toFixed(2)}h`;
+    }
+
+    function eliminarJornada(firebaseKey) {
+        if (!firebaseKey) return;
+        if (confirm("¿Estás seguro de eliminar este registro de la nube?")) {
+            window.dbRemove(window.dbRef(window.db, 'jornadas/' + firebaseKey))
+                .then(() => {
+                    loadDailyLogs();
+                    loadWeeklySummary();
+                });
+        }
+    }
+
+    function exportWeeklyCSV() {
+        const weekPicker = document.getElementById('weekPicker');
+        if (!weekPicker || !weekPicker.value) return alert("Seleccione una semana.");
+        let csv = 'Trabajador,Lunes,Martes,Miercoles,Jueves,Viernes,Sabado,Domingo,Total Horas\n';
+        let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Resumen_Semanal_${weekPicker.value}.csv`;
+        link.click();
+    }
+</script>
+
+</body>
+</html>
