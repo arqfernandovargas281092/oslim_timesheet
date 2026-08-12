@@ -759,8 +759,8 @@
 
         let distancia = calcularDistanciaMetros(currentCoords.lat, currentCoords.lng, proyectoObj.lat, proyectoObj.lng);
 
-        if (distancia > 100) {
-            alert(`❌ No puedes registrar asistencia. Estás a ${Math.round(distancia)} metros del proyecto "${proyectoObj.name}". Debes estar a menos de 100 metros.`);
+        if (distancia > 150) {
+            alert(`❌ No puedes registrar asistencia. Estás a ${Math.round(distancia)} metros del proyecto "${proyectoObj.name}". Debes estar a menos de 150 metros.`);
             return;
         }
 
