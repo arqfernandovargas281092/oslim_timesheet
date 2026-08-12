@@ -571,15 +571,6 @@
         obtenerGPSReal();
         // Inicializar datos en nube si no existen
         setTimeout(() => {
-            if(!window.usuariosSistemaNube) {
-                window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), usuariosSistemaDefault);
-            }
-            if(!window.listaProyectosNube) {
-                window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), listaProyectosDefault);
-            }
-            if(!window.listaTradesNube) {
-                window.dbSet(window.dbRef(window.db, 'config/listaTrades'), listaTradesDefault);
-            }
             poblarSelectsDinamicos();
         }, 1000);
         document.getElementById('mapDateFilter').valueAsDate = new Date();
