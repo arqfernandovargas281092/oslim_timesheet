@@ -497,13 +497,13 @@
   import { getDatabase, ref, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyD8NxJentfvFZL29U4sswq2_779vXtsbuk",
-    authDomain: "oslim-timesheet.firebaseapp.com",
-    databaseURL: "https://oslim-timesheet-default-rtdb.firebaseio.com",
-    projectId: "oslim-timesheet",
-    storageBucket: "oslim-timesheet.appspot.com",
-    messagingSenderId: "420399163728",
-    appId: "1:420399163728:web:c07e7b2e3a8ccf6ee4e455"
+    apiKey: "TU_API_KEY_PROPIA",
+    authDomain: "tu-proyecto.firebaseapp.com",
+    databaseURL: "https://tu-proyecto-default-rtdb.firebaseio.com",
+    projectId: "tu-proyecto",
+    storageBucket: "tu-proyecto.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -553,25 +553,10 @@
 <!-- Leaflet JS para Mapas -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let usuariosSistemaDefault = {
-        'fernando': { pass: 'r1234', phone: '+1 (305) 555-0199', trade: 'Supervisión', rol: 'admin' },
-        'juan': { pass: 'j1234', phone: '+1 (305) 555-0142', trade: 'Carpintero (Carpenter)', rol: 'trabajador' }
-    };
-
-    let listaProyectosDefault = [
-        { name: "Bay Harbor Islands", address: "9290 Bay Harbor Dr, Miami", lat: 25.8885, lng: -80.1285 },
-        { name: "Torre Balam", address: "Av. Constitución, Monterrey", lat: 25.6866, lng: -100.3161 },
-        { name: "Garage West Palm", address: "Clematis St, West Palm Beach", lat: 26.7153, lng: -80.0534 }
-    ];
-
-    let listaTradesDefault = [
-        "Carpintero (Carpenter)",
-        "Fierrero (Rodbuster)",
-        "Peón (Laborer)",
-        "Acabador (Finisher)",
-        "Capataz (Foreman)",
-        "Supervisión"
-    ];
+    // Variables por defecto vacías para que el sistema use exclusivamente Firebase y no se resetee
+    let usuariosSistemaDefault = {};
+    let listaProyectosDefault = [];
+    let listaTradesDefault = [];
 
     let usuarioActual = null;
     let currentCoords = { lat: 25.7617, lng: -80.1918 };
@@ -776,7 +761,6 @@
         return R * c;
     }
 
-    // FUNCIÓN ROBUSTA DE FECHA LOCAL (Evita cualquier salto de día UTC)
     function obtenerFechaLocalISO() {
         const d = new Date();
         const year = d.getFullYear();
@@ -802,7 +786,7 @@
         }
 
         const ahora = new Date();
-        const fechaStr = obtenerFechaLocalISO(); // Fecha local segura garantizada
+        const fechaStr = obtenerFechaLocalISO();
         const horaStr = ahora.toTimeString().split(' ')[0].substring(0, 5);
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
