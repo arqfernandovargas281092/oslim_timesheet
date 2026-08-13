@@ -256,7 +256,7 @@
                         <span><i class="fa-solid fa-pen-to-square me-2"></i>Panel de Edición de Jornadas, Comida, Extras y Dobles (Solo Administrador)</span>
                     </div>
                     <div class="card-body p-4">
-                        <!-- Filtros por Semana y Usuario para Edición de Horas -->
+                        <!-- Filtros por Semana y Usuario (Lunes a Domingo) para Edición de Horas -->
                         <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
                             <div class="col-md-4">
                                 <label class="form-label fw-bold mb-1">Seleccionar Semana (Lunes a Domingo):</label>
@@ -1369,7 +1369,6 @@
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
             
-            // Si es admin puede filtrar por el selector, si es trabajador solo ve sus propios registros
             let userMatch = isAdmin 
                 ? (selectedUser === 'ALL' || r.workerName.toLowerCase() === selectedUser.toLowerCase())
                 : (r.workerName.toLowerCase() === usuarioActual.toLowerCase());
