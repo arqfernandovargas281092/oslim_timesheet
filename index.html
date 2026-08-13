@@ -148,7 +148,7 @@
     <div class="container-fluid px-4 mb-5 tab-content-section" id="weekly-tab" style="display:none;">
         <div class="card shadow-sm border-0">
             <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
-                <span><i class="fa-solid fa-calendar-week me-2"></i>Resumen Semanal de Horas (Lunes a Domingo)[cite: 1, 2]</span>
+                <span><i class="fa-solid fa-calendar-week me-2"></i>Resumen Semanal de Horas (Lunes a Domingo)[cite: 1]</span>
                 <div>
                     <button type="button" class="btn btn-sm btn-light me-2" onclick="exportWeeklyCSV()"><i class="fa-solid fa-file-csv me-1"></i>Exportar Excel</button>
                     <button type="button" class="btn btn-sm btn-outline-light" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
@@ -776,7 +776,7 @@
         return R * c;
     }
 
-    // CORRECCIÓN DE FECHA LOCAL (Evita desfase UTC a medianoche o tarde)
+    // FUNCIÓN ROBUSTA DE FECHA LOCAL (Evita cualquier salto de día UTC)
     function obtenerFechaLocalISO() {
         const d = new Date();
         const year = d.getFullYear();
@@ -802,7 +802,7 @@
         }
 
         const ahora = new Date();
-        const fechaStr = obtenerFechaLocalISO(); // <--- Usamos fecha local exacta
+        const fechaStr = obtenerFechaLocalISO(); // Fecha local segura garantizada
         const horaStr = ahora.toTimeString().split(' ')[0].substring(0, 5);
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
