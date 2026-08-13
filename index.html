@@ -761,14 +761,6 @@
         return R * c;
     }
 
-    function obtenerFechaLocalISO() {
-        const d = new Date();
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
     function registrarAsistenciaConGeocerca(tipo) {
         const workerName = document.getElementById('loggedWorkerName').value;
         const trade = document.getElementById('loggedWorkerTrade').value;
@@ -785,9 +777,20 @@
             return;
         }
 
-        const ahora = new Date();
-        const fechaStr = obtenerFechaLocalISO();
-        const horaStr = ahora.toTimeString().split(' ')[0].substring(0, 5);
+        // --- SISTEMA INTELIGENTE DE ZONAS HORARIAS AUTOMÁTICAS ---
+        // Detecta si es Miami/EE.UU. (UTC-4) o México (UTC-6) según el nombre o dirección del proyecto
+        const textCheck = (proyectoObj.name + " " + (proyectoObj.address || "")).toLowerCase();
+        const esUSA = textCheck.includes("miami") || textCheck.includes("harbor") || textCheck.includes("palm") || textCheck.includes("usa") || textCheck.includes("florida");
+        
+        // Offset en horas: Miami (-4) | México (-6)
+        const offsetHoras = esUSA ? -4 : -6;
+
+        const fechaServidor = new Date();
+        const horaLocalProyecto = new Date(fechaServidor.getTime() + (offsetHoras * 60 * 60 * 1000) + (fechaServidor.getTimezoneOffset() * 60 * 1000));
+
+        const fechaStr = horaLocalProyecto.toISOString().split('T')[0];
+        const horaStr = String(horaLocalProyecto.getHours()).padStart(2, '0') + ":" + String(horaLocalProyecto.getMinutes()).padStart(2, '0');
+        
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
         let registros = window.registrosGlobales || [];
@@ -799,7 +802,7 @@
                 workerName: workerName,
                 trade: trade,
                 date: fechaStr,
-                dayName: days[ahora.getDay()],
+                dayName: days[horaLocalProyecto.getDay()],
                 job: selectedProjectName,
                 timeIn: (tipo === 'ENTRADA') ? horaStr : '-',
                 timeOut: (tipo === 'SALIDA') ? horaStr : '-',
@@ -826,7 +829,7 @@
             }
         }
 
-        alert(`✅ ¡${tipo} registrada en la nube con éxito! Estás a ${Math.round(distancia)}m del proyecto.`);
+        alert(`✅ ¡${tipo} registrada con éxito (${esUSA ? 'Hora Miami -4' : 'Hora México -6'})! Estás a ${Math.round(distancia)}m del proyecto.`);
         showTab('weekly-tab');
     }
 
