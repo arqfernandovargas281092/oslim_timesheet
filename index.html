@@ -80,13 +80,13 @@
         </div>
     </nav>
 
-    <!-- TAB 1: REGISTRO DIARIO DE ASISTENCIA CON VALIDACIÓN GEOFENCING 100M Y MAPA -->
+    <!-- TAB 1: REGISTRO DIARIO DE ASISTENCIA CON VALIDACIÓN GEOFENCING 150M Y MAPA -->
     <div class="container mb-5 tab-content-section" id="entry-tab">
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="card shadow-sm border-0">
                     <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
-                        <span><i class="fa-solid fa-user-clock me-2"></i>Registro de Asistencia y Validación por Mapa (100m)</span>
+                        <span><i class="fa-solid fa-user-clock me-2"></i>Registro de Asistencia y Validación por Mapa (150m)</span>
                         <span class="badge bg-light text-dark" id="loggedUserBadge">Usuario</span>
                     </div>
                     <div class="card-body p-4">
@@ -148,7 +148,7 @@
     <div class="container-fluid px-4 mb-5 tab-content-section" id="weekly-tab" style="display:none;">
         <div class="card shadow-sm border-0">
             <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
-                <span><i class="fa-solid fa-calendar-week me-2"></i>Resumen Semanal de Horas (Lunes a Domingo)[cite: 1]</span>
+                <span><i class="fa-solid fa-calendar-week me-2"></i>Resumen Semanal de Horas (Lunes a Domingo)[cite: 1, 2]</span>
                 <div>
                     <button type="button" class="btn btn-sm btn-light me-2" onclick="exportWeeklyCSV()"><i class="fa-solid fa-file-csv me-1"></i>Exportar Excel</button>
                     <button type="button" class="btn btn-sm btn-outline-light" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
@@ -256,6 +256,24 @@
                         <span><i class="fa-solid fa-pen-to-square me-2"></i>Panel de Edición de Jornadas, Comida, Extras y Dobles (Solo Administrador)</span>
                     </div>
                     <div class="card-body p-4">
+                        <!-- Filtros por Semana y Usuario para Edición de Horas -->
+                        <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold mb-1">Seleccionar Semana (Lunes a Domingo):</label>
+                                <input type="week" class="form-control" id="logsWeekPicker" onchange="loadDailyLogs()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold mb-1">Filtrar por Usuario:</label>
+                                <select class="form-select" id="logsUserFilter" onchange="loadDailyLogs()">
+                                    <option value="ALL">🌐 Todos los Usuarios</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-muted small">Rango Activo:</div>
+                                <div class="fw-bold text-primary" id="logsWeekRangeLabel">-</div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="table table-hover align-middle m-0" style="font-size: 0.8rem;">
                                 <thead class="table-dark">
@@ -383,7 +401,7 @@
 
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-dark text-white">
-                        <span><i class="fa-solid fa-list me-2"></i>Lista de Proyectos Activos (Geocercas de 100m)</span>
+                        <span><i class="fa-solid fa-list me-2"></i>Lista de Proyectos Activos (Geocercas de 150m)</span>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
@@ -569,7 +587,6 @@
     window.addEventListener('DOMContentLoaded', () => {
         setInitialWeek();
         obtenerGPSReal();
-        // Inicializar datos en nube si no existen
         setTimeout(() => {
             poblarSelectsDinamicos();
         }, 1000);
@@ -596,6 +613,18 @@
             adminNewTrade.innerHTML = '';
             trades.forEach(t => {
                 adminNewTrade.innerHTML += `<option value="${t}">${t}</option>`;
+            });
+        }
+
+        // Poblar selector de usuario en pestaña de edición de horas
+        const logsUserFilter = document.getElementById('logsUserFilter');
+        if (logsUserFilter) {
+            let currentVal = logsUserFilter.value;
+            logsUserFilter.innerHTML = '<option value="ALL">🌐 Todos los Usuarios</option>';
+            let usuarios = getUsuarios();
+            Object.keys(usuarios).sort().forEach(user => {
+                let sel = (user === currentVal) ? 'selected' : '';
+                logsUserFilter.innerHTML += `<option value="${user}" ${sel}>${user}</option>`;
             });
         }
     }
@@ -692,7 +721,10 @@
                 loadDailyRecords();
             }, 250);
         }
-        if (tabId === 'logs-tab') loadDailyLogs();
+        if (tabId === 'logs-tab') {
+            poblarSelectsDinamicos();
+            loadDailyLogs();
+        }
         if (tabId === 'admin-users-tab') loadUserManagement();
         if (tabId === 'admin-projects-tab') loadProjectsManagement();
         if (tabId === 'admin-trades-tab') loadTradesManagement();
@@ -1063,6 +1095,9 @@
         const weekNum = getISOWeek(now);
         const picker = document.getElementById('weekPicker');
         if (picker) picker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
+        
+        const logsPicker = document.getElementById('logsWeekPicker');
+        if (logsPicker) logsPicker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
     }
 
     function getISOWeek(d) {
@@ -1310,17 +1345,48 @@
     }
 
     function loadDailyLogs() {
+        const logsWeekPicker = document.getElementById('logsWeekPicker');
+        const logsUserFilter = document.getElementById('logsUserFilter');
+        if (!logsWeekPicker || !logsWeekPicker.value) return;
+
+        const weekVal = logsWeekPicker.value;
+        const selectedUser = logsUserFilter ? logsUserFilter.value : 'ALL';
+        const { mon, sun } = getMonToSunRange(weekVal);
+        if (!mon || !sun) return;
+
+        document.getElementById('logsWeekRangeLabel').innerText = `Semana del Lunes ${formatDateShort(mon)} al Domingo ${formatDateShort(sun)}`;
+
         let registros = window.registrosGlobales || [];
+        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
+        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+
+        let usuarios = getUsuarios();
+        let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
+
+        const filtered = registros.filter(r => {
+            const parts = r.date.split('-');
+            if(parts.length < 3) return false;
+            const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+            let dateMatch = (rDate >= monTime && rDate <= sunTime);
+            
+            // Si es admin puede filtrar por el selector, si es trabajador solo ve sus propios registros
+            let userMatch = isAdmin 
+                ? (selectedUser === 'ALL' || r.workerName.toLowerCase() === selectedUser.toLowerCase())
+                : (r.workerName.toLowerCase() === usuarioActual.toLowerCase());
+
+            return dateMatch && userMatch;
+        });
+
         let tbody = document.getElementById('logsTbody');
         if (!tbody) return;
         tbody.innerHTML = '';
 
-        if (registros.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas.</td></tr>';
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas para esta semana y filtros seleccionados.</td></tr>';
             return;
         }
 
-        registros.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
             let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
             let ot = parseFloat(r.overtime) || 0;
             let dt = parseFloat(r.doubletime) || 0;
