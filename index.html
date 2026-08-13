@@ -509,7 +509,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // Exponer herramientas globalmente para que funcionen las funciones de la app
   window.db = db;
   window.dbRef = ref;
   window.dbSet = set;
@@ -517,7 +516,6 @@
   window.dbUpdate = update;
   window.dbRemove = remove;
 
-  // Sincronización en tiempo real de Jornadas y Catálogos en la nube
   window.registrosGlobales = [];
   onValue(ref(db, 'jornadas'), (snapshot) => {
       const data = snapshot.val();
@@ -555,7 +553,6 @@
 <!-- Leaflet JS para Mapas -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Datos por defecto si la nube está vacía
     let usuariosSistemaDefault = {
         'fernando': { pass: 'r1234', phone: '+1 (305) 555-0199', trade: 'Supervisión', rol: 'admin' },
         'juan': { pass: 'j1234', phone: '+1 (305) 555-0142', trade: 'Carpintero (Carpenter)', rol: 'trabajador' }
@@ -616,7 +613,6 @@
             });
         }
 
-        // Poblar selector de usuario en pestaña de edición de horas
         const logsUserFilter = document.getElementById('logsUserFilter');
         if (logsUserFilter) {
             let currentVal = logsUserFilter.value;
@@ -780,6 +776,15 @@
         return R * c;
     }
 
+    // CORRECCIÓN DE FECHA LOCAL (Evita desfase UTC a medianoche o tarde)
+    function obtenerFechaLocalISO() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     function registrarAsistenciaConGeocerca(tipo) {
         const workerName = document.getElementById('loggedWorkerName').value;
         const trade = document.getElementById('loggedWorkerTrade').value;
@@ -797,7 +802,7 @@
         }
 
         const ahora = new Date();
-        const fechaStr = ahora.toISOString().split('T')[0];
+        const fechaStr = obtenerFechaLocalISO(); // <--- Usamos fecha local exacta
         const horaStr = ahora.toTimeString().split(' ')[0].substring(0, 5);
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
