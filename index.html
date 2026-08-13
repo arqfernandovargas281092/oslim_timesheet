@@ -553,7 +553,6 @@
 <!-- Leaflet JS para Mapas -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Variables por defecto vacías para que el sistema use exclusivamente Firebase y no se resetee
     let usuariosSistemaDefault = {};
     let listaProyectosDefault = [];
     let listaTradesDefault = [];
@@ -777,12 +776,9 @@
             return;
         }
 
-        // --- SISTEMA INTELIGENTE DE ZONAS HORARIAS AUTOMÁTICAS ---
-        // Detecta si es Miami/EE.UU. (UTC-4) o México (UTC-6) según el nombre o dirección del proyecto
+        // Sistema de Zonas Horarias Automáticas (Miami -4 / México -6)
         const textCheck = (proyectoObj.name + " " + (proyectoObj.address || "")).toLowerCase();
         const esUSA = textCheck.includes("miami") || textCheck.includes("harbor") || textCheck.includes("palm") || textCheck.includes("usa") || textCheck.includes("florida");
-        
-        // Offset en horas: Miami (-4) | México (-6)
         const offsetHoras = esUSA ? -4 : -6;
 
         const fechaServidor = new Date();
@@ -1136,6 +1132,11 @@
         }
     }
 
+    // --- NUEVA FUNCIÓN DE REDONDEO AUTOMÁTICO A BLOQUES DE 30 MINUTOS (0.5h) ---
+    function redondearAMediaHora(horas) {
+        return Math.round(horas * 2) / 2;
+    }
+
     function calcularTotalPagar(r) {
         let net = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
         let ot = parseFloat(r.overtime) || 0;
@@ -1150,8 +1151,14 @@
         let minsIn = h1 * 60 + m1;
         let minsOut = h2 * 60 + m2;
         if (minsOut <= minsIn) return 0;
+        
         let netMins = (minsOut - minsIn) - (parseFloat(lunchHours) * 60);
-        return netMins > 0 ? netMins / 60 : 0;
+        if (netMins <= 0) return 0;
+        
+        let horasDecimales = netMins / 60;
+        
+        // Aplica el redondeo por lapsos exactos de 30 minutos (0.5h)
+        return redondearAMediaHora(horasDecimales);
     }
 
     function loadWeeklySummary() {
