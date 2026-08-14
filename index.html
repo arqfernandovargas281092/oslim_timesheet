@@ -836,13 +836,18 @@
 
         const textCheck = (proyectoObj.name + " " + (proyectoObj.address || "")).toLowerCase();
         const esUSA = textCheck.includes("miami") || textCheck.includes("harbor") || textCheck.includes("palm") || textCheck.includes("usa") || textCheck.includes("florida");
-        const offsetHoras = esUSA ? -4 : -6;
+        
+        // Corrección horaria precisa usando la zona horaria local de la región
+        const timeZone = esUSA ? "America/New_York" : "America/Mexico_City";
+        const ahoraLocal = new Date().toLocaleString("en-US", { timeZone: timeZone });
+        const fechaLocalObj = new Date(ahoraLocal);
 
-        const fechaServidor = new Date();
-        const horaLocalProyecto = new Date(fechaServidor.getTime() + (offsetHoras * 60 * 60 * 1000) + (fechaServidor.getTimezoneOffset() * 60 * 1000));
+        const anio = fechaLocalObj.getFullYear();
+        const mes = String(fechaLocalObj.getMonth() + 1).padStart(2, '0');
+        const dia = String(fechaLocalObj.getDate()).padStart(2, '0');
+        const fechaStr = `${anio}-${mes}-${dia}`;
 
-        const fechaStr = horaLocalProyecto.toISOString().split('T')[0];
-        const horaStr = String(horaLocalProyecto.getHours()).padStart(2, '0') + ":" + String(horaLocalProyecto.getMinutes()).padStart(2, '0');
+        const horaStr = String(fechaLocalObj.getHours()).padStart(2, '0') + ":" + String(fechaLocalObj.getMinutes()).padStart(2, '0');
         
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -860,7 +865,7 @@
                 trade: trade,
                 rateSnapshot: tarifaActual,
                 date: fechaStr,
-                dayName: days[horaLocalProyecto.getDay()],
+                dayName: days[fechaLocalObj.getDay()],
                 job: selectedProjectName,
                 timeIn: (tipo === 'ENTRADA') ? horaStr : '-',
                 timeOut: (tipo === 'SALIDA') ? horaStr : '-',
@@ -889,7 +894,7 @@
             }
         }
 
-        alert(`✅ ¡${tipo} registrada con éxito (${esUSA ? 'Hora Miami -4' : 'Hora México -6'})! Estás a ${Math.round(distancia)}m del proyecto.`);
+        alert(`✅ ¡${tipo} registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
         showTab('weekly-tab');
     }
 
