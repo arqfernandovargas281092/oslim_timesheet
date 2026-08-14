@@ -2,570 +2,699 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSLIM - Control de Asistencia GPS Nube</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OSLIM CONSTRUCTION — Control de Asistencia</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS para Mapas -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        /* PALETA REFINADA: GRIS CLARO / BLANCO CON ACENTO COBRE ELEGANTE */
         :root {
-            --primary-color: #1a365d;
+            --bg-app: #f4f5f7;          /* Fondo general gris muy claro, limpio y moderno */
+            --bg-card: #ffffff;         /* Tarjetas en blanco puro */
+            --bg-input: #eef2f6;        /* Campos de texto y elementos secundarios en gris sutil */
+            --brand-accent: #111827;    /* Texto oscuro de alta legibilidad */
+            --brand-gold: #b45309;      /* Acento cobre/dorado elegante y profesional */
+            --text-main: #1f2937;       /* Texto principal oscuro para contraste perfecto */
+            --text-muted: #6b7280;      /* Texto secundario gris */
+            --border-color: #d1d5db;    /* Bordes limpios y definidos */
         }
-        body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-        .navbar-custom { background-color: var(--primary-color); }
-        .card-header-custom { background-color: var(--primary-color); color: white; font-weight: 600; }
-        .btn-custom { background-color: var(--primary-color); color: white; }
-        .btn-custom:hover { background-color: #2c5282; color: white; }
-        .table-weekly th, .table-weekly td { vertical-align: middle; text-align: center; font-size: 0.9rem; }
-        .table-weekly td.worker-info { text-align: left; }
-        .hidden { display: none !important; }
-        #map, #entryMap { height: 420px; width: 100%; border-radius: 8px; }
-        .record-row { cursor: pointer; transition: background-color 0.2s; }
-        .record-row:hover { background-color: #e2e8f0 !important; }
-        .record-row.table-active { background-color: #cbd5e1 !important; }
 
-        .dropdown-menu-checkboxes {
-            max-height: 220px;
-            overflow-y: auto;
-            padding: 10px;
-            width: 100%;
+        body { 
+            background-color: var(--bg-app); 
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; 
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- LOGIN SCREEN ESTILO ELEGANTE --- */
+        .login-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+        }
+        .login-header {
+            background: linear-gradient(135deg, #ffffff, #f9fafb);
+            color: var(--text-main);
+            padding: 3rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #111827;
+        }
+        .logo-cube {
+            width: 38px;
+            height: 38px;
+            background: var(--brand-gold);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(180, 83, 9, 0.25);
+        }
+
+        /* --- NAVBAR & MENÚ LATERAL OCULTO --- */
+        .navbar-custom { 
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.8rem 1.2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
         
-        /* ESTILOS OPTIMIZADOS PARA IMPRESIÓN Y PDF */
+        .offcanvas-custom {
+            background-color: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+        }
+        .nav-menu-btn {
+            background-color: transparent;
+            color: var(--text-main);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 1rem 1.2rem;
+            text-align: left;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .nav-menu-btn i { width: 30px; text-align: center; font-size: 1.1rem; color: var(--brand-gold); }
+        .nav-menu-btn:hover { background-color: var(--bg-input); color: #000; }
+        
+        .btn-logout { background-color: rgba(239, 68, 68, 0.08); color: #dc2626; margin-top: auto; }
+        .btn-logout:hover { background-color: #dc2626; color: white; }
+
+        /* --- COMPONENTES UI --- */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+            color: var(--text-main);
+        }
+        .card-header-custom { 
+            background: transparent; 
+            color: var(--text-main); 
+            font-weight: 700; 
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem 1.5rem;
+        }
+
+        .btn-custom { 
+            background-color: var(--brand-gold); 
+            color: #ffffff; 
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(180, 83, 9, 0.2);
+        }
+        .btn-custom:hover { background-color: #92400e; color: #fff; transform: translateY(-1px); }
+
+        .form-label { color: var(--text-muted) !important; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
+        .form-control, .form-select, input[type="date"], input[type="time"], input[type="week"] {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main) !important;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 16px !important; /* Evita zoom automático en iOS */
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #ffffff;
+            color: var(--text-main) !important;
+            border-color: var(--brand-gold);
+            box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
+        }
+        .form-control::placeholder { color: #9ca3af; }
+
+        .text-muted { color: var(--text-muted) !important; }
+        .bg-light-dark { background-color: #f8fafc !important; border: 1px solid var(--border-color); }
+
+        /* --- TABLAS MODO CLARO ELEGANTE --- */
+        .table { color: var(--text-main); border-color: var(--border-color); }
+        .table > :not(caption) > * > * { background-color: transparent; color: var(--text-main); border-bottom-color: var(--border-color); }
+        .table-hover tbody tr:hover { background-color: rgba(180, 83, 9, 0.04) !important; color: var(--text-main); }
+        .table-dark { background-color: #1f2937; color: #ffffff; }
+        .table-dark th { color: #ffffff !important; }
+        .table-weekly th { background-color: #f1f5f9 !important; color: #1e293b !important; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--brand-gold); }
+        .table-weekly td { vertical-align: middle; text-align: center; color: var(--text-main); }
+        .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #f8fafc; color: var(--text-main); }
+
+        /* --- DROPDOWNS Y CHECKBOXES --- */
+        .dropdown-menu-checkboxes {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            max-height: 240px; overflow-y: auto; padding: 12px; width: 100%; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .form-check-label { color: var(--text-main); }
+        .dropdown > button { background-color: var(--bg-input) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
+
+        .record-row { cursor: pointer; transition: background-color 0.15s; }
+        .record-row.table-active { background-color: rgba(180, 83, 9, 0.1) !important; }
+
+        #map, #entryMap { height: 420px; width: 100%; border-radius: 16px; border: 1px solid var(--border-color); }
+
+        .hidden { display: none !important; }
+
+        /* --- IMPRESIÓN CORREGIDA --- */
         @media print {
             @page { size: letter landscape; margin: 0.3in; }
             body { background: white !important; font-size: 9pt; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .no-print, nav, .navbar, .btn { display: none !important; }
+            .no-print, nav, .navbar, .btn, .offcanvas { display: none !important; }
             .container, .container-fluid { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
-            .card { border: none !important; box-shadow: none !important; margin: 0 !important; }
-            .card-header { background-color: #1a365d !important; color: white !important; border-radius: 0 !important; print-color-adjust: exact; }
-            .card-body { padding: 8px !important; }
+            .card { border: none !important; box-shadow: none !important; margin: 0 !important; background: white !important; color: #000 !important; }
+            .card-header { background-color: #f8f9fa !important; color: #000 !important; border-bottom: 2px solid #000 !important; padding: 0.5rem !important; }
+            .bg-light-dark { background-color: #fff !important; border: none !important; padding: 0 !important; margin-bottom: 10px !important; }
+            .text-main, .text-muted, .table { color: #000 !important; }
             
-            .row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; }
-            .col-md-3 { flex: 0 0 25% !important; max-width: 25% !important; }
-            .col-md-4 { flex: 0 0 33% !important; max-width: 33% !important; }
+            .col-md-3 { display: inline-block !important; width: auto !important; margin-right: 15px !important; }
+            .col-md-3 label, .col-md-3 .small, .col-md-3 b { font-size: 8pt !important; color: #000 !important; display: inline !important; }
+            .dropdown, .dropdown-menu-checkboxes, input[type="week"] { display: none !important; }
             
-            .bg-light { background-color: #f8f9fa !important; border: 1px solid #dee2e6 !important; print-color-adjust: exact; padding: 6px !important; }
+            #projectDropdownBtn, #tradeDropdownBtn { display: none !important; }
             
-            /* FORZAR VISIBILIDAD DE LOS TEXTOS DE FILTRO AL IMPRIMIR */
-            .dropdown-menu-checkboxes { display: none !important; }
-            .dropdown { display: block !important; }
-            .dropdown > button { 
-                background: transparent !important; 
-                border: none !important; 
-                color: #000 !important; 
-                font-size: 9pt !important; 
-                font-weight: bold !important; 
-                padding: 0 !important; 
-                box-shadow: none !important; 
-                text-align: left !important;
-                display: block !important;
-                width: 100% !important;
-            }
-            .dropdown > button span {
-                color: #000 !important;
-                display: inline !important;
-            }
-            .dropdown > button i { display: none !important; }
-
-            .badge.bg-primary { background-color: #0d6efd !important; color: white !important; print-color-adjust: exact; }
-            .badge.bg-success { background-color: #198754 !important; color: white !important; print-color-adjust: exact; }
-            
-            .table-weekly th { background-color: #212529 !important; color: white !important; print-color-adjust: exact; }
-            .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: rgba(0,0,0,0.03) !important; print-color-adjust: exact; }
+            .table-weekly th { background-color: #eee !important; color: #000 !important; border-bottom: 2px solid #000 !important; font-size: 8pt !important; padding: 4px !important; }
+            .table-weekly td { color: #000 !important; padding: 4px !important; font-size: 8pt !important; }
+            .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #f9f9f9 !important; color: #000 !important; }
         }
     </style>
 </head>
 <body>
 
 <!-- PANTALLA DE ACCESO (LOGIN) -->
-<div class="container mt-5" id="login-screen" style="max-width: 450px;">
-    <div class="card shadow-sm border-0">
-        <div class="card-header card-header-custom text-center py-3">
-            <h4 class="m-0"><i class="fa-solid fa-lock me-2"></i>Acceso al Sistema</h4>
+<div class="container mt-5" id="login-screen" style="max-width: 420px;">
+    <div class="card login-card">
+        <div class="login-header">
+            <div class="logo-container mb-2">
+                <div class="logo-cube"><i class="fa-solid fa-cube"></i></div>
+                <span>OSLIM <span style="font-weight: 300; font-size: 1.1rem; color: var(--text-muted);">CONSTRUCTION</span></span>
+            </div>
+            <p class="mb-0 small text-muted text-uppercase fw-semibold" style="letter-spacing: 2px;">Control de Asistencia</p>
         </div>
-        <div class="card-body p-4">
+        <div class="card-body p-4 pt-4">
             <div class="mb-3">
-                <label class="form-label fw-bold">Usuario</label>
-                <input type="text" class="form-control" id="loginUser" placeholder="Ej. fernando, juan">
+                <label class="form-label text-uppercase">Usuario</label>
+                <input type="text" class="form-control form-control-lg" id="loginUser" placeholder="Ingresa tu usuario">
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold">Contraseña</label>
-                <input type="password" class="form-control" id="loginPass" placeholder="••••••••">
+            <div class="mb-4">
+                <label class="form-label text-uppercase">Contraseña</label>
+                <input type="password" class="form-control form-control-lg" id="loginPass" placeholder="••••••••">
             </div>
-            <button type="button" class="btn btn-custom w-100 py-2 fw-bold" onclick="iniciarSesion()"><i class="fa-solid fa-right-to-bracket me-1"></i>Ingresar</button>
-            <div id="loginError" class="alert alert-danger mt-3 py-2 text-center hidden" style="font-size: 0.9rem;"></div>
+            <button type="button" class="btn btn-custom w-100 py-3 fs-5 shadow-sm" onclick="iniciarSesion()">
+                Entrar al Sistema
+            </button>
+            <div id="loginError" class="alert alert-danger mt-4 py-2 text-center hidden small border-0 shadow-sm" style="background-color: #fee2e2; color: #dc2626; border-radius: 10px;"></div>
         </div>
     </div>
 </div>
 
 <!-- APLICACIÓN PRINCIPAL -->
 <div id="main-app-container" class="hidden">
-    <nav class="navbar navbar-dark navbar-custom no-print mb-4 shadow-sm">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1"><i class="fa-solid fa-clock me-2"></i>OSLIM — Control de Horarios GPS</span>
-            <div id="nav-buttons-container">
-                <button type="button" class="btn btn-outline-light btn-sm me-2" onclick="showTab('entry-tab')"><i class="fa-solid fa-user-plus me-1"></i>Registrar Asistencia</button>
-                <button type="button" class="btn btn-outline-light btn-sm me-2" onclick="showTab('weekly-tab'); loadWeeklySummary();"><i class="fa-solid fa-calendar-week me-1"></i>Resumen Semanal</button>
-                
-                <!-- Botones exclusivos para Administrador -->
-                <button type="button" id="admin-daily-btn" class="btn btn-outline-light btn-sm me-2 hidden" onclick="showTab('daily-tab'); loadDailyRecords();"><i class="fa-solid fa-list-check me-1"></i>Registros por Día y Mapa</button>
-                <button type="button" id="admin-logs-btn" class="btn btn-outline-light btn-sm me-2 hidden" onclick="showTab('logs-tab'); loadDailyLogs();"><i class="fa-solid fa-pen-to-square me-1"></i>Edición de Horas</button>
-                <button type="button" id="admin-users-btn" class="btn btn-warning btn-sm me-2 hidden" onclick="showTab('admin-users-tab'); loadUserManagement();"><i class="fa-solid fa-users-gear me-1"></i>Usuarios</button>
-                <button type="button" id="admin-projects-btn" class="btn btn-info btn-sm me-2 hidden text-white" onclick="showTab('admin-projects-tab'); loadProjectsManagement();"><i class="fa-solid fa-building me-1"></i>Proyectos</button>
-                <button type="button" id="admin-trades-btn" class="btn btn-secondary btn-sm me-2 hidden" onclick="showTab('admin-trades-tab'); loadTradesManagement();"><i class="fa-solid fa-briefcase me-1"></i>Funciones</button>
-                <button type="button" id="admin-directory-btn" class="btn btn-light btn-sm me-2 hidden" onclick="showTab('directory-tab'); loadDirectory();"><i class="fa-solid fa-address-book me-1"></i>Agenda</button>
-                
-                <button type="button" class="btn btn-danger btn-sm" onclick="cerrarSesion()"><i class="fa-solid fa-power-off"></i></button>
-            </div>
+    
+    <!-- NAVBAR ELEGANTE -->
+    <nav class="navbar navbar-light navbar-custom no-print sticky-top">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand d-flex align-items-center gap-2 py-0 text-decoration-none" href="#">
+                <div style="width: 28px; height: 28px; background: var(--brand-gold); color: #ffffff; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-cube"></i>
+                </div>
+                <span class="fw-bold fs-5" style="color: var(--text-main); letter-spacing: -0.5px;">OSLIM <span class="fw-light text-muted fs-6">CONSTRUCTION</span></span>
+            </a>
+            
+            <!-- BOTÓN QUE ACTIVA EL MENÚ LATERAL OCULTO -->
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOculto" aria-controls="menuOculto" style="color: var(--brand-gold);">
+                <i class="fa-solid fa-bars-staggered fs-3"></i>
+            </button>
         </div>
     </nav>
 
-    <!-- TAB 1: REGISTRO DIARIO DE ASISTENCIA CON VALIDACIÓN GEOFENCING 150M Y MAPA -->
-    <div class="container mb-5 tab-content-section" id="entry-tab">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
-                        <span><i class="fa-solid fa-user-clock me-2"></i>Registro de Asistencia y Validación por Mapa (150m)</span>
-                        <span class="badge bg-light text-dark" id="loggedUserBadge">Usuario</span>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="alert alert-secondary d-flex align-items-center mb-3" id="gpsStatusAlert" role="alert">
-                                    <i class="fa-solid fa-location-dot fa-2x me-3 text-primary"></i>
-                                    <div>
-                                        <h6 class="alert-heading m-0 fw-bold">Estado del GPS</h6>
-                                        <p class="mb-0 small" id="gpsCoordsText">Obteniendo coordenadas de ubicación actuales...</p>
+    <!-- MENÚ LATERAL OCULTO (OFFCANVAS) -->
+    <div class="offcanvas offcanvas-end offcanvas-custom no-print" tabindex="-1" id="menuOculto" aria-labelledby="menuOcultoLabel">
+        <div class="offcanvas-header border-bottom" style="border-color: var(--border-color) !important;">
+            <h5 class="offcanvas-title fw-bold" style="color: var(--text-main);" id="menuOcultoLabel"><i class="fa-solid fa-layer-group me-2" style="color: var(--brand-gold);"></i>Menú Principal</h5>
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column gap-1 p-3">
+            
+            <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px;">General</p>
+            <button type="button" class="nav-menu-btn" onclick="showTab('entry-tab'); closeMenu();"><i class="fa-solid fa-user-clock"></i>Registrar Asistencia</button>
+            <button type="button" class="nav-menu-btn" onclick="showTab('weekly-tab'); loadWeeklySummary(); closeMenu();"><i class="fa-solid fa-calendar-week"></i>Resumen Semanal</button>
+            
+            <!-- Botones exclusivos para Administrador -->
+            <div id="admin-menu-section" class="hidden mt-3 d-flex flex-column gap-1">
+                <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px; color: var(--brand-gold) !important;">Administración</p>
+                <button type="button" id="admin-daily-btn" class="nav-menu-btn hidden" onclick="showTab('daily-tab'); loadDailyRecords(); closeMenu();"><i class="fa-solid fa-map-location-dot"></i>Registros por Día y Mapa</button>
+                <button type="button" id="admin-logs-btn" class="nav-menu-btn hidden" onclick="showTab('logs-tab'); loadDailyLogs(); closeMenu();"><i class="fa-solid fa-pen-to-square"></i>Edición de Horas</button>
+                <button type="button" id="admin-users-btn" class="nav-menu-btn hidden" onclick="showTab('admin-users-tab'); loadUserManagement(); closeMenu();"><i class="fa-solid fa-users-gear"></i>Usuarios</button>
+                <button type="button" id="admin-projects-btn" class="nav-menu-btn hidden" onclick="showTab('admin-projects-tab'); loadProjectsManagement(); closeMenu();"><i class="fa-solid fa-building"></i>Proyectos</button>
+                <button type="button" id="admin-trades-btn" class="nav-menu-btn hidden" onclick="showTab('admin-trades-tab'); loadTradesManagement(); closeMenu();"><i class="fa-solid fa-briefcase"></i>Funciones</button>
+                <button type="button" id="admin-directory-btn" class="nav-menu-btn hidden" onclick="showTab('directory-tab'); loadDirectory(); closeMenu();"><i class="fa-solid fa-address-book"></i>Agenda</button>
+            </div>
+            
+            <div class="mt-auto pt-3 border-top" style="border-color: var(--border-color) !important;">
+                <button type="button" class="nav-menu-btn btn-logout" onclick="cerrarSesion(); closeMenu();"><i class="fa-solid fa-right-from-bracket me-2"></i>Cerrar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="pt-4">
+        <!-- TAB 1: REGISTRO DIARIO DE ASISTENCIA CON VALIDACIÓN GEOFENCING 150M Y MAPA -->
+        <div class="container mb-5 tab-content-section" id="entry-tab">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card">
+                        <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
+                            <span><i class="fa-solid fa-location-crosshairs me-2" style="color: var(--brand-gold);"></i>Geocerca de Asistencia (150m)</span>
+                            <span class="badge py-2 px-3 text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" id="loggedUserBadge">Usuario</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="alert d-flex align-items-center mb-4 bg-light-dark border rounded-3 p-3 text-dark" id="gpsStatusAlert">
+                                        <i class="fa-solid fa-satellite-dish fa-2x me-3" style="color: var(--brand-gold);"></i>
+                                        <div>
+                                            <h6 class="m-0 fw-bold text-dark">Estado del GPS</h6>
+                                            <p class="mb-0 small text-muted" id="gpsCoordsText">Obteniendo señal...</p>
+                                        </div>
                                     </div>
+
+                                    <form id="timesheetForm">
+                                        <div class="mb-4">
+                                            <label class="form-label text-uppercase">Proyecto Activo</label>
+                                            <select class="form-select form-select-lg" id="entryJob" required onchange="actualizarMapaProyectoSeleccionado()">
+                                                <!-- Dinámico -->
+                                            </select>
+                                        </div>
+
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label text-uppercase">Trabajador</label>
+                                                <input type="text" class="form-control border fw-bold" style="background-color: #fef3c7; color: var(--brand-gold) !important;" id="loggedWorkerName" readonly>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label text-uppercase">Función</label>
+                                                <input type="text" class="form-control border text-dark" style="background-color: #ffffff;" id="loggedWorkerTrade" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-3 justify-content-center mt-5">
+                                            <button type="button" class="btn flex-fill py-3 fw-bold text-white shadow-sm" style="background-color: #059669; border-radius: 12px; border: none;" onclick="registrarAsistenciaConGeocerca('ENTRADA')">
+                                                <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>MARCAR ENTRADA
+                                            </button>
+                                            <button type="button" class="btn flex-fill py-3 fw-bold text-white shadow-sm" style="background-color: #dc2626; border-radius: 12px; border: none;" onclick="registrarAsistenciaConGeocerca('SALIDA')">
+                                                <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>MARCAR SALIDA
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
-
-                                <form id="timesheetForm">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold mb-1">Seleccionar Proyecto:</label>
-                                        <select class="form-select" id="entryJob" required onchange="actualizarMapaProyectoSeleccionado()">
-                                            <!-- Dinámico -->
-                                        </select>
-                                    </div>
-
-                                    <div class="row g-3 mb-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold mb-1">Trabajador:</label>
-                                            <input type="text" class="form-control bg-white fw-bold text-primary" id="loggedWorkerName" readonly>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold mb-1">Función:</label>
-                                            <input type="text" class="form-control bg-white" id="loggedWorkerTrade" readonly>
-                                        </div>
-                                    </div>
-
-                                    <div class="alert alert-warning text-center small mb-3">
-                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Debes estar a <b>menos de 150 metros</b> del proyecto para fichar.
-                                    </div>
-
-                                    <div class="d-flex gap-2 justify-content-center">
-                                        <button type="button" class="btn btn-success px-4" onclick="registrarAsistenciaConGeocerca('ENTRADA')">
-                                            <i class="fa-solid fa-right-to-bracket me-1"></i>Entrada
-                                        </button>
-                                        <button type="button" class="btn btn-danger px-4" onclick="registrarAsistenciaConGeocerca('SALIDA')">
-                                            <i class="fa-solid fa-right-from-bracket me-1"></i>Salida
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold mb-1"><i class="fa-solid fa-map me-1"></i>Ubicación de Obra y Tu Posición:</label>
-                                <div id="entryMap"></div>
+                                <div class="col-md-6">
+                                    <div id="entryMap"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- TAB 2: RESUMEN SEMANAL -->
-    <div class="container-fluid px-4 mb-5 tab-content-section" id="weekly-tab" style="display:none;">
-        <div class="card shadow-sm border-0">
-            <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-                <span><i class="fa-solid fa-calendar-week me-2"></i>Resumen Semanal de Horas y Pagos (Lunes a Domingo)[cite: 1]</span>
-                <div class="no-print">
-                    <button type="button" class="btn btn-sm btn-light me-2" onclick="exportWeeklyCSV()"><i class="fa-solid fa-file-csv me-1"></i>Exportar Excel</button>
-                    <button type="button" class="btn btn-sm btn-outline-light" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
+        <!-- TAB 2: RESUMEN SEMANAL -->
+        <div class="container-fluid px-4 mb-5 tab-content-section" id="weekly-tab" style="display:none;">
+            <div class="card">
+                <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-chart-bar me-2" style="color: var(--brand-gold);"></i>Resumen Semanal de Horas</span>
+                    <div class="no-print d-flex gap-2">
+                        <button type="button" class="btn btn-sm text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" onclick="exportWeeklyCSV()"><i class="fa-solid fa-file-csv me-1"></i>Excel</button>
+                        <button type="button" class="btn btn-sm btn-outline-dark fw-bold" style="border-radius: 8px; border-color: var(--border-color);" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body p-4">
-                <!-- Filtros del Resumen Semanal con Selección Múltiple -->
-                <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold mb-1">Semana:</label>
-                        <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
+                <div class="card-body p-4">
+                    <!-- Filtros del Resumen Semanal con Selección Múltiple -->
+                    <div class="row g-3 align-items-center mb-4 p-3 rounded-3 bg-light-dark border">
+                        <div class="col-md-3">
+                            <label class="form-label text-uppercase mb-1">Semana</label>
+                            <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
+                        </div>
+                        
+                        <!-- Filtro Múltiple de Proyectos -->
+                        <div class="col-md-3">
+                            <label class="form-label text-uppercase mb-1">Proyectos</label>
+                            <div class="dropdown">
+                                <button class="btn w-100 text-start d-flex justify-content-between align-items-center form-control" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="projectDropdownBtn">
+                                    <span id="projectDropdownText" class="text-truncate" style="color: var(--text-main);">Todos los Proyectos</span>
+                                    <i class="fa-solid fa-chevron-down small text-muted"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="projectCheckboxesContainer">
+                                    <div class="form-check border-bottom pb-2 mb-2" style="border-color: var(--border-color) !important;">
+                                        <input class="form-check-input border-secondary" type="checkbox" id="checkAllProjects" checked onchange="toggleAllCheckboxes('project')">
+                                        <label class="form-check-label fw-bold" for="checkAllProjects" style="color: var(--brand-gold);">🌐 Seleccionar Todos</label>
+                                    </div>
+                                    <div id="projectListCheckboxes"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filtro Múltiple de Funciones (Exclusivo Admin) -->
+                        <div class="col-md-3 admin-trade-filter-control">
+                            <label class="form-label text-uppercase mb-1">Funciones</label>
+                            <div class="dropdown">
+                                <button class="btn w-100 text-start d-flex justify-content-between align-items-center form-control" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="tradeDropdownBtn">
+                                    <span id="tradeDropdownText" class="text-truncate" style="color: var(--text-main);">Todas las Funciones</span>
+                                    <i class="fa-solid fa-chevron-down small text-muted"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="tradeCheckboxesContainer">
+                                    <div class="form-check border-bottom pb-2 mb-2" style="border-color: var(--border-color) !important;">
+                                        <input class="form-check-input border-secondary" type="checkbox" id="checkAllTrades" checked onchange="toggleAllCheckboxes('trade')">
+                                        <label class="form-check-label fw-bold" for="checkAllTrades" style="color: var(--brand-gold);">🌐 Seleccionar Todas</label>
+                                    </div>
+                                    <div id="tradeListCheckboxes"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 text-end ms-auto d-flex flex-column align-items-end justify-content-center">
+                            <span class="badge py-2 px-3 fs-6 mb-1 text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" id="totalWeeklyHoursBadge">Total Horas: 0.0 hrs</span>
+                            <span class="badge py-2 px-3 fs-6 shadow-sm" style="background-color: #059669; color: white; border-radius: 8px;" id="totalWeeklyPayBadge">Total a Pagar: $0.00</span>
+                        </div>
                     </div>
                     
-                    <!-- Filtro Múltiple de Proyectos -->
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold mb-1">Filtrar por Proyectos:</label>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center bg-white" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="projectDropdownBtn">
-                                <span id="projectDropdownText">Todos los Proyectos</span>
-                                <i class="fa-solid fa-chevron-down small"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="projectCheckboxesContainer">
-                                <div class="form-check border-bottom pb-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="checkAllProjects" checked onchange="toggleAllCheckboxes('project')">
-                                    <label class="form-check-label fw-bold" for="checkAllProjects">🌐 Seleccionar Todos</label>
-                                </div>
-                                <div id="projectListCheckboxes"></div>
-                            </div>
-                        </div>
+                    <div class="mb-3 text-dark small">
+                        <b>Rango Activo:</b> <span id="weekRangeLabel" style="color: var(--brand-gold); font-weight: 600;">-</span>
                     </div>
 
-                    <!-- Filtro Múltiple de Funciones (Exclusivo Admin) -->
-                    <div class="col-md-3 admin-trade-filter-control">
-                        <label class="form-label fw-bold mb-1">Filtrar por Funciones:</label>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center bg-white" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="tradeDropdownBtn">
-                                <span id="tradeDropdownText">Todas las Funciones</span>
-                                <i class="fa-solid fa-chevron-down small"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="tradeCheckboxesContainer">
-                                <div class="form-check border-bottom pb-2 mb-2">
-                                    <input class="form-check-input" type="checkbox" id="checkAllTrades" checked onchange="toggleAllCheckboxes('trade')">
-                                    <label class="form-check-label fw-bold" for="checkAllTrades">🌐 Seleccionar Todas</label>
-                                </div>
-                                <div id="tradeListCheckboxes"></div>
-                            </div>
-                        </div>
+                    <div class="table-responsive rounded-3 border" style="border-color: var(--border-color) !important;">
+                        <table class="table table-hover table-striped table-weekly align-middle m-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;" class="text-start">Trabajador</th>
+                                    <th style="width: 12%;" class="text-start">Función</th>
+                                    <th style="width: 6%;">Lun</th>
+                                    <th style="width: 6%;">Mar</th>
+                                    <th style="width: 6%;">Mié</th>
+                                    <th style="width: 6%;">Jue</th>
+                                    <th style="width: 6%;">Vie</th>
+                                    <th style="width: 6%;">Sáb</th>
+                                    <th style="width: 6%;">Dom</th>
+                                    <th style="width: 10%; color: var(--brand-gold) !important;">Horas</th>
+                                    <th style="width: 10%;">Tarifa/h</th>
+                                    <th style="width: 16%; color: #059669 !important;">Total a Pagar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weeklyTbody"></tbody>
+                        </table>
                     </div>
-
-                    <div class="col-md-3 text-end ms-auto">
-                        <span class="badge bg-primary fs-6 me-2" id="totalWeeklyHoursBadge">Total Horas: 0.0 hrs</span>
-                        <span class="badge bg-success fs-6" id="totalWeeklyPayBadge">Total a Pagar: $0.00</span>
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-12 text-muted small">
-                        <b>Rango Activo:</b> <span id="weekRangeLabel" class="text-primary">-</span>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped table-weekly align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th style="width: 18%;" class="text-start">Trabajador</th>
-                                <th style="width: 12%;" class="text-start">Función</th>
-                                <th style="width: 6%;">Lun</th>
-                                <th style="width: 6%;">Mar</th>
-                                <th style="width: 6%;">Mié</th>
-                                <th style="width: 6%;">Jue</th>
-                                <th style="width: 6%;">Vie</th>
-                                <th style="width: 6%;">Sáb</th>
-                                <th style="width: 6%;">Dom</th>
-                                <th style="width: 8%;" class="bg-primary text-white">Horas</th>
-                                <th style="width: 9%;">Tarifa/h</th>
-                                <th style="width: 17%;" class="bg-success text-white">Total a Pagar</th>
-                            </tr>
-                        </thead>
-                        <tbody id="weeklyTbody"></tbody>
-                    </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS CON SELECCIÓN -->
-    <div class="container mb-5 no-print tab-content-section" id="daily-tab" style="display:none;">
-        <div class="row justify-content-center">
-            <div class="col-lg-12">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-                        <span><i class="fa-solid fa-map-location-dot me-2"></i>Registros Individuales por Día, Usuario y Mapa GPS (Haz clic en un registro para ubicarlo)</span>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Filtrar por Fecha:</label>
-                                <input type="date" class="form-control" id="mapDateFilter" onchange="loadDailyRecords()">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Filtrar por Usuario:</label>
-                                <select class="form-select" id="mapUserFilter" onchange="loadDailyRecords()">
-                                    <option value="ALL">🌐 Todos los Usuarios</option>
-                                </select>
-                            </div>
+        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS CON SELECCIÓN -->
+        <div class="container mb-5 no-print tab-content-section" id="daily-tab" style="display:none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-12">
+                    <div class="card mb-4">
+                        <div class="card-header card-header-custom">
+                            <span><i class="fa-solid fa-map-location-dot me-2" style="color: var(--brand-gold);"></i>Registros Diarios y Mapa GPS</span>
                         </div>
-                        <div class="row">
-                            <div class="col-md-7">
-                                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
-                                    <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>Hora</th>
-                                                <th>Trabajador</th>
-                                                <th>Tipo</th>
-                                                <th>Proyecto</th>
-                                                <th>GPS</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="dailyRecordsTbody"></tbody>
-                                    </table>
+                        <div class="card-body p-4">
+                            <div class="row g-3 mb-4 bg-light-dark p-3 rounded-3 border">
+                                <div class="col-md-4">
+                                    <label class="form-label text-uppercase">Fecha</label>
+                                    <input type="date" class="form-control" id="mapDateFilter" onchange="loadDailyRecords()">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-uppercase">Usuario</label>
+                                    <select class="form-select text-dark" id="mapUserFilter" onchange="loadDailyRecords()">
+                                        <option value="ALL">🌐 Todos los Usuarios</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="col-md-5">
-                                <label class="form-label fw-bold mb-1"><i class="fa-solid fa-map me-1"></i>Mapa de Coordenadas de Asistencia:</label>
-                                <div id="map"></div>
+                            <div class="row g-4">
+                                <div class="col-md-7">
+                                    <div class="table-responsive border rounded-3" style="border-color: var(--border-color) !important; max-height: 420px; overflow-y: auto;">
+                                        <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
+                                            <thead class="table-dark sticky-top">
+                                                <tr>
+                                                    <th class="text-white">Hora</th>
+                                                    <th class="text-white">Trabajador</th>
+                                                    <th class="text-white">Tipo</th>
+                                                    <th class="text-white">Proyecto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dailyRecordsTbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div id="map"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- TAB 4: EDICIÓN DE HORAS CON EXTRAS Y DOBLES -->
-    <div class="container mb-5 no-print tab-content-section" id="logs-tab" style="display:none;">
-        <div class="row justify-content-center">
-            <div class="col-lg-12">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-                        <span><i class="fa-solid fa-pen-to-square me-2"></i>Panel de Edición de Jornadas, Comida, Extras y Dobles (Solo Administrador)</span>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1">Seleccionar Semana (Lunes a Domingo):</label>
-                                <input type="week" class="form-control" id="logsWeekPicker" onchange="loadDailyLogs()">
+        <!-- TAB 4: EDICIÓN DE HORAS CON EXTRAS (SIN DOBLES) -->
+        <div class="container mb-5 no-print tab-content-section" id="logs-tab" style="display:none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header card-header-custom">
+                            <span><i class="fa-solid fa-pen-to-square me-2" style="color: var(--brand-gold);"></i>Edición de Jornadas y Extras</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3 align-items-center mb-4 p-3 bg-light-dark rounded-3 border">
+                                <div class="col-md-4">
+                                    <label class="form-label text-uppercase">Semana</label>
+                                    <input type="week" class="form-control" id="logsWeekPicker" onchange="loadDailyLogs()">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-uppercase">Usuario</label>
+                                    <select class="form-select text-dark" id="logsUserFilter" onchange="loadDailyLogs()">
+                                        <option value="ALL">🌐 Todos los Usuarios</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="text-muted small text-uppercase">Rango Activo</div>
+                                    <div class="fw-bold" style="color: var(--brand-gold);" id="logsWeekRangeLabel">-</div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1">Filtrar por Usuario:</label>
-                                <select class="form-select" id="logsUserFilter" onchange="loadDailyLogs()">
-                                    <option value="ALL">🌐 Todos los Usuarios</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="text-muted small">Rango Activo:</div>
-                                <div class="fw-bold text-primary" id="logsWeekRangeLabel">-</div>
+
+                            <div class="table-responsive border rounded-3" style="border-color: var(--border-color) !important;">
+                                <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="text-white">Fecha</th>
+                                            <th class="text-white">Proyecto</th>
+                                            <th class="text-white">Trabajador</th>
+                                            <th class="text-white">Entrada</th>
+                                            <th class="text-white">Salida</th>
+                                            <th class="text-white">Comida</th>
+                                            <th class="text-white">Netas</th>
+                                            <th class="text-white">Extras</th>
+                                            <th class="text-white">Pagar</th>
+                                            <th class="text-end text-white">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logsTbody"></tbody>
+                                </table>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle m-0" style="font-size: 0.8rem;">
+        <!-- TAB 5: GESTIÓN DE USUARIOS -->
+        <div class="container mb-5 no-print tab-content-section" id="admin-users-tab" style="display:none;">
+            <div class="row justify-content-center g-4">
+                <div class="col-lg-5">
+                    <div class="card">
+                        <div class="card-header card-header-custom text-center border-0 pt-4" id="userFormHeader">
+                            <i class="fa-solid fa-user-gear fa-2x mb-2" style="color: var(--brand-gold);"></i><br>
+                            Formulario de Usuario
+                        </div>
+                        <div class="card-body p-4 pt-0">
+                            <form onsubmit="guardarOEditarUsuarioSistema(event)">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre del Trabajador:</label>
+                                    <input type="text" class="form-control" id="adminNewUser" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contraseña:</label>
+                                    <input type="password" class="form-control" id="adminNewPass" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Teléfono:</label>
+                                    <input type="tel" class="form-control" id="adminNewPhone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Tarifa por Hora ($):</label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="adminNewRate" value="20.00" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Función (Trade):</label>
+                                    <select class="form-select text-dark" id="adminNewTrade"></select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Rol en el Sistema:</label>
+                                    <select class="form-select text-dark" id="adminNewRol">
+                                        <option value="trabajador">Trabajador</option>
+                                        <option value="admin">Administrador</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-custom w-100" id="saveUserBtn">Guardar Usuario</button>
+                                <button type="button" class="btn btn-outline-dark w-100 mt-2 hidden" style="border-color: var(--border-color);" id="cancelEditUserBtn" onclick="resetUserForm()">Cancelar Edición</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header card-header-custom">
+                            <span><i class="fa-solid fa-users me-2" style="color: var(--brand-gold);"></i>Usuarios Registrados</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle m-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="text-white">Usuario</th>
+                                            <th class="text-white">Contacto</th>
+                                            <th class="text-white">Tarifa</th>
+                                            <th class="text-white">Rol</th>
+                                            <th class="text-end text-white">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="systemUsersTbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: GESTIÓN DE PROYECTOS -->
+        <div class="container mb-5 no-print tab-content-section" id="admin-projects-tab" style="display:none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-9">
+                    <div class="card mb-4">
+                        <div class="card-header card-header-custom text-dark fw-bold" id="projectFormHeader">
+                            <i class="fa-solid fa-building me-2" style="color: var(--brand-gold);"></i>Gestión de Proyectos
+                        </div>
+                        <div class="card-body p-4 bg-light-dark m-3 rounded-3 border">
+                            <form onsubmit="guardarOEditarProyecto(event)">
+                                <input type="hidden" id="editProjectOldName">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Nombre del Proyecto</label>
+                                        <input type="text" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectName" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Dirección</label>
+                                        <input type="text" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectAddress" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Latitud GPS</label>
+                                        <input type="number" step="any" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectLat" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Longitud GPS</label>
+                                        <input type="number" step="any" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectLng" required>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn btn-custom flex-fill" id="saveProjectBtn">Guardar Proyecto</button>
+                                    <button type="button" class="btn btn-outline-dark flex-fill hidden" style="border-color: var(--border-color);" id="cancelEditProjectBtn" onclick="resetProjectForm()">Cancelar Edición</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="card-body p-0 border-top" style="border-color: var(--border-color) !important;">
+                            <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>Fecha</th>
-                                        <th>Proyecto</th>
-                                        <th>Trabajador</th>
-                                        <th>Entrada</th>
-                                        <th>Salida</th>
-                                        <th>Comida</th>
-                                        <th>Netas</th>
-                                        <th>H. Extras</th>
-                                        <th>H. Dobles</th>
-                                        <th>Total a Pagar</th>
-                                        <th class="text-end">Acciones</th>
+                                        <th class="ps-4 text-white">Proyecto</th>
+                                        <th class="text-white">Dirección</th>
+                                        <th class="text-white">Coordenadas</th>
+                                        <th class="text-end pe-4 text-white">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="logsTbody"></tbody>
+                                <tbody id="projectsTbody"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- TAB 5: GESTIÓN DE USUARIOS, ROLES Y CONTACTO -->
-    <div class="container mb-5 no-print tab-content-section" id="admin-users-tab" style="display:none;">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-warning text-dark fw-bold" id="userFormHeader">
-                        <i class="fa-solid fa-user-gear me-2"></i>Crear o Editar Usuario del Sistema
-                    </div>
-                    <div class="card-body">
-                        <form onsubmit="guardarOEditarUsuarioSistema(event)">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Nombre del Trabajador / Usuario:</label>
-                                <input type="text" class="form-control" id="adminNewUser" placeholder="Ej. Juan Pérez" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Contraseña:</label>
-                                <input type="password" class="form-control" id="adminNewPass" placeholder="••••••••" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Número de Teléfono / Contacto:</label>
-                                <input type="tel" class="form-control" id="adminNewPhone" placeholder="Ej. +1 (305) 000-0000" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Sueldo / Tarifa por Hora ($):</label>
-                                <input type="number" step="0.01" min="0" class="form-control" id="adminNewRate" placeholder="Ej. 25.00" value="20.00" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Función / Especialidad (Trade):</label>
-                                <select class="form-select" id="adminNewTrade">
-                                    <!-- Dinámico -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Rol en el Sistema:</label>
-                                <select class="form-select" id="adminNewRol">
-                                    <option value="trabajador">Usuario Normal (Trabajador)</option>
-                                    <option value="admin">Administrador</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-warning w-100 fw-bold" id="saveUserBtn"><i class="fa-solid fa-user-plus me-1"></i>Guardar Usuario</button>
-                            <button type="button" class="btn btn-secondary w-100 mt-2 hidden" id="cancelEditUserBtn" onclick="resetUserForm()">Cancelar Edición</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-dark text-white">
-                        <span><i class="fa-solid fa-users me-2"></i>Usuarios Registrados y Roles</span>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-hover align-middle m-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Contacto</th>
-                                    <th>Tarifa/h</th>
-                                    <th>Función</th>
-                                    <th>Rol</th>
-                                    <th class="text-end">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="systemUsersTbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 6: GESTIÓN DE PROYECTOS -->
-    <div class="container mb-5 no-print tab-content-section" id="admin-projects-tab" style="display:none;">
-        <div class="row justify-content-center">
-            <div class="col-lg-9">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-info text-white fw-bold" id="projectFormHeader">
-                        <i class="fa-solid fa-building me-2"></i>Agregar o Editar Proyecto
-                    </div>
-                    <div class="card-body">
-                        <form onsubmit="guardarOEditarProyecto(event)">
-                            <input type="hidden" id="editProjectOldName">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Nombre del Proyecto:</label>
-                                    <input type="text" class="form-control" id="newProjectName" placeholder="Ej. Bay Harbor" required>
+        <!-- TAB 7: GESTIÓN DE FUNCIONES (TRADES) -->
+        <div class="container mb-5 no-print tab-content-section" id="admin-trades-tab" style="display:none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header card-header-custom text-dark fw-bold" id="tradeFormHeader">
+                            <i class="fa-solid fa-briefcase me-2" style="color: var(--brand-gold);"></i>Funciones / Especialidades
+                        </div>
+                        <div class="card-body p-4 border-bottom" style="border-color: var(--border-color) !important;">
+                            <form onsubmit="guardarOEditarTrade(event)">
+                                <input type="hidden" id="editTradeOldName">
+                                <div class="input-group">
+                                    <input type="text" class="form-control bg-light-dark text-dark" id="newTradeName" placeholder="Nueva función..." required>
+                                    <button type="submit" class="btn btn-custom" style="border-radius: 0 12px 12px 0;" id="saveTradeBtn">Añadir</button>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Dirección:</label>
-                                    <input type="text" class="form-control" id="newProjectAddress" placeholder="Ej. 9290 Bay Harbor Dr" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Latitud GPS:</label>
-                                    <input type="number" step="any" class="form-control" id="newProjectLat" placeholder="Ej. 25.8885" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Longitud GPS:</label>
-                                    <input type="number" step="any" class="form-control" id="newProjectLng" placeholder="Ej. -80.1285" required>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-info text-white fw-bold w-100 mt-3" id="saveProjectBtn"><i class="fa-solid fa-plus me-1"></i>Guardar Proyecto</button>
-                            <button type="button" class="btn btn-secondary w-100 mt-2 hidden" id="cancelEditProjectBtn" onclick="resetProjectForm()">Cancelar Edición</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-dark text-white">
-                        <span><i class="fa-solid fa-list me-2"></i>Lista de Proyectos Activos (Geocercas de 150m)</span>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Proyecto</th>
-                                    <th>Dirección</th>
-                                    <th>Coordenadas (Lat, Lng)</th>
-                                    <th class="text-end">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="projectsTbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 7: GESTIÓN DE FUNCIONES (TRADES) -->
-    <div class="container mb-5 no-print tab-content-section" id="admin-trades-tab" style="display:none;">
-        <div class="row justify-content-center">
-            <div class="col-lg-7">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-secondary text-white fw-bold" id="tradeFormHeader">
-                        <i class="fa-solid fa-briefcase me-2"></i>Agregar o Editar Función / Especialidad
-                    </div>
-                    <div class="card-body">
-                        <form onsubmit="guardarOEditarTrade(event)">
-                            <input type="hidden" id="editTradeOldName">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="newTradeName" placeholder="Nombre de la función..." required>
-                                <button type="submit" class="btn btn-secondary fw-bold" id="saveTradeBtn"><i class="fa-solid fa-plus me-1"></i>Añadir</button>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-secondary w-100 mt-2 hidden" id="cancelEditTradeBtn" onclick="resetTradeForm()">Cancelar Edición</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-dark text-white">
-                        <span><i class="fa-solid fa-list me-2"></i>Lista de Funciones Disponibles</span>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-hover align-middle m-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Nombre de la Función</th>
-                                    <th class="text-end">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tradesTbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 8: AGENDA / DIRECTORIO DE CONTACTO -->
-    <div class="container mb-5 no-print tab-content-section" id="directory-tab" style="display:none;">
-        <div class="row justify-content-center">
-            <div class="col-lg-9">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-                        <span><i class="fa-solid fa-address-book me-2"></i>Agenda y Directorio Telefónico del Personal</span>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="table-responsive">
+                                <button type="button" class="btn btn-sm btn-outline-dark w-100 mt-2 hidden" style="border-color: var(--border-color);" id="cancelEditTradeBtn" onclick="resetTradeForm()">Cancelar Edición</button>
+                            </form>
+                        </div>
+                        <div class="card-body p-0">
                             <table class="table table-hover align-middle m-0">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Trabajador</th>
-                                        <th>Número de Contacto</th>
-                                        <th>Sueldo / Tarifa hora</th>
-                                        <th>Función / Especialidad</th>
-                                        <th>Rol</th>
-                                        <th class="text-end">Llamar / Enviar Mensaje</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="directoryTbody"></tbody>
+                                <tbody id="tradesTbody"></tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 8: AGENDA / DIRECTORIO DE CONTACTO -->
+        <div class="container mb-5 no-print tab-content-section" id="directory-tab" style="display:none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-9">
+                    <div class="card">
+                        <div class="card-header card-header-custom">
+                            <span><i class="fa-solid fa-address-book me-2" style="color: var(--brand-gold);"></i>Agenda Telefónica</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle m-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="ps-4 text-white">Trabajador</th>
+                                            <th class="text-white">Número</th>
+                                            <th class="text-white">Especialidad</th>
+                                            <th class="text-end pe-4 text-white">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="directoryTbody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -635,7 +764,7 @@
 
 <!-- Leaflet JS para Mapas -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Bootstrap JS Bundle (requerido para los desplegables) -->
+<!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let usuariosSistemaDefault = {};
@@ -658,6 +787,14 @@
         }, 1000);
         document.getElementById('mapDateFilter').valueAsDate = new Date();
     });
+
+    function closeMenu() {
+        const offcanvasEl = document.getElementById('menuOculto');
+        const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (offcanvas) {
+            offcanvas.hide();
+        }
+    }
 
     function getUsuarios() { return window.usuariosSistemaNube || usuariosSistemaDefault; }
     function getProyectos() { return window.listaProyectosNube || listaProyectosDefault; }
@@ -690,7 +827,7 @@
                 let isChecked = (checkedValues.length === 0 || checkedValues.includes(proj.name)) ? 'checked' : '';
                 projectListContainer.innerHTML += `
                     <div class="form-check mb-1">
-                        <input class="form-check-input project-checkbox" type="checkbox" value="${proj.name}" id="proj_${proj.name}" ${isChecked} onchange="handleCheckboxChange('project')">
+                        <input class="form-check-input border-secondary project-checkbox" type="checkbox" value="${proj.name}" id="proj_${proj.name}" ${isChecked} onchange="handleCheckboxChange('project')">
                         <label class="form-check-label small" for="proj_${proj.name}">${proj.name}</label>
                     </div>`;
             });
@@ -705,7 +842,7 @@
                 let isChecked = (checkedValues.length === 0 || checkedValues.includes(t)) ? 'checked' : '';
                 tradeListContainer.innerHTML += `
                     <div class="form-check mb-1">
-                        <input class="form-check-input trade-checkbox" type="checkbox" value="${t}" id="trade_${t}" ${isChecked} onchange="handleCheckboxChange('trade')">
+                        <input class="form-check-input border-secondary trade-checkbox" type="checkbox" value="${t}" id="trade_${t}" ${isChecked} onchange="handleCheckboxChange('trade')">
                         <label class="form-check-label small" for="trade_${t}">${t}</label>
                     </div>`;
             });
@@ -815,13 +952,16 @@
 
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-app-container').classList.remove('hidden');
-        document.getElementById('loggedUserBadge').innerText = `Usuario: ${usuarioActual}`;
+        document.getElementById('loggedUserBadge').innerText = usuarioActual.toUpperCase();
 
         document.getElementById('loggedWorkerName').value = usuarioActual;
         document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
 
+        const adminSection = document.getElementById('admin-menu-section');
         const adminTradeElements = document.querySelectorAll('.admin-trade-filter-control');
+        
         if (datosUser.rol === 'admin') {
+            adminSection.classList.remove('hidden');
             document.getElementById('admin-daily-btn').classList.remove('hidden');
             document.getElementById('admin-logs-btn').classList.remove('hidden');
             document.getElementById('admin-users-btn').classList.remove('hidden');
@@ -830,6 +970,7 @@
             document.getElementById('admin-directory-btn').classList.remove('hidden');
             adminTradeElements.forEach(el => el.classList.remove('hidden'));
         } else {
+            adminSection.classList.add('hidden');
             document.getElementById('admin-daily-btn').classList.add('hidden');
             document.getElementById('admin-logs-btn').classList.add('hidden');
             document.getElementById('admin-users-btn').classList.add('hidden');
@@ -905,14 +1046,14 @@
         if (projectCircle) entryMap.removeLayer(projectCircle);
 
         entryMarker = L.marker([currentCoords.lat, currentCoords.lng]).addTo(entryMap)
-            .bindPopup("<b>Tu Ubicación GPS Actual</b>").openPopup();
+            .bindPopup("<b style='color:black;'>Tu Ubicación GPS</b>").openPopup();
 
         projectCircle = L.circle([proyectoObj.lat, proyectoObj.lng], {
-            color: 'blue',
-            fillColor: '#3023ae',
-            fillOpacity: 0.2,
+            color: '#b45309',
+            fillColor: '#b45309',
+            fillOpacity: 0.25,
             radius: 150
-        }).addTo(entryMap).bindPopup(`<b>Proyecto: ${proyectoObj.name}</b><br>Geocerca de 150m`);
+        }).addTo(entryMap).bindPopup(`<b style='color:black;'>Proyecto: ${proyectoObj.name}</b><br><span style='color:black;'>Geocerca 150m</span>`);
 
         entryMap.setView([proyectoObj.lat, proyectoObj.lng], 15);
     }
@@ -943,7 +1084,7 @@
         let distancia = calcularDistanciaMetros(currentCoords.lat, currentCoords.lng, proyectoObj.lat, proyectoObj.lng);
 
         if (distancia > 150) {
-            alert(`❌ No puedes registrar asistencia. Estás a ${Math.round(distancia)} metros del proyecto "${proyectoObj.name}". Debes estar a menos de 150 metros.`);
+            alert(`❌ Estás a ${Math.round(distancia)} metros del proyecto "${proyectoObj.name}". Debes estar dentro de la zona (150m).`);
             return;
         }
 
@@ -983,7 +1124,6 @@
                 timeOut: (tipo === 'SALIDA') ? horaStr : '-',
                 lunch: 0.5,
                 overtime: 0,
-                doubletime: 0,
                 coordsIn: (tipo === 'ENTRADA') ? { lat: currentCoords.lat, lng: currentCoords.lng } : null,
                 coordsOut: (tipo === 'SALIDA') ? { lat: currentCoords.lat, lng: currentCoords.lng } : null
             };
@@ -1019,17 +1159,17 @@
         Object.keys(usuarios).sort().forEach(user => {
             let info = usuarios[user];
             let phone = info.phone || 'S/N';
-            let rate = info.rate ? `$${Number(info.rate).toFixed(2)}` : '$20.00';
-            let rolBadge = (info.rol === 'admin') ? '<span class="badge bg-danger">Administrador</span>' : '<span class="badge bg-secondary">Trabajador</span>';
-            let callBtn = phone !== 'S/N' ? `<a href="tel:${phone}" class="btn btn-sm btn-success me-1"><i class="fa-solid fa-phone me-1"></i>Llamar</a> <a href="sms:${phone}" class="btn btn-sm btn-primary"><i class="fa-solid fa-comment me-1"></i>SMS</a>` : '<span class="text-muted">Sin número</span>';
+            
+            let cleanPhone = phone.replace(/[^0-9]/g, '');
+            let whatsBtn = phone !== 'S/N' && cleanPhone.length >= 8 
+                ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-sm text-white me-1 shadow-sm" style="background-color: #25d366;" title="Enviar WhatsApp"><i class="fa-brands fa-whatsapp fs-5 align-middle"></i></a>` 
+                : '<span class="text-muted small">N/A</span>';
 
             tbody.innerHTML += `<tr>
-                <td class="fw-bold">${user}</td>
+                <td class="fw-bold ps-4 text-dark">${user}</td>
                 <td><code>${phone}</code></td>
-                <td><span class="text-success fw-bold">${rate}</span></td>
                 <td><span class="text-muted">${info.trade || 'Carpintero'}</span></td>
-                <td>${rolBadge}</td>
-                <td class="text-end">${callBtn}</td>
+                <td class="text-end pe-4">${whatsBtn}</td>
             </tr>`;
         });
     }
@@ -1073,8 +1213,8 @@
         document.getElementById('newProjectLat').value = p.lat || '';
         document.getElementById('newProjectLng').value = p.lng || '';
 
-        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building-pen me-2"></i>Editando Proyecto: ${p.name}`;
-        document.getElementById('saveProjectBtn').innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Actualizar Proyecto`;
+        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building-pen me-2" style="color: var(--brand-gold);"></i>Editando Proyecto`;
+        document.getElementById('saveProjectBtn').innerHTML = `Actualizar`;
         document.getElementById('cancelEditProjectBtn').classList.remove('hidden');
     }
 
@@ -1084,8 +1224,8 @@
         document.getElementById('newProjectAddress').value = '';
         document.getElementById('newProjectLat').value = '';
         document.getElementById('newProjectLng').value = '';
-        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building me-2"></i>Agregar o Editar Proyecto`;
-        document.getElementById('saveProjectBtn').innerHTML = `<i class="fa-solid fa-plus me-1"></i>Guardar Proyecto`;
+        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building me-2" style="color: var(--brand-gold);"></i>Gestión de Proyectos`;
+        document.getElementById('saveProjectBtn').innerHTML = `Guardar Proyecto`;
         document.getElementById('cancelEditProjectBtn').classList.add('hidden');
     }
 
@@ -1097,11 +1237,11 @@
         proyectos.forEach((p) => {
             let deleteBtn = (proyectos.length > 1) ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarProyecto('${p.name}')"><i class="fa-solid fa-trash"></i></button>` : '';
             tbody.innerHTML += `<tr>
-                <td class="fw-bold">${p.name}</td>
-                <td>${p.address || 'S/D'}</td>
-                <td><code>${p.lat}, ${p.lng}</code></td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarProyecto('${p.name}')"><i class="fa-solid fa-pen"></i></button>
+                <td class="fw-bold ps-4 text-dark">${p.name}</td>
+                <td><span class="text-muted small">${p.address || 'S/D'}</span></td>
+                <td><code style="color: var(--brand-gold);">${p.lat}, ${p.lng}</code></td>
+                <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-outline-dark me-1" style="border-color: var(--border-color);" onclick="editarProyecto('${p.name}')"><i class="fa-solid fa-pen"></i></button>
                     ${deleteBtn}
                 </td>
             </tr>`;
@@ -1144,16 +1284,16 @@
     function editarTrade(tName) {
         document.getElementById('newTradeName').value = tName;
         document.getElementById('editTradeOldName').value = tName;
-        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2"></i>Editando Función: ${tName}`;
-        document.getElementById('saveTradeBtn').innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Actualizar`;
+        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2" style="color: var(--brand-gold);"></i>Editando Función`;
+        document.getElementById('saveTradeBtn').innerHTML = `Actualizar`;
         document.getElementById('cancelEditTradeBtn').classList.remove('hidden');
     }
 
     function resetTradeForm() {
         document.getElementById('newTradeName').value = '';
         document.getElementById('editTradeOldName').value = '';
-        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2"></i>Agregar o Editar Función / Especialidad`;
-        document.getElementById('saveTradeBtn').innerHTML = `<i class="fa-solid fa-plus me-1"></i>Añadir`;
+        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2" style="color: var(--brand-gold);"></i>Funciones / Especialidades`;
+        document.getElementById('saveTradeBtn').innerHTML = `Añadir`;
         document.getElementById('cancelEditTradeBtn').classList.add('hidden');
     }
 
@@ -1165,9 +1305,9 @@
         trades.forEach((t) => {
             let deleteBtn = (trades.length > 1) ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarTrade('${t}')"><i class="fa-solid fa-trash"></i></button>` : '';
             tbody.innerHTML += `<tr>
-                <td class="fw-bold">${t}</td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTrade('${t}')"><i class="fa-solid fa-pen"></i></button>
+                <td class="fw-bold ps-4 text-dark">${t}</td>
+                <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-outline-dark me-1" style="border-color: var(--border-color);" onclick="editarTrade('${t}')"><i class="fa-solid fa-pen"></i></button>
                     ${deleteBtn}
                 </td>
             </tr>`;
@@ -1197,7 +1337,7 @@
         usuarios[userKey] = { pass, phone, rate, trade, rol };
 
         window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), usuarios);
-        alert(`¡Usuario "${userKey}" guardado en la nube!`);
+        alert(`¡Usuario "${userKey}" guardado!`);
         resetUserForm();
         loadUserManagement();
     }
@@ -1215,8 +1355,8 @@
         document.getElementById('adminNewTrade').value = info.trade || getTrades()[0];
         document.getElementById('adminNewRol').value = info.rol || 'trabajador';
 
-        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-pen me-2"></i>Editando Usuario: ${userKey}`;
-        document.getElementById('saveUserBtn').innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Actualizar Usuario`;
+        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-pen fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Editando Usuario`;
+        document.getElementById('saveUserBtn').innerHTML = `Actualizar`;
         document.getElementById('cancelEditUserBtn').classList.remove('hidden');
     }
 
@@ -1226,8 +1366,8 @@
         document.getElementById('adminNewPass').value = '';
         document.getElementById('adminNewPhone').value = '';
         document.getElementById('adminNewRate').value = '20.00';
-        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-gear me-2"></i>Crear o Editar Usuario del Sistema`;
-        document.getElementById('saveUserBtn').innerHTML = `<i class="fa-solid fa-user-plus me-1"></i>Guardar Usuario`;
+        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-gear fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Formulario de Usuario`;
+        document.getElementById('saveUserBtn').innerHTML = `Guardar Usuario`;
         document.getElementById('cancelEditUserBtn').classList.add('hidden');
         loadUserManagement();
     }
@@ -1240,18 +1380,17 @@
         Object.keys(usuarios).forEach(user => {
             let info = usuarios[user];
             let rate = info.rate ? `$${Number(info.rate).toFixed(2)}` : '$20.00';
-            let rolBadge = (info.rol === 'admin') ? '<span class="badge bg-danger">Administrador</span>' : '<span class="badge bg-secondary">Trabajador</span>';
-            let actions = `<button class="btn btn-sm btn-outline-primary me-1" onclick="editarUsuario('${user}')"><i class="fa-solid fa-pen"></i></button>`;
+            let rolBadge = (info.rol === 'admin') ? '<span class="badge bg-danger">Admin</span>' : '<span class="badge text-dark" style="background-color: var(--bg-input);">Normal</span>';
+            let actions = `<button class="btn btn-sm btn-outline-dark me-1" style="border-color: var(--border-color);" onclick="editarUsuario('${user}')"><i class="fa-solid fa-pen"></i></button>`;
             if (user.toLowerCase() !== 'fernando') {
                 actions += `<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuarioSistema('${user}')"><i class="fa-solid fa-trash"></i></button>`;
             }
             tbody.innerHTML += `<tr>
-                <td class="fw-bold">${user}</td>
-                <td><code>${info.phone || 'S/N'}</code></td>
+                <td class="fw-bold ps-4 text-dark">${user}</td>
+                <td><code style="color: var(--brand-gold);">${info.phone || 'S/N'}</code></td>
                 <td><span class="text-success fw-bold">${rate}</span></td>
-                <td><span class="text-muted">${info.trade || 'Carpintero'}</span></td>
                 <td>${rolBadge}</td>
-                <td class="text-end">${actions}</td>
+                <td class="text-end pe-4">${actions}</td>
             </tr>`;
         });
     }
@@ -1314,8 +1453,7 @@
     function calcularTotalPagar(r) {
         let net = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
         let ot = parseFloat(r.overtime) || 0;
-        let dt = parseFloat(r.doubletime) || 0;
-        return net + ot + dt;
+        return net + ot;
     }
 
     function calcularHorasNetas(inTime, outTime, lunchHours) {
@@ -1344,7 +1482,7 @@
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
 
-        document.getElementById('weekRangeLabel').innerText = `Del Lunes ${formatDateShort(mon)} al Domingo ${formatDateShort(sun)}`;
+        document.getElementById('weekRangeLabel').innerText = `${formatDateShort(mon)} al ${formatDateShort(sun)}`;
 
         let registros = window.registrosGlobales || [];
         const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
@@ -1403,8 +1541,8 @@
 
         if (keys.length === 0) {
             tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted p-4">No hay registros con los filtros seleccionados.</td></tr>';
-            document.getElementById('totalWeeklyHoursBadge').innerText = 'Total Horas: 0.0 hrs';
-            document.getElementById('totalWeeklyPayBadge').innerText = 'Total a Pagar: $0.00';
+            document.getElementById('totalWeeklyHoursBadge').innerText = '0.0 hrs';
+            document.getElementById('totalWeeklyPayBadge').innerText = '$0.00';
             return;
         }
 
@@ -1415,8 +1553,8 @@
             grandTotalMoney += moneyOwed;
 
             tbody.innerHTML += `<tr>
-                <td class="worker-info fw-bold">${w.name}</td>
-                <td class="worker-info text-muted">${w.trade}</td>
+                <td class="worker-info fw-bold text-dark">${w.name}</td>
+                <td class="worker-info text-muted small">${w.trade}</td>
                 <td>${w.days[1] > 0 ? w.days[1].toFixed(1) : '-'}</td>
                 <td>${w.days[2] > 0 ? w.days[2].toFixed(1) : '-'}</td>
                 <td>${w.days[3] > 0 ? w.days[3].toFixed(1) : '-'}</td>
@@ -1424,14 +1562,14 @@
                 <td>${w.days[5] > 0 ? w.days[5].toFixed(1) : '-'}</td>
                 <td>${w.days[6] > 0 ? w.days[6].toFixed(1) : '-'}</td>
                 <td>${w.days[0] > 0 ? w.days[0].toFixed(1) : '-'}</td>
-                <td class="fw-bold bg-light text-primary">${w.totalHours.toFixed(1)}h</td>
-                <td><code class="text-dark">$${w.rate.toFixed(2)}</code></td>
-                <td class="fw-bold bg-light text-success">$${moneyOwed.toFixed(2)}</td>
+                <td class="fw-bold" style="color: var(--brand-gold);">${w.totalHours.toFixed(1)}h</td>
+                <td><code class="text-dark bg-transparent p-0">$${w.rate.toFixed(2)}</code></td>
+                <td class="fw-bold" style="color: #059669;">$${moneyOwed.toFixed(2)}</td>
             </tr>`;
         });
 
         document.getElementById('totalWeeklyHoursBadge').innerText = `Total Horas: ${grandTotalHours.toFixed(1)} hrs`;
-        document.getElementById('totalWeeklyPayBadge').innerText = `Total a Pagar: $${grandTotalMoney.toFixed(2)}`;
+        document.getElementById('totalWeeklyPayBadge').innerText = `Total Pagar: $${grandTotalMoney.toFixed(2)}`;
     }
 
     function initMap() {
@@ -1486,16 +1624,15 @@
                 let trIn = document.createElement('tr');
                 trIn.className = 'record-row';
                 trIn.innerHTML = `
-                    <td><b>${r.timeIn}</b> (Entrada)</td>
-                    <td>${r.workerName}</td>
+                    <td class="ps-3"><b class="text-dark">${r.timeIn}</b></td>
+                    <td class="text-dark">${r.workerName}</td>
                     <td><span class="badge bg-success">ENTRADA</span></td>
-                    <td>${r.job}</td>
-                    <td><code>${r.coordsIn.lat.toFixed(3)}, ${r.coordsIn.lng.toFixed(3)}</code></td>
+                    <td class="small text-muted pe-3">${r.job}</td>
                 `;
-                trIn.onclick = () => seleccionarRegistroEnMapa(r.coordsIn.lat, r.coordsIn.lng, `${r.workerName} - Entrada: ${r.timeIn} (${r.job})`, trIn);
+                trIn.onclick = () => seleccionarRegistroEnMapa(r.coordsIn.lat, r.coordsIn.lng, `<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Entrada: ${r.timeIn} (${r.job})</span>`, trIn);
                 tbody.appendChild(trIn);
 
-                let markerIn = L.marker([r.coordsIn.lat, r.coordsIn.lng]).bindPopup(`<b>${r.workerName}</b><br>Entrada: ${r.timeIn}<br>${r.job}`);
+                let markerIn = L.marker([r.coordsIn.lat, r.coordsIn.lng]).bindPopup(`<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Entrada: ${r.timeIn}<br>${r.job}</span>`);
                 markersLayer.addLayer(markerIn);
                 bounds.push([r.coordsIn.lat, r.coordsIn.lng]);
             }
@@ -1504,16 +1641,15 @@
                 let trOut = document.createElement('tr');
                 trOut.className = 'record-row';
                 trOut.innerHTML = `
-                    <td><b>${r.timeOut}</b> (Salida)</td>
-                    <td>${r.workerName}</td>
+                    <td class="ps-3"><b class="text-dark">${r.timeOut}</b></td>
+                    <td class="text-dark">${r.workerName}</td>
                     <td><span class="badge bg-danger">SALIDA</span></td>
-                    <td>${r.job}</td>
-                    <td><code>${r.coordsOut.lat.toFixed(3)}, ${r.coordsOut.lng.toFixed(3)}</code></td>
+                    <td class="small text-muted pe-3">${r.job}</td>
                 `;
-                trOut.onclick = () => seleccionarRegistroEnMapa(r.coordsOut.lat, r.coordsOut.lng, `${r.workerName} - Salida: ${r.timeOut} (${r.job})`, trOut);
+                trOut.onclick = () => seleccionarRegistroEnMapa(r.coordsOut.lat, r.coordsOut.lng, `<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Salida: ${r.timeOut} (${r.job})</span>`, trOut);
                 tbody.appendChild(trOut);
 
-                let markerOut = L.marker([r.coordsOut.lat, r.coordsOut.lng]).bindPopup(`<b>${r.workerName}</b><br>Salida: ${r.timeOut}<br>${r.job}`);
+                let markerOut = L.marker([r.coordsOut.lat, r.coordsOut.lng]).bindPopup(`<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Salida: ${r.timeOut}<br>${r.job}</span>`);
                 markersLayer.addLayer(markerOut);
                 bounds.push([r.coordsOut.lat, r.coordsOut.lng]);
             }
@@ -1544,7 +1680,7 @@
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
 
-        document.getElementById('logsWeekRangeLabel').innerText = `Semana del Lunes ${formatDateShort(mon)} al Domingo ${formatDateShort(sun)}`;
+        document.getElementById('logsWeekRangeLabel').innerText = `${formatDateShort(mon)} al ${formatDateShort(sun)}`;
 
         let registros = window.registrosGlobales || [];
         const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
@@ -1571,29 +1707,27 @@
         tbody.innerHTML = '';
 
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas para esta semana y filtros seleccionados.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted p-4">No hay jornadas registradas para esta semana.</td></tr>';
             return;
         }
 
         filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
             let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
             let ot = parseFloat(r.overtime) || 0;
-            let dt = parseFloat(r.doubletime) || 0;
-            let totalPago = netHours + ot + dt;
+            let totalPago = netHours + ot;
 
             tbody.innerHTML += `<tr>
-                <td><strong>${r.date}</strong></td>
-                <td>${r.job}</td>
-                <td>${r.workerName}</td>
-                <td><input type="time" class="form-control form-control-sm" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="time" class="form-control form-control-sm" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center" id="lunch_${r.id}" value="${r.lunch}" style="width: 65px;" onchange="actualizarJornada(${r.id})"></td>
-                <td><span class="badge bg-secondary" id="net_${r.id}">${netHours.toFixed(2)}h</span></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold text-primary" id="ot_${r.id}" value="${ot}" style="width: 65px;" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold text-warning" id="dt_${r.id}" value="${dt}" style="width: 65px;" onchange="actualizarJornada(${r.id})"></td>
+                <td class="ps-3"><strong class="text-dark">${r.date}</strong></td>
+                <td class="small text-muted">${r.job}</td>
+                <td class="text-dark">${r.workerName}</td>
+                <td><input type="time" class="form-control form-control-sm border text-dark" style="background-color: #fff;" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="time" class="form-control form-control-sm border text-dark" style="background-color: #fff;" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center border text-dark" style="background-color: #fff; width: 65px;" id="lunch_${r.id}" value="${r.lunch}" onchange="actualizarJornada(${r.id})"></td>
+                <td><span class="badge" style="background-color: #e2e8f0; color: #1e293b;" id="net_${r.id}">${netHours.toFixed(2)}h</span></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border text-dark" style="background-color: #fff; width: 65px;" id="ot_${r.id}" value="${ot}" onchange="actualizarJornada(${r.id})"></td>
                 <td><span class="badge bg-success fs-6" id="total_${r.id}">${totalPago.toFixed(2)}h</span></td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarJornada('${r.firebaseKey}')"><i class="fa-solid fa-trash"></i></button>
+                <td class="text-end pe-3">
+                    <button class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" onclick="eliminarJornada('${r.firebaseKey}')"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>`;
         });
@@ -1608,12 +1742,11 @@
         r.timeOut = document.getElementById(`out_${id}`).value || '-';
         r.lunch = parseFloat(document.getElementById(`lunch_${id}`).value) || 0.5;
         r.overtime = parseFloat(document.getElementById(`ot_${id}`).value) || 0;
-        r.doubletime = parseFloat(document.getElementById(`dt_${id}`).value) || 0;
 
         window.dbSet(window.dbRef(window.db, 'jornadas/' + r.firebaseKey), r);
         
         let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
-        let totalPago = netHours + r.overtime + r.doubletime;
+        let totalPago = netHours + r.overtime;
 
         document.getElementById(`net_${id}`).innerText = `${netHours.toFixed(2)}h`;
         document.getElementById(`total_${id}`).innerText = `${totalPago.toFixed(2)}h`;
@@ -1664,6 +1797,7 @@
         });
 
         let workerSummary = {};
+        filtered.exports = {};
         filtered.forEach(r => {
             const key = r.workerName.toLowerCase().trim();
             if (!workerSummary[key]) {
