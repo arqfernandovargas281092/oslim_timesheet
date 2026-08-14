@@ -24,6 +24,14 @@
         .record-row { cursor: pointer; transition: background-color 0.2s; }
         .record-row:hover { background-color: #e2e8f0 !important; }
         .record-row.table-active { background-color: #cbd5e1 !important; }
+
+        /* Estilo para los dropdowns de selección múltiple */
+        .dropdown-menu-checkboxes {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 10px;
+            width: 100%;
+        }
         
         /* ESTILOS OPTIMIZADOS PARA IMPRESIÓN Y PDF */
         @media print {
@@ -35,7 +43,6 @@
             .card-header { background-color: #1a365d !important; color: white !important; border-radius: 0 !important; print-color-adjust: exact; }
             .card-body { padding: 8px !important; }
             
-            /* Forzar diseño horizontal compacto en impresión para los filtros */
             .row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; }
             .col-md-3 { flex: 0 0 25% !important; max-width: 25% !important; }
             .col-md-4 { flex: 0 0 33% !important; max-width: 33% !important; }
@@ -170,26 +177,49 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                <!-- Filtros del Resumen Semanal -->
+                <!-- Filtros del Resumen Semanal con Selección Múltiple -->
                 <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
                     <div class="col-md-3">
                         <label class="form-label fw-bold mb-1">Semana:</label>
                         <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
                     </div>
-                    <!-- Filtro de proyecto visible para todos -->
+                    
+                    <!-- Filtro Múltiple de Proyectos -->
                     <div class="col-md-3">
-                        <label class="form-label fw-bold mb-1">Filtrar por Proyecto:</label>
-                        <select class="form-select" id="projectFilter" onchange="loadWeeklySummary()">
-                            <option value="ALL">🌐 Todos los Proyectos</option>
-                        </select>
+                        <label class="form-label fw-bold mb-1">Filtrar por Proyectos:</label>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center bg-white" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="projectDropdownBtn">
+                                <span id="projectDropdownText">Todos los Proyectos</span>
+                                <i class="fa-solid fa-chevron-down small"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="projectCheckboxesContainer">
+                                <div class="form-check border-bottom pb-2 mb-2">
+                                    <input class="form-check-input" type="checkbox" id="checkAllProjects" checked onchange="toggleAllCheckboxes('project')">
+                                    <label class="form-check-label fw-bold" for="checkAllProjects">🌐 Seleccionar Todos</label>
+                                </div>
+                                <div id="projectListCheckboxes"></div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Filtro de función exclusivo para administradores -->
+
+                    <!-- Filtro Múltiple de Funciones (Exclusivo Admin) -->
                     <div class="col-md-3 admin-trade-filter-control">
-                        <label class="form-label fw-bold mb-1">Filtrar por Función:</label>
-                        <select class="form-select" id="tradeFilter" onchange="loadWeeklySummary()">
-                            <option value="ALL">🌐 Todas las Funciones</option>
-                        </select>
+                        <label class="form-label fw-bold mb-1">Filtrar por Funciones:</label>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center bg-white" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="tradeDropdownBtn">
+                                <span id="tradeDropdownText">Todas las Funciones</span>
+                                <i class="fa-solid fa-chevron-down small"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="tradeCheckboxesContainer">
+                                <div class="form-check border-bottom pb-2 mb-2">
+                                    <input class="form-check-input" type="checkbox" id="checkAllTrades" checked onchange="toggleAllCheckboxes('trade')">
+                                    <label class="form-check-label fw-bold" for="checkAllTrades">🌐 Seleccionar Todas</label>
+                                </div>
+                                <div id="tradeListCheckboxes"></div>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="col-md-3 text-end ms-auto">
                         <span class="badge bg-primary fs-6 me-2" id="totalWeeklyHoursBadge">Total Horas: 0.0 hrs</span>
                         <span class="badge bg-success fs-6" id="totalWeeklyPayBadge">Total a Pagar: $0.00</span>
@@ -284,7 +314,6 @@
                         <span><i class="fa-solid fa-pen-to-square me-2"></i>Panel de Edición de Jornadas, Comida, Extras y Dobles (Solo Administrador)</span>
                     </div>
                     <div class="card-body p-4">
-                        <!-- Filtros por Semana y Usuario (Lunes a Domingo) para Edición de Horas -->
                         <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
                             <div class="col-md-4">
                                 <label class="form-label fw-bold mb-1">Seleccionar Semana (Lunes a Domingo):</label>
@@ -586,6 +615,8 @@
 
 <!-- Leaflet JS para Mapas -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Bootstrap JS Bundle (requerido para los desplegables) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let usuariosSistemaDefault = {};
     let listaProyectosDefault = [];
@@ -631,24 +662,36 @@
             });
         }
 
-        const projectFilter = document.getElementById('projectFilter');
-        if (projectFilter) {
-            let currentProj = projectFilter.value;
-            projectFilter.innerHTML = '<option value="ALL">🌐 Todos los Proyectos</option>';
+        // Poblar Checkboxes de Proyectos
+        const projectListContainer = document.getElementById('projectListCheckboxes');
+        if (projectListContainer) {
+            let checkedValues = getSelectedCheckboxValues('project');
+            projectListContainer.innerHTML = '';
             proyectos.forEach(proj => {
-                let sel = (proj.name === currentProj) ? 'selected' : '';
-                projectFilter.innerHTML += `<option value="${proj.name}" ${sel}>${proj.name}</option>`;
+                let isChecked = (checkedValues.length === 0 || checkedValues.includes(proj.name)) ? 'checked' : '';
+                projectListContainer.innerHTML += `
+                    <div class="form-check mb-1">
+                        <input class="form-check-input project-checkbox" type="checkbox" value="${proj.name}" id="proj_${proj.name}" ${isChecked} onchange="handleCheckboxChange('project')">
+                        <label class="form-check-label small" for="proj_${proj.name}">${proj.name}</label>
+                    </div>`;
             });
+            updateDropdownButtonText('project');
         }
 
-        const tradeFilter = document.getElementById('tradeFilter');
-        if (tradeFilter) {
-            let currentTrade = tradeFilter.value;
-            tradeFilter.innerHTML = '<option value="ALL">🌐 Todas las Funciones</option>';
+        // Poblar Checkboxes de Funciones
+        const tradeListContainer = document.getElementById('tradeListCheckboxes');
+        if (tradeListContainer) {
+            let checkedValues = getSelectedCheckboxValues('trade');
+            tradeListContainer.innerHTML = '';
             trades.forEach(t => {
-                let sel = (t === currentTrade) ? 'selected' : '';
-                tradeFilter.innerHTML += `<option value="${t}" ${sel}>${t}</option>`;
+                let isChecked = (checkedValues.length === 0 || checkedValues.includes(t)) ? 'checked' : '';
+                tradeListContainer.innerHTML += `
+                    <div class="form-check mb-1">
+                        <input class="form-check-input trade-checkbox" type="checkbox" value="${t}" id="trade_${t}" ${isChecked} onchange="handleCheckboxChange('trade')">
+                        <label class="form-check-label small" for="trade_${t}">${t}</label>
+                    </div>`;
             });
+            updateDropdownButtonText('trade');
         }
 
         const logsUserFilter = document.getElementById('logsUserFilter');
@@ -660,6 +703,59 @@
                 let sel = (user === currentVal) ? 'selected' : '';
                 logsUserFilter.innerHTML += `<option value="${user}" ${sel}>${user}</option>`;
             });
+        }
+    }
+
+    function toggleAllCheckboxes(type) {
+        const selectAll = document.getElementById(type === 'project' ? 'checkAllProjects' : 'checkAllTrades');
+        const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
+        
+        checkboxes.forEach(cb => {
+            cb.checked = selectAll.checked;
+        });
+        
+        updateDropdownButtonText(type);
+        loadWeeklySummary();
+    }
+
+    function handleCheckboxChange(type) {
+        const selectAll = document.getElementById(type === 'project' ? 'checkAllProjects' : 'checkAllTrades');
+        const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        selectAll.checked = allChecked;
+        updateDropdownButtonText(type);
+        loadWeeklySummary();
+    }
+
+    function getSelectedCheckboxValues(type) {
+        const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
+        let selected = [];
+        checkboxes.forEach(cb => {
+            if (cb.checked) selected.push(cb.value);
+        });
+        return selected;
+    }
+
+    function updateDropdownButtonText(type) {
+        const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
+        const textSpan = document.getElementById(type === 'project' ? 'projectDropdownText' : 'tradeDropdownText');
+        const selectAll = document.getElementById(type === 'project' ? 'checkAllProjects' : 'checkAllTrades');
+        
+        let selected = getSelectedCheckboxValues(type);
+        
+        if (selected.length === 0) {
+            textSpan.innerText = "Ninguno seleccionado";
+            selectAll.checked = false;
+        } else if (selected.length === checkboxes.length) {
+            textSpan.innerText = type === 'project' ? "Todos los Proyectos" : "Todas las Funciones";
+            selectAll.checked = true;
+        } else if (selected.length === 1) {
+            textSpan.innerText = selected[0];
+            selectAll.checked = false;
+        } else {
+            textSpan.innerText = `${selected.length} seleccionados`;
+            selectAll.checked = false;
         }
     }
 
@@ -706,7 +802,6 @@
         document.getElementById('loggedWorkerName').value = usuarioActual;
         document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
 
-        // Control de visibilidad: El filtro de función solo lo ve el Administrador
         const adminTradeElements = document.querySelectorAll('.admin-trade-filter-control');
         if (datosUser.rol === 'admin') {
             document.getElementById('admin-daily-btn').classList.remove('hidden');
@@ -837,7 +932,6 @@
         const textCheck = (proyectoObj.name + " " + (proyectoObj.address || "")).toLowerCase();
         const esUSA = textCheck.includes("miami") || textCheck.includes("harbor") || textCheck.includes("palm") || textCheck.includes("usa") || textCheck.includes("florida");
         
-        // Corrección horaria precisa usando la zona horaria local de la región
         const timeZone = esUSA ? "America/New_York" : "America/Mexico_City";
         const ahoraLocal = new Date().toLocaleString("en-US", { timeZone: timeZone });
         const fechaLocalObj = new Date(ahoraLocal);
@@ -1223,13 +1317,12 @@
 
     function loadWeeklySummary() {
         const weekPicker = document.getElementById('weekPicker');
-        const projectFilter = document.getElementById('projectFilter');
-        const tradeFilter = document.getElementById('tradeFilter');
         if (!weekPicker || !weekPicker.value) return;
         
         const weekVal = weekPicker.value;
-        const selectedProject = projectFilter ? projectFilter.value : 'ALL';
-        const selectedTrade = tradeFilter ? tradeFilter.value : 'ALL';
+        const selectedProjects = getSelectedCheckboxValues('project');
+        const selectedTrades = getSelectedCheckboxValues('trade');
+        
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
 
@@ -1247,11 +1340,12 @@
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            let projMatch = (selectedProject === 'ALL' || (r.job && r.job.trim() === selectedProject));
+            
+            let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
             
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
-            let tradeMatch = (!isAdmin || selectedTrade === 'ALL' || workerTrade.toLowerCase() === selectedTrade.toLowerCase());
+            let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
 
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
             return dateMatch && projMatch && tradeMatch && userMatch;
@@ -1520,13 +1614,11 @@
 
     function exportWeeklyCSV() {
         const weekPicker = document.getElementById('weekPicker');
-        const projectFilter = document.getElementById('projectFilter');
-        const tradeFilter = document.getElementById('tradeFilter');
         if (!weekPicker || !weekPicker.value) return alert("Seleccione una semana.");
 
         const weekVal = weekPicker.value;
-        const selectedProject = projectFilter ? projectFilter.value : 'ALL';
-        const selectedTrade = tradeFilter ? tradeFilter.value : 'ALL';
+        const selectedProjects = getSelectedCheckboxValues('project');
+        const selectedTrades = getSelectedCheckboxValues('trade');
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
 
@@ -1542,11 +1634,12 @@
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            let projMatch = (selectedProject === 'ALL' || (r.job && r.job.trim() === selectedProject));
+            
+            let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
             
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
-            let tradeMatch = (!isAdmin || selectedTrade === 'ALL' || workerTrade.toLowerCase() === selectedTrade.toLowerCase());
+            let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
 
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
             return dateMatch && projMatch && tradeMatch && userMatch;
@@ -1579,9 +1672,9 @@
         let csvContent = "\uFEFF";
         csvContent += `RESUMEN SEMANAL DE HORAS Y PAGOS\n`;
         csvContent += `Semana:,Del ${formatDateShort(mon)} al ${formatDateShort(sun)}\n`;
-        csvContent += `Proyecto:,${selectedProject === 'ALL' ? 'Todos' : selectedProject}\n`;
+        csvContent += `Proyectos:,${selectedProjects.join(' - ') || 'Todos'}\n`;
         if (isAdmin) {
-            csvContent += `Función:,${selectedTrade === 'ALL' ? 'Todas' : selectedTrade}\n`;
+            csvContent += `Funciones:,${selectedTrades.join(' - ') || 'Todas'}\n`;
         }
         csvContent += `\n`;
         
@@ -1617,7 +1710,7 @@
         let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         let link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `Resumen_Oslim_${weekPicker.value}_Proj-${selectedProject}.csv`;
+        link.download = `Resumen_Oslim_${weekPicker.value}.csv`;
         link.click();
     }
 </script>
