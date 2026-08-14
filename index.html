@@ -37,7 +37,6 @@
             
             /* Forzar diseño horizontal compacto en impresión para los filtros */
             .row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; }
-            .col-md-2 { flex: 0 0 16% !important; max-width: 16% !important; }
             .col-md-3 { flex: 0 0 25% !important; max-width: 25% !important; }
             .col-md-4 { flex: 0 0 33% !important; max-width: 33% !important; }
             
@@ -171,26 +170,27 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                <!-- Filtros del Resumen Semanal (Administradores y Trabajadores) -->
+                <!-- Filtros del Resumen Semanal -->
                 <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold mb-1">Semana:</label>
                         <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
                     </div>
-                    <!-- Filtros exclusivos para Administradores -->
-                    <div class="col-md-3 admin-filter-control">
+                    <!-- Filtro de proyecto visible para todos -->
+                    <div class="col-md-3">
                         <label class="form-label fw-bold mb-1">Filtrar por Proyecto:</label>
                         <select class="form-select" id="projectFilter" onchange="loadWeeklySummary()">
                             <option value="ALL">🌐 Todos los Proyectos</option>
                         </select>
                     </div>
-                    <div class="col-md-3 admin-filter-control">
+                    <!-- Filtro de función exclusivo para administradores -->
+                    <div class="col-md-3 admin-trade-filter-control">
                         <label class="form-label fw-bold mb-1">Filtrar por Función:</label>
                         <select class="form-select" id="tradeFilter" onchange="loadWeeklySummary()">
                             <option value="ALL">🌐 Todas las Funciones</option>
                         </select>
                     </div>
-                    <div class="col-md-4 text-end ms-auto">
+                    <div class="col-md-3 text-end ms-auto">
                         <span class="badge bg-primary fs-6 me-2" id="totalWeeklyHoursBadge">Total Horas: 0.0 hrs</span>
                         <span class="badge bg-success fs-6" id="totalWeeklyPayBadge">Total a Pagar: $0.00</span>
                     </div>
@@ -706,8 +706,8 @@
         document.getElementById('loggedWorkerName').value = usuarioActual;
         document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
 
-        // Control de visibilidad según rol Administrador o Trabajador Normal
-        const adminElements = document.querySelectorAll('.admin-filter-control');
+        // Control de visibilidad: El filtro de función solo lo ve el Administrador
+        const adminTradeElements = document.querySelectorAll('.admin-trade-filter-control');
         if (datosUser.rol === 'admin') {
             document.getElementById('admin-daily-btn').classList.remove('hidden');
             document.getElementById('admin-logs-btn').classList.remove('hidden');
@@ -715,7 +715,7 @@
             document.getElementById('admin-projects-btn').classList.remove('hidden');
             document.getElementById('admin-trades-btn').classList.remove('hidden');
             document.getElementById('admin-directory-btn').classList.remove('hidden');
-            adminElements.forEach(el => el.classList.remove('hidden'));
+            adminTradeElements.forEach(el => el.classList.remove('hidden'));
         } else {
             document.getElementById('admin-daily-btn').classList.add('hidden');
             document.getElementById('admin-logs-btn').classList.add('hidden');
@@ -723,7 +723,7 @@
             document.getElementById('admin-projects-btn').classList.add('hidden');
             document.getElementById('admin-trades-btn').classList.add('hidden');
             document.getElementById('admin-directory-btn').classList.add('hidden');
-            adminElements.forEach(el => el.classList.add('hidden'));
+            adminTradeElements.forEach(el => el.classList.add('hidden'));
         }
 
         poblarSelectsDinamicos();
@@ -858,7 +858,7 @@
                 id: Date.now(),
                 workerName: workerName,
                 trade: trade,
-                rateSnapshot: tarifaActual, // Guarda la tarifa histórica del momento
+                rateSnapshot: tarifaActual,
                 date: fechaStr,
                 dayName: days[horaLocalProyecto.getDay()],
                 job: selectedProjectName,
@@ -874,7 +874,6 @@
             jornadaHoy.firebaseKey = newRef.key;
             window.dbSet(newRef, jornadaHoy);
         } else {
-            // Si ya existe pero no tenía tarifa histórica grabada, le asignamos la actual
             if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
 
             if (tipo === 'ENTRADA') {
@@ -1247,7 +1246,7 @@
             
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
-            let tradeMatch = (selectedTrade === 'ALL' || workerTrade.toLowerCase() === selectedTrade.toLowerCase());
+            let tradeMatch = (!isAdmin || selectedTrade === 'ALL' || workerTrade.toLowerCase() === selectedTrade.toLowerCase());
 
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
             return dateMatch && projMatch && tradeMatch && userMatch;
@@ -1258,7 +1257,6 @@
             const key = r.workerName.toLowerCase().trim();
             if (!workerSummary[key]) {
                 let userObj = usuarios[r.workerName] || {};
-                // Usar la tarifa histórica guardada en el registro o respaldar con la actual si faltase
                 let historicalRate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
 
                 workerSummary[key] = {
@@ -1543,7 +1541,7 @@
             
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
-            let tradeMatch = (selectedTrade === 'ALL' || workerTrade.toLowerCase() === selectedTrade.toLowerCase());
+            let tradeMatch = (!isAdmin || selectedTrade === 'ALL' || workerTrade.toLowerCase() === selectedTrade.toLowerCase());
 
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
             return dateMatch && projMatch && tradeMatch && userMatch;
@@ -1577,7 +1575,10 @@
         csvContent += `RESUMEN SEMANAL DE HORAS Y PAGOS\n`;
         csvContent += `Semana:,Del ${formatDateShort(mon)} al ${formatDateShort(sun)}\n`;
         csvContent += `Proyecto:,${selectedProject === 'ALL' ? 'Todos' : selectedProject}\n`;
-        csvContent += `Función:,${selectedTrade === 'ALL' ? 'Todas' : selectedTrade}\n\n`;
+        if (isAdmin) {
+            csvContent += `Función:,${selectedTrade === 'ALL' ? 'Todas' : selectedTrade}\n`;
+        }
+        csvContent += `\n`;
         
         csvContent += 'Trabajador,Función,Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo,Total Horas,Tarifa/h,Total a Pagar\n';
 
@@ -1611,7 +1612,7 @@
         let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         let link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `Resumen_Oslim_${weekPicker.value}_Proj-${selectedProject}_Trade-${selectedTrade}.csv`;
+        link.download = `Resumen_Oslim_${weekPicker.value}_Proj-${selectedProject}.csv`;
         link.click();
     }
 </script>
