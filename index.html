@@ -172,7 +172,7 @@
 
         .hidden { display: none !important; }
 
-        /* --- IMPRESIÓN CORREGIDA --- */
+        /* --- IMPRESIÓN CORREGIDA (INCLUYENDO FILTROS VISIBLES) --- */
         @media print {
             @page { size: letter landscape; margin: 0.3in; }
             body { background: white !important; font-size: 9pt; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -180,15 +180,17 @@
             .container, .container-fluid { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
             .card { border: none !important; box-shadow: none !important; margin: 0 !important; background: white !important; color: #000 !important; }
             .card-header { background-color: #f8f9fa !important; color: #000 !important; border-bottom: 2px solid #000 !important; padding: 0.5rem !important; }
-            .bg-light-dark { background-color: #fff !important; border: none !important; padding: 0 !important; margin-bottom: 10px !important; }
+            .bg-light-dark { background-color: #fff !important; border: 1px solid #ccc !important; padding: 10px !important; margin-bottom: 10px !important; }
             .text-main, .text-muted, .table { color: #000 !important; }
             
-            .col-md-3 { display: inline-block !important; width: auto !important; margin-right: 15px !important; }
-            .col-md-3 label, .col-md-3 .small, .col-md-3 b { font-size: 8pt !important; color: #000 !important; display: inline !important; }
-            .dropdown, .dropdown-menu-checkboxes, input[type="week"] { display: none !important; }
+            .col-md-3 { display: inline-block !important; width: 23% !important; margin-right: 15px !important; vertical-align: top !important; }
+            .col-md-3 label { font-size: 8pt !important; color: #000 !important; display: block !important; margin-bottom: 2px !important; }
+            .dropdown, .dropdown-menu-checkboxes, input[type="week"] { display: block !important; }
             
-            #projectDropdownBtn, #tradeDropdownBtn { display: none !important; }
-            
+            #projectDropdownBtn, #tradeDropdownBtn { display: flex !important; background: #fff !important; border: 1px solid #999 !important; font-size: 8pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; box-shadow: none !important; }
+            #weekPicker { display: block !important; background: #fff !important; border: 1px solid #999 !important; font-size: 8pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; }
+            .dropdown-menu { display: none !important; }
+
             .table-weekly th { background-color: #eee !important; color: #000 !important; border-bottom: 2px solid #000 !important; font-size: 8pt !important; padding: 4px !important; }
             .table-weekly td { color: #000 !important; padding: 4px !important; font-size: 8pt !important; }
             .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #f9f9f9 !important; color: #000 !important; }
@@ -212,14 +214,56 @@
                 <label class="form-label text-uppercase">Usuario</label>
                 <input type="text" class="form-control form-control-lg" id="loginUser" placeholder="Ingresa tu usuario">
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="form-label text-uppercase">Contraseña</label>
                 <input type="password" class="form-control form-control-lg" id="loginPass" placeholder="••••••••">
+            </div>
+            <div class="mb-4 text-end">
+                <a href="#" class="small text-muted text-decoration-none fw-semibold" onclick="mostrarPantallaRecuperacion()" style="color: var(--brand-gold) !important;">¿Olvidaste tu contraseña?</a>
             </div>
             <button type="button" class="btn btn-custom w-100 py-3 fs-5 shadow-sm" onclick="iniciarSesion()">
                 Entrar al Sistema
             </button>
             <div id="loginError" class="alert alert-danger mt-4 py-2 text-center hidden small border-0 shadow-sm" style="background-color: #fee2e2; color: #dc2626; border-radius: 10px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- PANTALLA DE RECUPERACIÓN DE CONTRASEÑA -->
+<div class="container mt-5 hidden" id="recovery-screen" style="max-width: 420px;">
+    <div class="card login-card">
+        <div class="login-header">
+            <div class="logo-container mb-2">
+                <div class="logo-cube" style="background: var(--text-main);"><i class="fa-solid fa-key"></i></div>
+                <span>RECUPERAR <span style="font-weight: 300; font-size: 1.1rem; color: var(--text-muted);">ACCESO</span></span>
+            </div>
+            <p class="mb-0 small text-muted text-uppercase fw-semibold" style="letter-spacing: 1px;">Verifica tus datos de empleado</p>
+        </div>
+        <div class="card-body p-4">
+            <form onsubmit="verificarYCambiarPassword(event)">
+                <div class="mb-3">
+                    <label class="form-label text-uppercase">Usuario</label>
+                    <input type="text" class="form-control" id="recUser" required placeholder="Tu nombre de usuario">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-uppercase">Celular Registrado</label>
+                    <input type="tel" class="form-control" id="recPhone" required placeholder="Ej. 5512345678">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-uppercase">Tu Tarifa por Hora ($)</label>
+                    <input type="number" step="0.01" class="form-control" id="recRate" required placeholder="Ej. 20.00">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-uppercase">Nueva Contraseña</label>
+                    <input type="password" class="form-control" id="recNewPass" required placeholder="Nueva contraseña">
+                </div>
+                <button type="submit" class="btn btn-custom w-100 py-3 shadow-sm mb-2">
+                    Actualizar Contraseña
+                </button>
+                <button type="button" class="btn btn-outline-dark w-100 py-2" style="border-color: var(--border-color);" onclick="volverAlLogin()">
+                    Volver al Inicio de Sesión
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -418,7 +462,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS -->
+        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS (CON FILTRO DE PROYECTO) -->
         <div class="container mb-5 no-print tab-content-section" id="daily-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-12">
@@ -436,6 +480,12 @@
                                     <label class="form-label text-uppercase">Usuario</label>
                                     <select class="form-select text-dark" id="mapUserFilter" onchange="loadDailyRecords()">
                                         <option value="ALL">🌐 Todos los Usuarios</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-uppercase">Proyecto</label>
+                                    <select class="form-select text-dark" id="mapProjectFilter" onchange="loadDailyRecords()">
+                                        <option value="ALL">🌐 Todos los Proyectos</option>
                                     </select>
                                 </div>
                             </div>
@@ -465,52 +515,61 @@
             </div>
         </div>
 
-        <!-- TAB 4: EDICIÓN DE JORNADAS Y EXTRAS (CORREGIDO ANCHO DE INPUTS) -->
-        <div class="container mb-5 no-print tab-content-section" id="logs-tab" style="display:none;">
-            <div class="row justify-content-center">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header card-header-custom">
-                            <span><i class="fa-solid fa-pen-to-square me-2" style="color: var(--brand-gold);"></i>Edición de Jornadas y Extras</span>
+        <!-- TAB 4: EDICIÓN DE JORNADAS Y EXTRAS -->
+        <div class="container-fluid px-4 mb-5 no-print tab-content-section" id="logs-tab" style="display:none;">
+            <div class="card">
+                <div class="card-header card-header-custom">
+                    <span><i class="fa-solid fa-pen-to-square me-2" style="color: var(--brand-gold);"></i>Edición de Jornadas y Extras</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 align-items-center mb-4 p-3 bg-light-dark rounded-3 border">
+                        <div class="col-md-2">
+                            <label class="form-label text-uppercase mb-1">Semana</label>
+                            <input type="week" class="form-control" id="logsWeekPicker" onchange="loadDailyLogs()">
                         </div>
-                        <div class="card-body p-4">
-                            <div class="row g-3 align-items-center mb-4 p-3 bg-light-dark rounded-3 border">
-                                <div class="col-md-4">
-                                    <label class="form-label text-uppercase">Semana</label>
-                                    <input type="week" class="form-control" id="logsWeekPicker" onchange="loadDailyLogs()">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-uppercase">Usuario</label>
-                                    <select class="form-select text-dark" id="logsUserFilter" onchange="loadDailyLogs()">
-                                        <option value="ALL">🌐 Todos los Usuarios</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="text-muted small text-uppercase">Rango Activo</div>
-                                    <div class="fw-bold" style="color: var(--brand-gold);" id="logsWeekRangeLabel">-</div>
-                                </div>
-                            </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-uppercase mb-1">Usuario</label>
+                            <select class="form-select text-dark" id="logsUserFilter" onchange="loadDailyLogs()">
+                                <option value="ALL">🌐 Todos los Usuarios</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-uppercase mb-1">Proyecto</label>
+                            <select class="form-select text-dark" id="logsProjectFilter" onchange="loadDailyLogs()">
+                                <option value="ALL">🌐 Todos los Proyectos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-uppercase mb-1">Función</label>
+                            <select class="form-select text-dark" id="logsTradeFilter" onchange="loadDailyLogs()">
+                                <option value="ALL">🌐 Todas las Funciones</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <div class="text-muted small text-uppercase">Rango Activo</div>
+                            <div class="fw-bold small" style="color: var(--brand-gold);" id="logsWeekRangeLabel">-</div>
+                        </div>
+                    </div>
 
-                            <div class="table-responsive border rounded-3" style="border-color: var(--border-color) !important;">
-                                <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th class="text-white" style="width: 11%;">Fecha</th>
-                                            <th class="text-white" style="width: 12%;">Proyecto</th>
-                                            <th class="text-white" style="width: 12%;">Trabajador</th>
-                                            <th class="text-white" style="width: 12%;">Entrada</th>
-                                            <th class="text-white" style="width: 12%;">Salida</th>
-                                            <th class="text-white" style="width: 8%;">Comida</th>
-                                            <th class="text-white" style="width: 8%;">Netas</th>
-                                            <th class="text-white" style="width: 8%;">Extras</th>
-                                            <th class="text-white" style="width: 9%;">Pagar</th>
-                                            <th class="text-end text-white" style="width: 8%;">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="logsTbody"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <div class="table-responsive border rounded-3" style="border-color: var(--border-color) !important;">
+                        <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-white" style="width: 10%;">Fecha</th>
+                                    <th class="text-white" style="width: 12%;">Proyecto</th>
+                                    <th class="text-white" style="width: 12%;">Trabajador</th>
+                                    <th class="text-white" style="width: 10%;">Función</th>
+                                    <th class="text-white" style="width: 12%;">Entrada</th>
+                                    <th class="text-white" style="width: 12%;">Salida</th>
+                                    <th class="text-white" style="width: 7%;">Comida</th>
+                                    <th class="text-white" style="width: 7%;">Netas</th>
+                                    <th class="text-white" style="width: 7%;">Extras</th>
+                                    <th class="text-white" style="width: 7%;">Pagar</th>
+                                    <th class="text-end text-white" style="width: 4%;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTbody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -589,79 +648,104 @@
 
         <!-- TAB 6: GESTIÓN DE PROYECTOS -->
         <div class="container mb-5 no-print tab-content-section" id="admin-projects-tab" style="display:none;">
-            <div class="row justify-content-center">
-                <div class="col-lg-9">
-                    <div class="card mb-4">
-                        <div class="card-header card-header-custom text-dark fw-bold" id="projectFormHeader">
-                            <i class="fa-solid fa-building me-2" style="color: var(--brand-gold);"></i>Gestión de Proyectos
+            <div class="row justify-content-center g-4">
+                <div class="col-lg-5">
+                    <div class="card">
+                        <div class="card-header card-header-custom text-center border-0 pt-4" id="projectFormHeader">
+                            <i class="fa-solid fa-building fa-2x mb-2" style="color: var(--brand-gold);"></i><br>
+                            Formulario de Proyecto
                         </div>
-                        <div class="card-body p-4 bg-light-dark m-3 rounded-3 border">
+                        <div class="card-body p-4 pt-0">
                             <form onsubmit="guardarOEditarProyecto(event)">
                                 <input type="hidden" id="editProjectOldName">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label text-uppercase">Nombre del Proyecto</label>
-                                        <input type="text" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectName" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label text-uppercase">Dirección</label>
-                                        <input type="text" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectAddress" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label text-uppercase">Latitud GPS</label>
-                                        <input type="number" step="any" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectLat" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label text-uppercase">Longitud GPS</label>
-                                        <input type="number" step="any" class="form-control border text-dark" style="background-color: #ffffff;" id="newProjectLng" required>
-                                    </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre del Proyecto:</label>
+                                    <input type="text" class="form-control" id="newProjectName" required>
                                 </div>
-                                <div class="d-flex gap-2 mt-4">
-                                    <button type="submit" class="btn btn-custom flex-fill" id="saveProjectBtn">Guardar Proyecto</button>
-                                    <button type="button" class="btn btn-outline-dark flex-fill hidden" style="border-color: var(--border-color);" id="cancelEditProjectBtn" onclick="resetProjectForm()">Cancelar Edición</button>
+                                <div class="mb-3">
+                                    <label class="form-label">Dirección:</label>
+                                    <input type="text" class="form-control" id="newProjectAddress" required>
                                 </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Latitud GPS:</label>
+                                    <input type="number" step="any" class="form-control" id="newProjectLat" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Longitud GPS:</label>
+                                    <input type="number" step="any" class="form-control" id="newProjectLng" required>
+                                </div>
+                                <button type="submit" class="btn btn-custom w-100" id="saveProjectBtn">Guardar Proyecto</button>
+                                <button type="button" class="btn btn-outline-dark w-100 mt-2 hidden" style="border-color: var(--border-color);" id="cancelEditProjectBtn" onclick="resetProjectForm()">Cancelar Edición</button>
                             </form>
                         </div>
-                        <div class="card-body p-0 border-top" style="border-color: var(--border-color) !important;">
-                            <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th class="ps-4 text-white">Proyecto</th>
-                                        <th class="text-white">Dirección</th>
-                                        <th class="text-white">Coordenadas</th>
-                                        <th class="text-end pe-4 text-white">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="projectsTbody"></tbody>
-                            </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header card-header-custom">
+                            <span><i class="fa-solid fa-building me-2" style="color: var(--brand-gold);"></i>Proyectos Registrados</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle m-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="ps-4 text-white">Proyecto</th>
+                                            <th class="text-white">Dirección</th>
+                                            <th class="text-white">Coordenadas</th>
+                                            <th class="text-end pe-4 text-white">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="projectsTbody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 7: GESTIÓN DE FUNCIONES (TRADES) -->
+        <!-- TAB 7: GESTIÓN DE FUNCIONES -->
         <div class="container mb-5 no-print tab-content-section" id="admin-trades-tab" style="display:none;">
-            <div class="row justify-content-center">
-                <div class="col-lg-6">
-                    <div class="card mb-4">
-                        <div class="card-header card-header-custom text-dark fw-bold" id="tradeFormHeader">
-                            <i class="fa-solid fa-briefcase me-2" style="color: var(--brand-gold);"></i>Funciones / Especialidades
+            <div class="row justify-content-center g-4">
+                <div class="col-lg-5">
+                    <div class="card">
+                        <div class="card-header card-header-custom text-center border-0 pt-4" id="tradeFormHeader">
+                            <i class="fa-solid fa-briefcase fa-2x mb-2" style="color: var(--brand-gold);"></i><br>
+                            Formulario de Función
                         </div>
-                        <div class="card-body p-4 border-bottom" style="border-color: var(--border-color) !important;">
+                        <div class="card-body p-4 pt-0">
                             <form onsubmit="guardarOEditarTrade(event)">
                                 <input type="hidden" id="editTradeOldName">
-                                <div class="input-group">
-                                    <input type="text" class="form-control bg-light-dark text-dark" id="newTradeName" placeholder="Nueva función..." required>
-                                    <button type="submit" class="btn btn-custom" style="border-radius: 0 12px 12px 0;" id="saveTradeBtn">Añadir</button>
+                                <div class="mb-4">
+                                    <label class="form-label">Nombre de la Función (Trade):</label>
+                                    <input type="text" class="form-control" id="newTradeName" placeholder="Ej. Carpintero..." required>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-outline-dark w-100 mt-2 hidden" style="border-color: var(--border-color);" id="cancelEditTradeBtn" onclick="resetTradeForm()">Cancelar Edición</button>
+                                <button type="submit" class="btn btn-custom w-100" id="saveTradeBtn">Añadir Función</button>
+                                <button type="button" class="btn btn-outline-dark w-100 mt-2 hidden" style="border-color: var(--border-color);" id="cancelEditTradeBtn" onclick="resetTradeForm()">Cancelar Edición</button>
                             </form>
                         </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header card-header-custom">
+                            <span><i class="fa-solid fa-briefcase me-2" style="color: var(--brand-gold);"></i>Funciones Registradas</span>
+                        </div>
                         <div class="card-body p-0">
-                            <table class="table table-hover align-middle m-0">
-                                <tbody id="tradesTbody"></tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle m-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="ps-4 text-white">Función</th>
+                                            <th class="text-end pe-4 text-white">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tradesTbody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -777,6 +861,19 @@
     window.addEventListener('DOMContentLoaded', () => {
         setInitialWeek();
         obtenerGPSReal();
+        
+        // Ver si hay sesión guardada al recargar
+        const sesionGuardada = localStorage.getItem('oslim_usuario_actual');
+        if (sesionGuardada) {
+            setTimeout(() => {
+                let usuarios = getUsuarios();
+                if (usuarios[sesionGuardada]) {
+                    document.getElementById('loginUser').value = sesionGuardada;
+                    restaurarSesionAutomatica(sesionGuardada);
+                }
+            }, 1200);
+        }
+
         setTimeout(() => {
             poblarSelectsDinamicos();
         }, 1000);
@@ -854,6 +951,36 @@
                 logsUserFilter.innerHTML += `<option value="${user}" ${sel}>${user}</option>`;
             });
         }
+
+        const logsProjectFilter = document.getElementById('logsProjectFilter');
+        if (logsProjectFilter) {
+            let currentVal = logsProjectFilter.value;
+            logsProjectFilter.innerHTML = '<option value="ALL">🌐 Todos los Proyectos</option>';
+            proyectos.forEach(proj => {
+                let sel = (proj.name === currentVal) ? 'selected' : '';
+                logsProjectFilter.innerHTML += `<option value="${proj.name}" ${sel}>${proj.name}</option>`;
+            });
+        }
+
+        const logsTradeFilter = document.getElementById('logsTradeFilter');
+        if (logsTradeFilter) {
+            let currentVal = logsTradeFilter.value;
+            logsTradeFilter.innerHTML = '<option value="ALL">🌐 Todas las Funciones</option>';
+            trades.forEach(t => {
+                let sel = (t === currentVal) ? 'selected' : '';
+                logsTradeFilter.innerHTML += `<option value="${t}" ${sel}>${t}</option>`;
+            });
+        }
+
+        const mapProjectFilter = document.getElementById('mapProjectFilter');
+        if (mapProjectFilter) {
+            let currentVal = mapProjectFilter.value;
+            mapProjectFilter.innerHTML = '<option value="ALL">🌐 Todos los Proyectos</option>';
+            proyectos.forEach(proj => {
+                let sel = (proj.name === currentVal) ? 'selected' : '';
+                mapProjectFilter.innerHTML += `<option value="${proj.name}" ${sel}>${proj.name}</option>`;
+            });
+        }
     }
 
     function toggleAllCheckboxes(type) {
@@ -928,6 +1055,51 @@
         );
     }
 
+    function mostrarPantallaRecuperacion() {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('recovery-screen').classList.remove('hidden');
+    }
+
+    function volverAlLogin() {
+        document.getElementById('recovery-screen').classList.add('hidden');
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    function verificarYCambiarPassword(e) {
+        e.preventDefault();
+        const u = document.getElementById('recUser').value.trim();
+        const phoneInput = document.getElementById('recPhone').value.trim();
+        const rateInput = parseFloat(document.getElementById('recRate').value);
+        const newPass = document.getElementById('recNewPass').value.trim();
+
+        let usuarios = getUsuarios();
+        const matchedKey = Object.keys(usuarios).find(key => key.toLowerCase() === u.toLowerCase());
+
+        if (!matchedKey) {
+            alert("❌ El usuario no existe en el sistema.");
+            return;
+        }
+
+        let userData = usuarios[matchedKey];
+        let dbPhone = (userData.phone || "").replace(/[^0-9]/g, '');
+        let inputPhoneClean = phoneInput.replace(/[^0-9]/g, '');
+        let dbRate = parseFloat(userData.rate) || 20.00;
+
+        if (dbPhone === inputPhoneClean && dbRate === rateInput) {
+            userData.pass = newPass;
+            window.dbSet(window.dbRef(window.db, 'config/usuariosSistema/' + matchedKey), userData)
+                .then(() => {
+                    alert("✅ ¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión.");
+                    volverAlLogin();
+                })
+                .catch((err) => {
+                    alert("❌ Error al actualizar en la base de datos.");
+                });
+        } else {
+            alert("❌ Los datos de verificación (Celular o Tarifa/Sueldo) no coinciden con nuestros registros.");
+        }
+    }
+
     function iniciarSesion() {
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
@@ -943,7 +1115,48 @@
         }
 
         usuarioActual = matchedKey;
+        localStorage.setItem('oslim_usuario_actual', usuarioActual);
         let datosUser = usuarios[usuarioActual];
+
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('main-app-container').classList.remove('hidden');
+        document.getElementById('loggedUserBadge').innerText = usuarioActual.toUpperCase();
+
+        document.getElementById('loggedWorkerName').value = usuarioActual;
+        document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
+
+        const adminSection = document.getElementById('admin-menu-section');
+        const adminTradeElements = document.querySelectorAll('.admin-trade-filter-control');
+        
+        if (datosUser.rol === 'admin') {
+            adminSection.classList.remove('hidden');
+            document.getElementById('admin-daily-btn').classList.remove('hidden');
+            document.getElementById('admin-logs-btn').classList.remove('hidden');
+            document.getElementById('admin-users-btn').classList.remove('hidden');
+            document.getElementById('admin-projects-btn').classList.remove('hidden');
+            document.getElementById('admin-trades-btn').classList.remove('hidden');
+            document.getElementById('admin-directory-btn').classList.remove('hidden');
+            adminTradeElements.forEach(el => el.classList.remove('hidden'));
+        } else {
+            adminSection.classList.add('hidden');
+            document.getElementById('admin-daily-btn').classList.add('hidden');
+            document.getElementById('admin-logs-btn').classList.add('hidden');
+            document.getElementById('admin-users-btn').classList.add('hidden');
+            document.getElementById('admin-projects-btn').classList.add('hidden');
+            document.getElementById('admin-trades-btn').classList.add('hidden');
+            document.getElementById('admin-directory-btn').classList.add('hidden');
+            adminTradeElements.forEach(el => el.classList.add('hidden'));
+        }
+
+        poblarSelectsDinamicos();
+        showTab('entry-tab');
+        loadWeeklySummary();
+    }
+
+    function restaurarSesionAutomatica(userKey) {
+        usuarioActual = userKey;
+        let usuarios = getUsuarios();
+        let datosUser = usuarios[usuarioActual] || { rol: 'trabajador', trade: 'Carpintero' };
 
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-app-container').classList.remove('hidden');
@@ -982,6 +1195,7 @@
 
     function cerrarSesion() {
         usuarioActual = null;
+        localStorage.removeItem('oslim_usuario_actual');
         document.getElementById('loginUser').value = '';
         document.getElementById('loginPass').value = '';
         document.getElementById('loginError').classList.add('hidden');
@@ -1003,6 +1217,7 @@
         }
         if (tabId === 'daily-tab') {
             updateMapUserFilterDropdown();
+            poblarSelectsDinamicos();
             setTimeout(() => {
                 initMap();
                 loadDailyRecords();
@@ -1106,42 +1321,57 @@
         let registros = window.registrosGlobales || [];
         let jornadaHoy = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === selectedProjectName);
 
-        if (!jornadaHoy) {
-            jornadaHoy = {
-                id: Date.now(),
-                workerName: workerName,
-                trade: trade,
-                rateSnapshot: tarifaActual,
-                date: fechaStr,
-                dayName: days[fechaLocalObj.getDay()],
-                job: selectedProjectName,
-                timeIn: (tipo === 'ENTRADA') ? horaStr : '-',
-                timeOut: (tipo === 'SALIDA') ? horaStr : '-',
-                lunch: 0.5,
-                overtime: 0,
-                coordsIn: (tipo === 'ENTRADA') ? { lat: currentCoords.lat, lng: currentCoords.lng } : null,
-                coordsOut: (tipo === 'SALIDA') ? { lat: currentCoords.lat, lng: currentCoords.lng } : null
-            };
-            const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
-            jornadaHoy.firebaseKey = newRef.key;
-            window.dbSet(newRef, jornadaHoy);
-        } else {
-            if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
-
-            if (tipo === 'ENTRADA') {
+        if (tipo === 'ENTRADA') {
+            if (!jornadaHoy) {
+                jornadaHoy = {
+                    id: Date.now(),
+                    workerName: workerName,
+                    trade: trade,
+                    rateSnapshot: tarifaActual,
+                    date: fechaStr,
+                    dayName: days[fechaLocalObj.getDay()],
+                    job: selectedProjectName,
+                    timeIn: horaStr,
+                    timeOut: '-',
+                    lunch: 0.5,
+                    overtime: 0,
+                    coordsIn: { lat: currentCoords.lat, lng: currentCoords.lng },
+                    coordsOut: null
+                };
+                const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
+                jornadaHoy.firebaseKey = newRef.key;
+                window.dbSet(newRef, jornadaHoy);
+                alert(`✅ ¡ENTRADA registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
+            } else {
+                if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
+                if (jornadaHoy.timeIn && jornadaHoy.timeIn !== '-') {
+                    alert(`⚠️ Ya registraste una entrada a las ${jornadaHoy.timeIn} hoy para este proyecto. Si necesitas cambiarla, hazlo desde la sección de administración.`);
+                    return;
+                }
                 jornadaHoy.timeIn = horaStr;
                 jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
-            }
-            if (tipo === 'SALIDA') {
-                jornadaHoy.timeOut = horaStr;
-                jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
-            }
-            if(jornadaHoy.firebaseKey) {
                 window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
+                alert(`✅ ¡ENTRADA registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
             }
+        } else if (tipo === 'SALIDA') {
+            if (!jornadaHoy || !jornadaHoy.timeIn || jornadaHoy.timeIn === '-') {
+                alert(`❌ No puedes registrar la salida porque aún no tienes una entrada registrada hoy para este proyecto.`);
+                return;
+            }
+
+            if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
+
+            if (jornadaHoy.timeOut && jornadaHoy.timeOut !== '-') {
+                let cambiar = confirm(`⚠️ Ya tienes una hora de salida registrada a las ${jornadaHoy.timeOut}.\n¿Deseas cambiarla por la hora actual (${horaStr})?`);
+                if (!cambiar) return;
+            }
+
+            jornadaHoy.timeOut = horaStr;
+            jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
+            window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
+            alert(`✅ ¡SALIDA actualizada con éxito a las ${horaStr} (${esUSA ? 'Hora Miami' : 'Hora México'})!`);
         }
 
-        alert(`✅ ¡${tipo} registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
         showTab('weekly-tab');
     }
 
@@ -1208,7 +1438,7 @@
         document.getElementById('newProjectLat').value = p.lat || '';
         document.getElementById('newProjectLng').value = p.lng || '';
 
-        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building-pen me-2" style="color: var(--brand-gold);"></i>Editando Proyecto`;
+        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Editando Proyecto`;
         document.getElementById('saveProjectBtn').innerHTML = `Actualizar`;
         document.getElementById('cancelEditProjectBtn').classList.remove('hidden');
     }
@@ -1219,7 +1449,7 @@
         document.getElementById('newProjectAddress').value = '';
         document.getElementById('newProjectLat').value = '';
         document.getElementById('newProjectLng').value = '';
-        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building me-2" style="color: var(--brand-gold);"></i>Gestión de Proyectos`;
+        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Formulario de Proyecto`;
         document.getElementById('saveProjectBtn').innerHTML = `Guardar Proyecto`;
         document.getElementById('cancelEditProjectBtn').classList.add('hidden');
     }
@@ -1279,7 +1509,7 @@
     function editarTrade(tName) {
         document.getElementById('newTradeName').value = tName;
         document.getElementById('editTradeOldName').value = tName;
-        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2" style="color: var(--brand-gold);"></i>Editando Función`;
+        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Editando Función`;
         document.getElementById('saveTradeBtn').innerHTML = `Actualizar`;
         document.getElementById('cancelEditTradeBtn').classList.remove('hidden');
     }
@@ -1287,8 +1517,8 @@
     function resetTradeForm() {
         document.getElementById('newTradeName').value = '';
         document.getElementById('editTradeOldName').value = '';
-        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase me-2" style="color: var(--brand-gold);"></i>Funciones / Especialidades`;
-        document.getElementById('saveTradeBtn').innerHTML = `Añadir`;
+        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Formulario de Función`;
+        document.getElementById('saveTradeBtn').innerHTML = `Añadir Función`;
         document.getElementById('cancelEditTradeBtn').classList.add('hidden');
     }
 
@@ -1594,6 +1824,8 @@
     function loadDailyRecords() {
         const dateFilter = document.getElementById('mapDateFilter').value;
         const userFilter = document.getElementById('mapUserFilter').value;
+        const projectFilter = document.getElementById('mapProjectFilter') ? document.getElementById('mapProjectFilter').value : 'ALL';
+        
         let registros = window.registrosGlobales || [];
         let tbody = document.getElementById('dailyRecordsTbody');
         if (!tbody) return;
@@ -1604,7 +1836,8 @@
         let filtered = registros.filter(r => {
             let dateMatch = (!dateFilter || r.date === dateFilter);
             let userMatch = (userFilter === 'ALL' || r.workerName.toLowerCase() === userFilter.toLowerCase());
-            return dateMatch && userMatch;
+            let projMatch = (projectFilter === 'ALL' || (r.job && r.job.trim() === projectFilter.trim()));
+            return dateMatch && userMatch && projMatch;
         });
 
         if (filtered.length === 0) {
@@ -1668,10 +1901,16 @@
     function loadDailyLogs() {
         const logsWeekPicker = document.getElementById('logsWeekPicker');
         const logsUserFilter = document.getElementById('logsUserFilter');
+        const logsProjectFilter = document.getElementById('logsProjectFilter');
+        const logsTradeFilter = document.getElementById('logsTradeFilter');
+
         if (!logsWeekPicker || !logsWeekPicker.value) return;
 
         const weekVal = logsWeekPicker.value;
         const selectedUser = logsUserFilter ? logsUserFilter.value : 'ALL';
+        const selectedProject = logsProjectFilter ? logsProjectFilter.value : 'ALL';
+        const selectedTrade = logsTradeFilter ? logsTradeFilter.value : 'ALL';
+
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
 
@@ -1694,7 +1933,13 @@
                 ? (selectedUser === 'ALL' || r.workerName.toLowerCase() === selectedUser.toLowerCase())
                 : (r.workerName.toLowerCase() === usuarioActual.toLowerCase());
 
-            return dateMatch && userMatch;
+            let projMatch = (selectedProject === 'ALL' || (r.job && r.job.trim() === selectedProject.trim()));
+            
+            let userObj = usuarios[r.workerName] || {};
+            let workerTrade = r.trade || userObj.trade || 'Carpintero';
+            let tradeMatch = (selectedTrade === 'ALL' || workerTrade === selectedTrade);
+
+            return dateMatch && userMatch && projMatch && tradeMatch;
         });
 
         let tbody = document.getElementById('logsTbody');
@@ -1702,25 +1947,28 @@
         tbody.innerHTML = '';
 
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted p-4">No hay jornadas registradas para esta semana.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas con estos filtros.</td></tr>';
             return;
         }
 
         filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+            let userObj = usuarios[r.workerName] || {};
+            let workerTrade = r.trade || userObj.trade || 'Carpintero';
+
             let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
             let ot = parseFloat(r.overtime) || 0;
             let totalPago = netHours + ot;
 
-            // ANCHO AMPLIADO Y CENTRADO EN INPUTS DE HORA, COMIDA Y EXTRAS PARA EVITAR QUE SE CORTEN
             tbody.innerHTML += `<tr>
                 <td class="ps-3"><strong class="text-dark">${r.date}</strong></td>
                 <td class="small text-muted text-truncate" style="max-width: 100px;" title="${r.job}">${r.job}</td>
                 <td class="text-dark fw-semibold">${r.workerName}</td>
-                <td><input type="time" class="form-control form-control-sm border text-dark px-1 py-2 text-center" style="background-color: #fff; width: 110px; font-size: 0.85rem !important;" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="time" class="form-control form-control-sm border text-dark px-1 py-2 text-center" style="background-color: #fff; width: 110px; font-size: 0.85rem !important;" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border text-dark py-2" style="background-color: #fff; width: 85px;" id="lunch_${r.id}" value="${r.lunch}" onchange="actualizarJornada(${r.id})"></td>
+                <td class="small text-muted">${workerTrade}</td>
+                <td><input type="time" class="form-control form-control-sm border text-dark px-1 py-2 text-center" style="background-color: #fff; width: 105px; font-size: 0.85rem !important;" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="time" class="form-control form-control-sm border text-dark px-1 py-2 text-center" style="background-color: #fff; width: 105px; font-size: 0.85rem !important;" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border text-dark py-2" style="background-color: #fff; width: 70px;" id="lunch_${r.id}" value="${r.lunch}" onchange="actualizarJornada(${r.id})"></td>
                 <td><span class="badge py-2 px-2" style="background-color: #e2e8f0; color: #1e293b; font-size: 0.8rem;" id="net_${r.id}">${netHours.toFixed(2)}h</span></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border text-dark py-2" style="background-color: #fff; width: 85px;" id="ot_${r.id}" value="${ot}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border text-dark py-2" style="background-color: #fff; width: 70px;" id="ot_${r.id}" value="${ot}" onchange="actualizarJornada(${r.id})"></td>
                 <td><span class="badge bg-success fs-6 py-2 px-2" id="total_${r.id}">${totalPago.toFixed(2)}h</span></td>
                 <td class="text-end pe-3">
                     <button class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" onclick="eliminarJornada('${r.firebaseKey}')"><i class="fa-solid fa-trash"></i></button>
