@@ -43,7 +43,6 @@
             
             .bg-light { background-color: #f8f9fa !important; border: 1px solid #dee2e6 !important; print-color-adjust: exact; padding: 6px !important; }
             
-            /* Asegurar visibilidad y colores de los Badges de Totales en PDF */
             .badge.bg-primary { background-color: #0d6efd !important; color: white !important; print-color-adjust: exact; }
             .badge.bg-success { background-color: #198754 !important; color: white !important; print-color-adjust: exact; }
             
@@ -172,25 +171,26 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                <!-- Filtros del Resumen Semanal -->
+                <!-- Filtros del Resumen Semanal (Administradores y Trabajadores) -->
                 <div class="row g-3 align-items-center mb-4 p-3 rounded bg-light border">
                     <div class="col-md-2">
                         <label class="form-label fw-bold mb-1">Semana:</label>
                         <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
                     </div>
-                    <div class="col-md-3">
+                    <!-- Filtros exclusivos para Administradores -->
+                    <div class="col-md-3 admin-filter-control">
                         <label class="form-label fw-bold mb-1">Filtrar por Proyecto:</label>
                         <select class="form-select" id="projectFilter" onchange="loadWeeklySummary()">
                             <option value="ALL">🌐 Todos los Proyectos</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 admin-filter-control">
                         <label class="form-label fw-bold mb-1">Filtrar por Función:</label>
                         <select class="form-select" id="tradeFilter" onchange="loadWeeklySummary()">
                             <option value="ALL">🌐 Todas las Funciones</option>
                         </select>
                     </div>
-                    <div class="col-md-4 text-end">
+                    <div class="col-md-4 text-end ms-auto">
                         <span class="badge bg-primary fs-6 me-2" id="totalWeeklyHoursBadge">Total Horas: 0.0 hrs</span>
                         <span class="badge bg-success fs-6" id="totalWeeklyPayBadge">Total a Pagar: $0.00</span>
                     </div>
@@ -706,6 +706,8 @@
         document.getElementById('loggedWorkerName').value = usuarioActual;
         document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
 
+        // Control de visibilidad según rol Administrador o Trabajador Normal
+        const adminElements = document.querySelectorAll('.admin-filter-control');
         if (datosUser.rol === 'admin') {
             document.getElementById('admin-daily-btn').classList.remove('hidden');
             document.getElementById('admin-logs-btn').classList.remove('hidden');
@@ -713,6 +715,7 @@
             document.getElementById('admin-projects-btn').classList.remove('hidden');
             document.getElementById('admin-trades-btn').classList.remove('hidden');
             document.getElementById('admin-directory-btn').classList.remove('hidden');
+            adminElements.forEach(el => el.classList.remove('hidden'));
         } else {
             document.getElementById('admin-daily-btn').classList.add('hidden');
             document.getElementById('admin-logs-btn').classList.add('hidden');
@@ -720,6 +723,7 @@
             document.getElementById('admin-projects-btn').classList.add('hidden');
             document.getElementById('admin-trades-btn').classList.add('hidden');
             document.getElementById('admin-directory-btn').classList.add('hidden');
+            adminElements.forEach(el => el.classList.add('hidden'));
         }
 
         poblarSelectsDinamicos();
@@ -842,6 +846,10 @@
         
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
+        let usuarios = getUsuarios();
+        let userObj = usuarios[workerName] || {};
+        let tarifaActual = parseFloat(userObj.rate) || 20.00;
+
         let registros = window.registrosGlobales || [];
         let jornadaHoy = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === selectedProjectName);
 
@@ -850,6 +858,7 @@
                 id: Date.now(),
                 workerName: workerName,
                 trade: trade,
+                rateSnapshot: tarifaActual, // Guarda la tarifa histórica del momento
                 date: fechaStr,
                 dayName: days[horaLocalProyecto.getDay()],
                 job: selectedProjectName,
@@ -865,6 +874,9 @@
             jornadaHoy.firebaseKey = newRef.key;
             window.dbSet(newRef, jornadaHoy);
         } else {
+            // Si ya existe pero no tenía tarifa histórica grabada, le asignamos la actual
+            if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
+
             if (tipo === 'ENTRADA') {
                 jornadaHoy.timeIn = horaStr;
                 jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
@@ -1179,7 +1191,6 @@
         return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
     }
 
-    // Redondeo exacto a bloques de 30 minutos (0.5h)
     function redondearAMediaHora(horas) {
         return Math.round(horas * 2) / 2;
     }
@@ -1247,10 +1258,13 @@
             const key = r.workerName.toLowerCase().trim();
             if (!workerSummary[key]) {
                 let userObj = usuarios[r.workerName] || {};
+                // Usar la tarifa histórica guardada en el registro o respaldar con la actual si faltase
+                let historicalRate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
+
                 workerSummary[key] = {
                     name: r.workerName,
                     trade: r.trade || userObj.trade || 'Carpintero',
-                    rate: parseFloat(userObj.rate) || 20.00,
+                    rate: historicalRate,
                     days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 },
                     totalHours: 0
                 };
@@ -1540,10 +1554,12 @@
             const key = r.workerName.toLowerCase().trim();
             if (!workerSummary[key]) {
                 let userObj = usuarios[r.workerName] || {};
+                let historicalRate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
+
                 workerSummary[key] = {
                     name: r.workerName,
                     trade: r.trade || userObj.trade || 'Carpintero',
-                    rate: parseFloat(userObj.rate) || 20.00,
+                    rate: historicalRate,
                     days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 },
                     totalHours: 0
                 };
