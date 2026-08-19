@@ -303,6 +303,7 @@
                 <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px; color: var(--brand-gold) !important;">Administración</p>
                 <button type="button" id="admin-daily-btn" class="nav-menu-btn hidden" onclick="showTab('daily-tab'); loadDailyRecords(); closeMenu();"><i class="fa-solid fa-map-location-dot"></i>Registros por Día y Mapa</button>
                 <button type="button" id="admin-logs-btn" class="nav-menu-btn hidden" onclick="showTab('logs-tab'); loadDailyLogs(); closeMenu();"><i class="fa-solid fa-pen-to-square"></i>Edición de Horas</button>
+                <button type="button" id="admin-manual-btn" class="nav-menu-btn hidden" onclick="showTab('manual-tab'); closeMenu();"><i class="fa-solid fa-calendar-plus"></i>Registro Manual Admin</button>
                 <button type="button" id="admin-users-btn" class="nav-menu-btn hidden" onclick="showTab('admin-users-tab'); loadUserManagement(); closeMenu();"><i class="fa-solid fa-users-gear"></i>Usuarios</button>
                 <button type="button" id="admin-projects-btn" class="nav-menu-btn hidden" onclick="showTab('admin-projects-tab'); loadProjectsManagement(); closeMenu();"><i class="fa-solid fa-building"></i>Proyectos</button>
                 <button type="button" id="admin-trades-btn" class="nav-menu-btn hidden" onclick="showTab('admin-trades-tab'); loadTradesManagement(); closeMenu();"><i class="fa-solid fa-briefcase"></i>Funciones</button>
@@ -570,6 +571,53 @@
                             </thead>
                             <tbody id="logsTbody"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NUEVO APARTADO: REGISTRO MANUAL DE ASISTENCIA (ADMIN) -->
+        <div class="container mb-5 no-print tab-content-section" id="manual-tab" style="display:none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header card-header-custom">
+                            <span><i class="fa-solid fa-calendar-plus me-2" style="color: var(--brand-gold);"></i>Registro Manual de Asistencia (Administrador)</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-4">Utiliza este apartado para registrar o completar la asistencia de cualquier usuario de forma directa, sin restricciones de geocerca ni necesidad de iniciar sesión en su cuenta.</p>
+                            <form onsubmit="registrarAsistenciaManualAdmin(event)">
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase">Trabajador</label>
+                                    <select class="form-select text-dark" id="manualWorkerSelect" required>
+                                        <!-- Dinámico -->
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase">Proyecto Asignado</label>
+                                    <select class="form-select text-dark" id="manualProjectSelect" required>
+                                        <!-- Dinámico -->
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase">Fecha</label>
+                                    <input type="date" class="form-control" id="manualDateInput" required>
+                                </div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Hora de Inicio (Entrada)</label>
+                                        <input type="time" class="form-control" id="manualTimeInInput" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Hora de Término (Salida)</label>
+                                        <input type="time" class="form-control" id="manualTimeOutInput" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-custom w-100 py-3 shadow-sm">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Registro Manual
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -902,6 +950,23 @@
             });
         }
 
+        const manualProjectSelect = document.getElementById('manualProjectSelect');
+        if (manualProjectSelect) {
+            manualProjectSelect.innerHTML = '';
+            proyectos.forEach(p => {
+                manualProjectSelect.innerHTML += `<option value="${p.name}">${p.name} (${p.address})</option>`;
+            });
+        }
+
+        const manualWorkerSelect = document.getElementById('manualWorkerSelect');
+        if (manualWorkerSelect) {
+            manualWorkerSelect.innerHTML = '';
+            let usuarios = getUsuarios();
+            Object.keys(usuarios).sort().forEach(user => {
+                manualWorkerSelect.innerHTML += `<option value="${user}">${user}</option>`;
+            });
+        }
+
         const adminNewTrade = document.getElementById('adminNewTrade');
         let trades = getTrades();
         if (adminNewTrade) {
@@ -1132,6 +1197,7 @@
             adminSection.classList.remove('hidden');
             document.getElementById('admin-daily-btn').classList.remove('hidden');
             document.getElementById('admin-logs-btn').classList.remove('hidden');
+            document.getElementById('admin-manual-btn').classList.remove('hidden');
             document.getElementById('admin-users-btn').classList.remove('hidden');
             document.getElementById('admin-projects-btn').classList.remove('hidden');
             document.getElementById('admin-trades-btn').classList.remove('hidden');
@@ -1141,6 +1207,7 @@
             adminSection.classList.add('hidden');
             document.getElementById('admin-daily-btn').classList.add('hidden');
             document.getElementById('admin-logs-btn').classList.add('hidden');
+            document.getElementById('admin-manual-btn').classList.add('hidden');
             document.getElementById('admin-users-btn').classList.add('hidden');
             document.getElementById('admin-projects-btn').classList.add('hidden');
             document.getElementById('admin-trades-btn').classList.add('hidden');
@@ -1172,6 +1239,7 @@
             adminSection.classList.remove('hidden');
             document.getElementById('admin-daily-btn').classList.remove('hidden');
             document.getElementById('admin-logs-btn').classList.remove('hidden');
+            document.getElementById('admin-manual-btn').classList.remove('hidden');
             document.getElementById('admin-users-btn').classList.remove('hidden');
             document.getElementById('admin-projects-btn').classList.remove('hidden');
             document.getElementById('admin-trades-btn').classList.remove('hidden');
@@ -1181,6 +1249,7 @@
             adminSection.classList.add('hidden');
             document.getElementById('admin-daily-btn').classList.add('hidden');
             document.getElementById('admin-logs-btn').classList.add('hidden');
+            document.getElementById('admin-manual-btn').classList.add('hidden');
             document.getElementById('admin-users-btn').classList.add('hidden');
             document.getElementById('admin-projects-btn').classList.add('hidden');
             document.getElementById('admin-trades-btn').classList.add('hidden');
@@ -1226,6 +1295,13 @@
         if (tabId === 'logs-tab') {
             poblarSelectsDinamicos();
             loadDailyLogs();
+        }
+        if (tabId === 'manual-tab') {
+            poblarSelectsDinamicos();
+            const manualDateInput = document.getElementById('manualDateInput');
+            if (manualDateInput && !manualDateInput.value) {
+                manualDateInput.valueAsDate = new Date();
+            }
         }
         if (tabId === 'admin-users-tab') loadUserManagement();
         if (tabId === 'admin-projects-tab') loadProjectsManagement();
@@ -1373,6 +1449,79 @@
         }
 
         showTab('weekly-tab');
+    }
+
+    function registrarAsistenciaManualAdmin(e) {
+        e.preventDefault();
+        const workerName = document.getElementById('manualWorkerSelect').value;
+        const projectName = document.getElementById('manualProjectSelect').value;
+        const dateStr = document.getElementById('manualDateInput').value;
+        const timeIn = document.getElementById('manualTimeInInput').value;
+        const timeOut = document.getElementById('manualTimeOutInput').value;
+
+        if (!workerName || !projectName || !dateStr || !timeIn || !timeOut) {
+            alert("❌ Por favor completa todos los campos del registro manual.");
+            return;
+        }
+
+        let usuarios = getUsuarios();
+        let userObj = usuarios[workerName] || {};
+        let trade = userObj.trade || 'Carpintero';
+        let tarifaActual = parseFloat(userObj.rate) || 20.00;
+
+        const parts = dateStr.split('-');
+        if (parts.length < 3) return;
+        const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const dayName = days[dObj.getDay()];
+
+        let proyectos = getProyectos();
+        let proyectoObj = proyectos.find(p => p.name === projectName);
+        let coordsProj = proyectoObj ? { lat: proyectoObj.lat, lng: proyectoObj.lng } : { lat: 0, lng: 0 };
+
+        let registros = window.registrosGlobales || [];
+        let jornadaExistente = registros.find(j => j.workerName === workerName && j.date === dateStr && j.job === projectName);
+
+        if (jornadaExistente) {
+            let actualizar = confirm(`⚠️ Ya existe un registro para ${workerName} en el proyecto ${projectName} en la fecha ${dateStr}.\n¿Deseas sobrescribirlo con las nuevas horas (${timeIn} - ${timeOut})?`);
+            if (!actualizar) return;
+
+            jornadaExistente.timeIn = timeIn;
+            jornadaExistente.timeOut = timeOut;
+            jornadaExistente.trade = trade;
+            jornadaExistente.rateSnapshot = tarifaActual;
+            jornadaExistente.dayName = dayName;
+
+            window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaExistente.firebaseKey), jornadaExistente)
+                .then(() => {
+                    alert("✅ ¡Registro de asistencia actualizado correctamente!");
+                    showTab('logs-tab');
+                });
+        } else {
+            let nuevaJornada = {
+                id: Date.now(),
+                workerName: workerName,
+                trade: trade,
+                rateSnapshot: tarifaActual,
+                date: dateStr,
+                dayName: dayName,
+                job: projectName,
+                timeIn: timeIn,
+                timeOut: timeOut,
+                lunch: 0.5,
+                overtime: 0,
+                coordsIn: coordsProj,
+                coordsOut: coordsProj
+            };
+
+            const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
+            nuevaJornada.firebaseKey = newRef.key;
+            window.dbSet(newRef, nuevaJornada)
+                .then(() => {
+                    alert("✅ ¡Registro manual agregado con éxito!");
+                    showTab('logs-tab');
+                });
+        }
     }
 
     function loadDirectory() {
