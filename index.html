@@ -8,17 +8,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS para Mapas -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- SheetJS CDN para Exportación Excel Avanzada -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         /* PALETA REFINADA: GRIS CLARO / BLANCO CON ACENTO COBRE ELEGANTE */
         :root {
-            --bg-app: #f4f5f7;          /* Fondo general gris muy claro, limpio y moderno */
-            --bg-card: #ffffff;         /* Tarjetas en blanco puro */
-            --bg-input: #eef2f6;        /* Campos de texto y elementos secundarios en gris sutil */
-            --brand-accent: #111827;    /* Texto oscuro de alta legibilidad */
-            --brand-gold: #b45309;      /* Acento cobre/dorado elegante y profesional */
-            --text-main: #1f2937;       /* Texto principal oscuro para contraste perfecto */
-            --text-muted: #6b7280;      /* Texto secundario gris */
-            --border-color: #d1d5db;    /* Bordes limpios y definidos */
+            --bg-app: #f4f5f7;
+            --bg-card: #ffffff;
+            --bg-input: #eef2f6;
+            --brand-accent: #111827;
+            --brand-gold: #b45309;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #d1d5db;
         }
 
         body { 
@@ -140,12 +142,11 @@
             border-color: var(--brand-gold);
             box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
         }
-        .form-control::placeholder { color: #9ca3af; }
 
         .text-muted { color: var(--text-muted) !important; }
         .bg-light-dark { background-color: #f8fafc !important; border: 1px solid var(--border-color); }
 
-        /* --- TABLAS MODO CLARO ELEGANTE --- */
+        /* --- TABLAS Y MODO CLARO ELEGANTE --- */
         .table { color: var(--text-main); border-color: var(--border-color); }
         .table > :not(caption) > * > * { background-color: transparent; color: var(--text-main); border-bottom-color: var(--border-color); }
         .table-hover tbody tr:hover { background-color: rgba(180, 83, 9, 0.04) !important; color: var(--text-main); }
@@ -154,13 +155,17 @@
         .table-weekly th { background-color: #f1f5f9 !important; color: #1e293b !important; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--brand-gold); }
         .table-weekly td { vertical-align: middle; text-align: center; color: var(--text-main); }
         .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #f8fafc; color: var(--text-main); }
+        
+        .table-weekly input.table-input-clean {
+            background: transparent !important; border: 1px solid transparent !important; box-shadow: none !important;
+            color: var(--text-main) !important; text-align: center; width: 100%; font-family: inherit; font-size: 0.95rem; padding: 2px 4px; border-radius: 6px;
+        }
+        .table-weekly input.table-input-clean:hover { background: rgba(0, 0, 0, 0.03) !important; border-color: var(--border-color) !important; }
+        .table-weekly input.table-input-clean:focus { background: #ffffff !important; border-color: var(--brand-gold) !important; outline: none; }
 
-        /* --- DROPDOWNS Y CHECKBOXES --- */
         .dropdown-menu-checkboxes {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            max-height: 240px; overflow-y: auto; padding: 12px; width: 100%; border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background-color: var(--bg-card); border: 1px solid var(--border-color);
+            max-height: 240px; overflow-y: auto; padding: 12px; width: 100%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         .form-check-label { color: var(--text-main); }
         .dropdown > button { background-color: var(--bg-input) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; }
@@ -172,28 +177,52 @@
 
         .hidden { display: none !important; }
 
-        /* --- IMPRESIÓN CORREGIDA (INCLUYENDO FILTROS VISIBLES) --- */
-        @media print {
-            @page { size: letter landscape; margin: 0.3in; }
-            body { background: white !important; font-size: 9pt; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .no-print, nav, .navbar, .btn, .offcanvas { display: none !important; }
-            .container, .container-fluid { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
-            .card { border: none !important; box-shadow: none !important; margin: 0 !important; background: white !important; color: #000 !important; }
-            .card-header { background-color: #f8f9fa !important; color: #000 !important; border-bottom: 2px solid #000 !important; padding: 0.5rem !important; }
-            .bg-light-dark { background-color: #fff !important; border: 1px solid #ccc !important; padding: 10px !important; margin-bottom: 10px !important; }
-            .text-main, .text-muted, .table { color: #000 !important; }
-            
-            .col-md-3 { display: inline-block !important; width: 23% !important; margin-right: 15px !important; vertical-align: top !important; }
-            .col-md-3 label { font-size: 8pt !important; color: #000 !important; display: block !important; margin-bottom: 2px !important; }
-            .dropdown, .dropdown-menu-checkboxes, input[type="week"] { display: block !important; }
-            
-            #projectDropdownBtn, #tradeDropdownBtn { display: flex !important; background: #fff !important; border: 1px solid #999 !important; font-size: 8pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; box-shadow: none !important; }
-            #weekPicker { display: block !important; background: #fff !important; border: 1px solid #999 !important; font-size: 8pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; }
-            .dropdown-menu { display: none !important; }
+        /* Estilo para ocultar en pantalla las tablas de impresión */
+        .print-only-tables { display: none; }
 
-            .table-weekly th { background-color: #eee !important; color: #000 !important; border-bottom: 2px solid #000 !important; font-size: 8pt !important; padding: 4px !important; }
-            .table-weekly td { color: #000 !important; padding: 4px !important; font-size: 8pt !important; }
-            .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #f9f9f9 !important; color: #000 !important; }
+        /* --- ESTILOS DE IMPRESIÓN OPTIMIZADOS --- */
+        @media print {
+            @page { size: landscape; margin: 0.3in; }
+            body { font-size: 7.5pt !important; background: white !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print, nav, .navbar, .btn, .offcanvas { display: none !important; }
+            
+            /* Ocultar el contenedor interactivo web y mostrar las secciones de impresión */
+            .screen-only-summary { display: none !important; }
+            .print-only-tables { display: block !important; }
+            
+            .container, .container-fluid { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .card { border: none !important; box-shadow: none !important; margin: 0 !important; }
+            .card-header { display: none !important; }
+            
+            /* Filtros en impresión */
+            .bg-light-dark { background-color: #fff !important; border: 1px solid #ccc !important; padding: 8px !important; margin-bottom: 10px !important; border-radius: 8px !important; }
+            .col-md-3 { display: inline-block !important; width: 23% !important; margin-right: 1%; vertical-align: top !important; }
+            .col-md-3 label { font-size: 7.5pt !important; color: #000 !important; display: block !important; margin-bottom: 2px !important; font-weight: bold !important;}
+            .dropdown, .dropdown-menu-checkboxes, input[type="week"] { display: block !important; }
+            #projectDropdownBtn, #tradeDropdownBtn, #weekPicker { display: flex !important; background: #fff !important; border: 1px solid #999 !important; font-size: 7.5pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; box-shadow: none !important; border-radius: 6px !important; height: auto !important;}
+            .dropdown-menu { display: none !important; }
+            
+            #totalWeeklyHoursBadge { background-color: #b45309 !important; color: white !important; border: none !important; font-size: 8.5pt !important; padding: 4px 8px !important; border-radius: 6px !important;}
+            #totalWeeklyPayBadge { background-color: #059669 !important; color: white !important; border: none !important; font-size: 8.5pt !important; padding: 4px 8px !important; border-radius: 6px !important;}
+            
+            /* Salto de página para separar las hojas impresas */
+            .print-page-break { page-break-before: always !important; break-before: page !important; margin-top: 15px !important; }
+            
+            table { width: 100% !important; border-collapse: collapse !important; border: 1px solid #ddd !important; }
+            .table-weekly th { background-color: #f1f5f9 !important; color: #000 !important; border-bottom: 2px solid #b45309 !important; font-size: 7pt !important; padding: 4px !important; text-transform: uppercase !important; font-weight: bold !important; }
+            .table-weekly td { color: #000 !important; padding: 4px !important; font-size: 7.5pt !important; border-bottom: 1px solid #eee !important; vertical-align: middle !important;}
+            
+            .table-weekly input.table-input-clean { font-size: 7.5pt !important; padding: 0 !important; border: none !important; color: #000 !important; background: transparent !important;}
+            
+            h5 { font-size: 10pt !important; margin-bottom: 5px !important; font-weight: bold !important;}
+            
+            .print-section-header { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 8px !important; }
+            .print-section-title { font-size: 9pt !important; color: #b45309 !important; font-weight: bold !important; text-transform: uppercase !important; margin: 0 !important; }
+            .print-section-badges { display: flex !important; gap: 8px !important; }
+            .print-badge-hours { background-color: #b45309 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 8px !important; border-radius: 4px !important; font-weight: bold !important; }
+            .print-badge-pay { background-color: #059669 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 8px !important; border-radius: 4px !important; font-weight: bold !important; }
+            
+            .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #fcfcfc !important; color: #000 !important; }
         }
     </style>
 </head>
@@ -341,9 +370,7 @@
                                     <form id="timesheetForm">
                                         <div class="mb-4">
                                             <label class="form-label text-uppercase">Proyecto Activo</label>
-                                            <select class="form-select form-select-lg" id="entryJob" required onchange="actualizarMapaProyectoSeleccionado()">
-                                                <!-- Dinámico -->
-                                            </select>
+                                            <select class="form-select form-select-lg" id="entryJob" required onchange="actualizarMapaProyectoSeleccionado()"></select>
                                         </div>
 
                                         <div class="row g-3 mb-4">
@@ -380,15 +407,17 @@
         <!-- TAB 2: RESUMEN SEMANAL -->
         <div class="container-fluid px-4 mb-5 tab-content-section" id="weekly-tab" style="display:none;">
             <div class="card">
-                <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
                     <span><i class="fa-solid fa-chart-bar me-2" style="color: var(--brand-gold);"></i>Resumen Semanal de Horas</span>
-                    <div class="no-print d-flex gap-2">
-                        <button type="button" class="btn btn-sm text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" onclick="exportWeeklyCSV()"><i class="fa-solid fa-file-csv me-1"></i>Excel</button>
-                        <button type="button" class="btn btn-sm btn-outline-dark fw-bold" style="border-radius: 8px; border-color: var(--border-color);" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm text-white fw-bold shadow-sm" style="background-color: #059669; border-radius: 8px;" onclick="exportWeeklyExcelWithFormulas()"><i class="fa-solid fa-file-excel me-1"></i>Excel Multi-Hoja</button>
+                        <button type="button" class="btn btn-sm btn-outline-dark fw-bold" style="border-radius: 8px; border-color: var(--border-color);" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir Reporte</button>
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row g-3 align-items-center mb-4 p-3 rounded-3 bg-light-dark border">
+                    
+                    <!-- ENCABEZADO DE IMPRESIÓN (Filtros visibles al imprimir y en pantalla) -->
+                    <div class="row g-3 align-items-center mb-4 p-3 rounded-3 bg-light-dark border" id="printHeaderFilters">
                         <div class="col-md-3">
                             <label class="form-label text-uppercase mb-1">Semana</label>
                             <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
@@ -399,9 +428,9 @@
                             <div class="dropdown">
                                 <button class="btn w-100 text-start d-flex justify-content-between align-items-center form-control" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="projectDropdownBtn">
                                     <span id="projectDropdownText" class="text-truncate" style="color: var(--text-main);">Todos los Proyectos</span>
-                                    <i class="fa-solid fa-chevron-down small text-muted"></i>
+                                    <i class="fa-solid fa-chevron-down small text-muted no-print"></i>
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="projectCheckboxesContainer">
+                                <div class="dropdown-menu dropdown-menu-checkboxes shadow no-print" id="projectCheckboxesContainer">
                                     <div class="form-check border-bottom pb-2 mb-2" style="border-color: var(--border-color) !important;">
                                         <input class="form-check-input border-secondary" type="checkbox" id="checkAllProjects" checked onchange="toggleAllCheckboxes('project')">
                                         <label class="form-check-label fw-bold" for="checkAllProjects" style="color: var(--brand-gold);">🌐 Seleccionar Todos</label>
@@ -416,9 +445,9 @@
                             <div class="dropdown">
                                 <button class="btn w-100 text-start d-flex justify-content-between align-items-center form-control" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="tradeDropdownBtn">
                                     <span id="tradeDropdownText" class="text-truncate" style="color: var(--text-main);">Todas las Funciones</span>
-                                    <i class="fa-solid fa-chevron-down small text-muted"></i>
+                                    <i class="fa-solid fa-chevron-down small text-muted no-print"></i>
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-checkboxes shadow" id="tradeCheckboxesContainer">
+                                <div class="dropdown-menu dropdown-menu-checkboxes shadow no-print" id="tradeCheckboxesContainer">
                                     <div class="form-check border-bottom pb-2 mb-2" style="border-color: var(--border-color) !important;">
                                         <input class="form-check-input border-secondary" type="checkbox" id="checkAllTrades" checked onchange="toggleAllCheckboxes('trade')">
                                         <label class="form-check-label fw-bold" for="checkAllTrades" style="color: var(--brand-gold);">🌐 Seleccionar Todas</label>
@@ -434,36 +463,21 @@
                         </div>
                     </div>
                     
-                    <div class="mb-3 text-dark small">
-                        <b>Rango Activo:</b> <span id="weekRangeLabel" style="color: var(--brand-gold); font-weight: 600;">-</span>
+                    <div class="mb-3 text-dark small fw-semibold">
+                        Rango Activo: <span id="weekRangeLabel" style="color: var(--brand-gold);"> - </span>
                     </div>
 
-                    <div class="table-responsive rounded-3 border" style="border-color: var(--border-color) !important;">
-                        <table class="table table-hover table-striped table-weekly align-middle m-0">
-                            <thead>
-                                <tr>
-                                    <th style="width: 18%;" class="text-start">Trabajador</th>
-                                    <th style="width: 12%;" class="text-start">Función</th>
-                                    <th style="width: 6%;">Lun</th>
-                                    <th style="width: 6%;">Mar</th>
-                                    <th style="width: 6%;">Mié</th>
-                                    <th style="width: 6%;">Jue</th>
-                                    <th style="width: 6%;">Vie</th>
-                                    <th style="width: 6%;">Sáb</th>
-                                    <th style="width: 6%;">Dom</th>
-                                    <th style="width: 10%; color: var(--brand-gold) !important;">Horas</th>
-                                    <th style="width: 10%;">Tarifa/h</th>
-                                    <th style="width: 16%; color: #059669 !important;">Total a Pagar</th>
-                                </tr>
-                            </thead>
-                            <tbody id="weeklyTbody"></tbody>
-                        </table>
-                    </div>
+                    <!-- CONTENEDOR DEL RESUMEN (Visible en pantalla, Oculto al Imprimir) -->
+                    <div id="resumenGeneralContainer" class="screen-only-summary"></div>
+                    
+                    <!-- CONTENEDOR DE TABLAS SEPARADAS Y RESUMEN DE IMPRESIÓN -->
+                    <div id="tablasSeparadasContainer" class="print-only-tables"></div>
+
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS (CON FILTRO DE PROYECTO) -->
+        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS -->
         <div class="container mb-5 no-print tab-content-section" id="daily-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-12">
@@ -576,7 +590,7 @@
             </div>
         </div>
 
-        <!-- NUEVO APARTADO: REGISTRO MANUAL POR SEMANA Y DÍAS (ADMIN) -->
+        <!-- TAB 5: REGISTRO MANUAL POR SEMANA Y DÍAS (ADMIN) -->
         <div class="container mb-5 no-print tab-content-section" id="manual-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
@@ -591,13 +605,11 @@
                                     <div class="col-md-6">
                                         <label class="form-label text-uppercase">Trabajador</label>
                                         <select class="form-select text-dark" id="manualWorkerSelect" required>
-                                            <!-- Dinámico -->
                                         </select>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-uppercase">Proyecto Asignado</label>
                                         <select class="form-select text-dark" id="manualProjectSelect" required>
-                                            <!-- Dinámico -->
                                         </select>
                                     </div>
                                 </div>
@@ -611,7 +623,6 @@
                                 <div class="mb-4">
                                     <label class="form-label text-uppercase">Selecciona los días a registrar</label>
                                     <div class="row g-2 p-3 bg-light-dark rounded-3 border" id="manualDaysCheckboxesContainer">
-                                        <!-- Checkboxes dinámicos de Lunes a Domingo -->
                                     </div>
                                 </div>
 
@@ -628,7 +639,6 @@
                                 <div class="mb-4">
                                     <label class="form-label text-uppercase">Horas Extras por Día (Opcional)</label>
                                     <input type="number" step="0.25" min="0" class="form-control" id="manualOvertimeInput" value="0" placeholder="Ej. 1.5">
-                                    <div class="form-text small text-muted">Se asignarán como horas extras fijas a cada uno de los días seleccionados.</div>
                                 </div>
                                 <button type="submit" class="btn btn-custom w-100 py-3 shadow-sm">
                                     <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Registros Seleccionados
@@ -640,7 +650,7 @@
             </div>
         </div>
 
-        <!-- TAB 5: GESTIÓN DE USUARIOS -->
+        <!-- TAB 6: GESTIÓN DE USUARIOS -->
         <div class="container mb-5 no-print tab-content-section" id="admin-users-tab" style="display:none;">
             <div class="row justify-content-center g-4">
                 <div class="col-lg-5">
@@ -711,7 +721,7 @@
             </div>
         </div>
 
-        <!-- TAB 6: GESTIÓN DE PROYECTOS -->
+        <!-- TAB 7: GESTIÓN DE PROYECTOS -->
         <div class="container mb-5 no-print tab-content-section" id="admin-projects-tab" style="display:none;">
             <div class="row justify-content-center g-4">
                 <div class="col-lg-5">
@@ -771,7 +781,7 @@
             </div>
         </div>
 
-        <!-- TAB 7: GESTIÓN DE FUNCIONES -->
+        <!-- TAB 8: GESTIÓN DE FUNCIONES -->
         <div class="container mb-5 no-print tab-content-section" id="admin-trades-tab" style="display:none;">
             <div class="row justify-content-center g-4">
                 <div class="col-lg-5">
@@ -817,7 +827,7 @@
             </div>
         </div>
 
-        <!-- TAB 8: AGENDA / DIRECTORIO DE CONTACTO -->
+        <!-- TAB 9: AGENDA / DIRECTORIO DE CONTACTO -->
         <div class="container mb-5 no-print tab-content-section" id="directory-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-9">
@@ -881,6 +891,12 @@
       if (typeof loadDailyLogs === 'function') loadDailyLogs();
   });
 
+  window.ajustesSemanalesNube = {};
+  onValue(ref(db, 'ajustesSemanales'), (snapshot) => {
+      window.ajustesSemanalesNube = snapshot.val() || {};
+      if (typeof loadWeeklySummary === 'function') loadWeeklySummary();
+  });
+
   onValue(ref(db, 'config/usuariosSistema'), (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -927,7 +943,6 @@
         setInitialWeek();
         obtenerGPSReal();
         
-        // Ver si hay sesión guardada al recargar
         const sesionGuardada = localStorage.getItem('oslim_usuario_actual');
         if (sesionGuardada) {
             setTimeout(() => {
@@ -948,9 +963,7 @@
     function closeMenu() {
         const offcanvasEl = document.getElementById('menuOculto');
         const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
-        if (offcanvas) {
-            offcanvas.hide();
-        }
+        if (offcanvas) offcanvas.hide();
     }
 
     function getUsuarios() { return window.usuariosSistemaNube || usuariosSistemaDefault; }
@@ -1033,7 +1046,6 @@
                 logsUserFilter.innerHTML += `<option value="${user}" ${sel}>${user}</option>`;
             });
         }
-
         const logsProjectFilter = document.getElementById('logsProjectFilter');
         if (logsProjectFilter) {
             let currentVal = logsProjectFilter.value;
@@ -1043,7 +1055,6 @@
                 logsProjectFilter.innerHTML += `<option value="${proj.name}" ${sel}>${proj.name}</option>`;
             });
         }
-
         const logsTradeFilter = document.getElementById('logsTradeFilter');
         if (logsTradeFilter) {
             let currentVal = logsTradeFilter.value;
@@ -1053,7 +1064,6 @@
                 logsTradeFilter.innerHTML += `<option value="${t}" ${sel}>${t}</option>`;
             });
         }
-
         const mapProjectFilter = document.getElementById('mapProjectFilter');
         if (mapProjectFilter) {
             let currentVal = mapProjectFilter.value;
@@ -1068,11 +1078,7 @@
     function toggleAllCheckboxes(type) {
         const selectAll = document.getElementById(type === 'project' ? 'checkAllProjects' : 'checkAllTrades');
         const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
-        
-        checkboxes.forEach(cb => {
-            cb.checked = selectAll.checked;
-        });
-        
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
         updateDropdownButtonText(type);
         loadWeeklySummary();
     }
@@ -1081,7 +1087,6 @@
         const selectAll = document.getElementById(type === 'project' ? 'checkAllProjects' : 'checkAllTrades');
         const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-        
         selectAll.checked = allChecked;
         updateDropdownButtonText(type);
         loadWeeklySummary();
@@ -1090,9 +1095,7 @@
     function getSelectedCheckboxValues(type) {
         const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
         let selected = [];
-        checkboxes.forEach(cb => {
-            if (cb.checked) selected.push(cb.value);
-        });
+        checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
         return selected;
     }
 
@@ -1100,7 +1103,6 @@
         const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
         const textSpan = document.getElementById(type === 'project' ? 'projectDropdownText' : 'tradeDropdownText');
         const selectAll = document.getElementById(type === 'project' ? 'checkAllProjects' : 'checkAllTrades');
-        
         let selected = getSelectedCheckboxValues(type);
         
         if (selected.length === 0) {
@@ -1130,9 +1132,7 @@
                 gpsText.innerHTML = `✅ GPS Activo — Lat: <b>${currentCoords.lat.toFixed(5)}</b>, Lng: <b>${currentCoords.lng.toFixed(5)}</b>`;
                 if (entryMap) actualizarMapaProyectoSeleccionado();
             },
-            (err) => {
-                gpsText.innerHTML = "⚠️ No se pudo obtener la posición GPS.";
-            },
+            (err) => { gpsText.innerHTML = "⚠️ No se pudo obtener la posición GPS."; },
             { enableHighAccuracy: true }
         );
     }
@@ -1141,42 +1141,28 @@
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('recovery-screen').classList.remove('hidden');
     }
-
     function volverAlLogin() {
         document.getElementById('recovery-screen').classList.add('hidden');
         document.getElementById('login-screen').classList.remove('hidden');
     }
-
     function verificarYCambiarPassword(e) {
         e.preventDefault();
         const u = document.getElementById('recUser').value.trim();
         const phoneInput = document.getElementById('recPhone').value.trim();
         const rateInput = parseFloat(document.getElementById('recRate').value);
         const newPass = document.getElementById('recNewPass').value.trim();
-
         let usuarios = getUsuarios();
         const matchedKey = Object.keys(usuarios).find(key => key.toLowerCase() === u.toLowerCase());
-
-        if (!matchedKey) {
-            alert("❌ El usuario no existe en el sistema.");
-            return;
-        }
-
+        if (!matchedKey) return alert("❌ El usuario no existe en el sistema.");
         let userData = usuarios[matchedKey];
         let dbPhone = (userData.phone || "").replace(/[^0-9]/g, '');
         let inputPhoneClean = phoneInput.replace(/[^0-9]/g, '');
         let dbRate = parseFloat(userData.rate) || 20.00;
-
         if (dbPhone === inputPhoneClean && dbRate === rateInput) {
             userData.pass = newPass;
             window.dbSet(window.dbRef(window.db, 'config/usuariosSistema/' + matchedKey), userData)
-                .then(() => {
-                    alert("✅ ¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión.");
-                    volverAlLogin();
-                })
-                .catch((err) => {
-                    alert("❌ Error al actualizar en la base de datos.");
-                });
+                .then(() => { alert("✅ ¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión."); volverAlLogin(); })
+                .catch(() => { alert("❌ Error al actualizar en la base de datos."); });
         } else {
             alert("❌ Los datos de verificación (Celular o Tarifa/Sueldo) no coinciden con nuestros registros.");
         }
@@ -1186,7 +1172,6 @@
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
         const errDiv = document.getElementById('loginError');
-
         let usuarios = getUsuarios();
         const matchedKey = Object.keys(usuarios).find(key => key.toLowerCase() === u.toLowerCase());
 
@@ -1195,57 +1180,22 @@
             errDiv.innerText = "Usuario o contraseña incorrectos.";
             return;
         }
-
         usuarioActual = matchedKey;
         localStorage.setItem('oslim_usuario_actual', usuarioActual);
-        let datosUser = usuarios[usuarioActual];
-
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('main-app-container').classList.remove('hidden');
-        document.getElementById('loggedUserBadge').innerText = usuarioActual.toUpperCase();
-
-        document.getElementById('loggedWorkerName').value = usuarioActual;
-        document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
-
-        const adminSection = document.getElementById('admin-menu-section');
-        const adminTradeElements = document.querySelectorAll('.admin-trade-filter-control');
-        
-        if (datosUser.rol === 'admin') {
-            adminSection.classList.remove('hidden');
-            document.getElementById('admin-daily-btn').classList.remove('hidden');
-            document.getElementById('admin-logs-btn').classList.remove('hidden');
-            document.getElementById('admin-manual-btn').classList.remove('hidden');
-            document.getElementById('admin-users-btn').classList.remove('hidden');
-            document.getElementById('admin-projects-btn').classList.remove('hidden');
-            document.getElementById('admin-trades-btn').classList.remove('hidden');
-            document.getElementById('admin-directory-btn').classList.remove('hidden');
-            adminTradeElements.forEach(el => el.classList.remove('hidden'));
-        } else {
-            adminSection.classList.add('hidden');
-            document.getElementById('admin-daily-btn').classList.add('hidden');
-            document.getElementById('admin-logs-btn').classList.add('hidden');
-            document.getElementById('admin-manual-btn').classList.add('hidden');
-            document.getElementById('admin-users-btn').classList.add('hidden');
-            document.getElementById('admin-projects-btn').classList.add('hidden');
-            document.getElementById('admin-trades-btn').classList.add('hidden');
-            document.getElementById('admin-directory-btn').classList.add('hidden');
-            adminTradeElements.forEach(el => el.classList.add('hidden'));
-        }
-
-        poblarSelectsDinamicos();
-        showTab('entry-tab');
-        loadWeeklySummary();
+        prepararUIUsuario(usuarios[matchedKey]);
     }
 
     function restaurarSesionAutomatica(userKey) {
         usuarioActual = userKey;
         let usuarios = getUsuarios();
         let datosUser = usuarios[usuarioActual] || { rol: 'trabajador', trade: 'Carpintero' };
+        prepararUIUsuario(datosUser);
+    }
 
+    function prepararUIUsuario(datosUser) {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-app-container').classList.remove('hidden');
         document.getElementById('loggedUserBadge').innerText = usuarioActual.toUpperCase();
-
         document.getElementById('loggedWorkerName').value = usuarioActual;
         document.getElementById('loggedWorkerTrade').value = datosUser.trade || 'Carpintero (Carpenter)';
 
@@ -1273,7 +1223,6 @@
             document.getElementById('admin-directory-btn').classList.add('hidden');
             adminTradeElements.forEach(el => el.classList.add('hidden'));
         }
-
         poblarSelectsDinamicos();
         showTab('entry-tab');
         loadWeeklySummary();
@@ -1294,33 +1243,16 @@
         const target = document.getElementById(tabId);
         if (target) target.style.display = 'block';
 
-        if (tabId === 'entry-tab') {
-            setTimeout(() => { initEntryMap(); }, 200);
-        }
-        if (tabId === 'weekly-tab') {
-            poblarSelectsDinamicos();
-            loadWeeklySummary();
-        }
-        if (tabId === 'daily-tab') {
-            updateMapUserFilterDropdown();
-            poblarSelectsDinamicos();
-            setTimeout(() => {
-                initMap();
-                loadDailyRecords();
-            }, 250);
-        }
-        if (tabId === 'logs-tab') {
-            poblarSelectsDinamicos();
-            loadDailyLogs();
-        }
+        if (tabId === 'entry-tab') { setTimeout(() => { initEntryMap(); }, 200); }
+        if (tabId === 'weekly-tab') { poblarSelectsDinamicos(); loadWeeklySummary(); }
+        if (tabId === 'daily-tab') { updateMapUserFilterDropdown(); poblarSelectsDinamicos(); setTimeout(() => { initMap(); loadDailyRecords(); }, 250); }
+        if (tabId === 'logs-tab') { poblarSelectsDinamicos(); loadDailyLogs(); }
         if (tabId === 'manual-tab') {
             poblarSelectsDinamicos();
             const manualWeekPicker = document.getElementById('manualWeekPicker');
             if (manualWeekPicker && !manualWeekPicker.value) {
                 const now = new Date();
-                const year = now.getFullYear();
-                const weekNum = getISOWeek(now);
-                manualWeekPicker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
+                manualWeekPicker.value = `${now.getFullYear()}-W${getISOWeek(now) < 10 ? '0' + getISOWeek(now) : getISOWeek(now)}`;
             }
             actualizarDiasSemanaManual();
         }
@@ -1333,15 +1265,12 @@
     function initEntryMap() {
         if (!entryMap) {
             entryMap = L.map('entryMap').setView([currentCoords.lat, currentCoords.lng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(entryMap);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(entryMap);
         } else {
             entryMap.invalidateSize();
         }
         actualizarMapaProyectoSeleccionado();
     }
-
     function actualizarMapaProyectoSeleccionado() {
         if (!entryMap) return;
         const selectedProjectName = document.getElementById('entryJob').value;
@@ -1352,33 +1281,19 @@
         if (entryMarker) entryMap.removeLayer(entryMarker);
         if (projectCircle) entryMap.removeLayer(projectCircle);
 
-        entryMarker = L.marker([currentCoords.lat, currentCoords.lng]).addTo(entryMap)
-            .bindPopup("<b style='color:black;'>Tu Ubicación GPS</b>").openPopup();
-
-        projectCircle = L.circle([proyectoObj.lat, proyectoObj.lng], {
-            color: '#b45309',
-            fillColor: '#b45309',
-            fillOpacity: 0.25,
-            radius: 150
-        }).addTo(entryMap).bindPopup(`<b style='color:black;'>Proyecto: ${proyectoObj.name}</b><br><span style='color:black;'>Geocerca 150m</span>`);
-
+        entryMarker = L.marker([currentCoords.lat, currentCoords.lng]).addTo(entryMap).bindPopup("<b style='color:black;'>Tu Ubicación GPS</b>").openPopup();
+        projectCircle = L.circle([proyectoObj.lat, proyectoObj.lng], { color: '#b45309', fillColor: '#b45309', fillOpacity: 0.25, radius: 150 }).addTo(entryMap).bindPopup(`<b style='color:black;'>Proyecto: ${proyectoObj.name}</b>`);
         entryMap.setView([proyectoObj.lat, proyectoObj.lng], 15);
     }
-
     function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
         const φ2 = lat2 * Math.PI/180;
         const Δφ = (lat2-lat1) * Math.PI/180;
         const Δλ = (lon2-lon1) * Math.PI/180;
-
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
-
     function registrarAsistenciaConGeocerca(tipo) {
         const workerName = document.getElementById('loggedWorkerName').value;
         const trade = document.getElementById('loggedWorkerTrade').value;
@@ -1389,473 +1304,58 @@
         if (!proyectoObj) return alert("Seleccione un proyecto válido.");
 
         let distancia = calcularDistanciaMetros(currentCoords.lat, currentCoords.lng, proyectoObj.lat, proyectoObj.lng);
+        if (distancia > 150) return alert(`❌ Estás a ${Math.round(distancia)} metros del proyecto. Debes estar dentro de la zona (150m).`);
 
-        if (distancia > 150) {
-            alert(`❌ Estás a ${Math.round(distancia)} metros del proyecto "${proyectoObj.name}". Debes estar dentro de la zona (150m).`);
-            return;
-        }
-
-        const textCheck = (proyectoObj.name + " " + (proyectoObj.address || "")).toLowerCase();
-        const esUSA = textCheck.includes("miami") || textCheck.includes("harbor") || textCheck.includes("palm") || textCheck.includes("usa") || textCheck.includes("florida");
-        
+        const esUSA = (proyectoObj.name + " " + (proyectoObj.address || "")).toLowerCase().match(/miami|harbor|palm|usa|florida/);
         const timeZone = esUSA ? "America/New_York" : "America/Mexico_City";
-        const ahoraLocal = new Date().toLocaleString("en-US", { timeZone: timeZone });
-        const fechaLocalObj = new Date(ahoraLocal);
-
-        const anio = fechaLocalObj.getFullYear();
-        const mes = String(fechaLocalObj.getMonth() + 1).padStart(2, '0');
-        const dia = String(fechaLocalObj.getDate()).padStart(2, '0');
-        const fechaStr = `${anio}-${mes}-${dia}`;
-
+        const fechaLocalObj = new Date(new Date().toLocaleString("en-US", { timeZone: timeZone }));
+        const fechaStr = `${fechaLocalObj.getFullYear()}-${String(fechaLocalObj.getMonth() + 1).padStart(2, '0')}-${String(fechaLocalObj.getDate()).padStart(2, '0')}`;
         const horaStr = String(fechaLocalObj.getHours()).padStart(2, '0') + ":" + String(fechaLocalObj.getMinutes()).padStart(2, '0');
-        
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
         let usuarios = getUsuarios();
-        let userObj = usuarios[workerName] || {};
-        let tarifaActual = parseFloat(userObj.rate) || 20.00;
-
+        let tarifaActual = parseFloat((usuarios[workerName] || {}).rate) || 20.00;
         let registros = window.registrosGlobales || [];
         let jornadaHoy = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === selectedProjectName);
 
         if (tipo === 'ENTRADA') {
             if (!jornadaHoy) {
                 jornadaHoy = {
-                    id: Date.now(),
-                    workerName: workerName,
-                    trade: trade,
-                    rateSnapshot: tarifaActual,
-                    date: fechaStr,
-                    dayName: days[fechaLocalObj.getDay()],
-                    job: selectedProjectName,
-                    timeIn: horaStr,
-                    timeOut: '-',
-                    lunch: 0.5,
-                    overtime: 0,
-                    coordsIn: { lat: currentCoords.lat, lng: currentCoords.lng },
-                    coordsOut: null
+                    id: Date.now(), workerName, trade, rateSnapshot: tarifaActual, date: fechaStr, dayName: days[fechaLocalObj.getDay()], job: selectedProjectName,
+                    timeIn: horaStr, timeOut: '-', lunch: 0.5, overtime: 0, coordsIn: { lat: currentCoords.lat, lng: currentCoords.lng }, coordsOut: null
                 };
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 jornadaHoy.firebaseKey = newRef.key;
                 window.dbSet(newRef, jornadaHoy);
-                alert(`✅ ¡ENTRADA registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
+                alert(`✅ ENTRADA registrada a las ${horaStr}.`);
             } else {
-                if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
-                if (jornadaHoy.timeIn && jornadaHoy.timeIn !== '-') {
-                    alert(`⚠️ Ya registraste una entrada a las ${jornadaHoy.timeIn} hoy para este proyecto. Si necesitas cambiarla, hazlo desde la sección de administración.`);
-                    return;
-                }
+                if (jornadaHoy.timeIn && jornadaHoy.timeIn !== '-') return alert(`⚠️ Ya registraste entrada a las ${jornadaHoy.timeIn}.`);
                 jornadaHoy.timeIn = horaStr;
                 jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
                 window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
-                alert(`✅ ¡ENTRADA registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
+                alert(`✅ ENTRADA actualizada a las ${horaStr}.`);
             }
         } else if (tipo === 'SALIDA') {
-            if (!jornadaHoy || !jornadaHoy.timeIn || jornadaHoy.timeIn === '-') {
-                alert(`❌ No puedes registrar la salida porque aún no tienes una entrada registrada hoy para este proyecto.`);
-                return;
-            }
-
-            if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
-
+            if (!jornadaHoy || !jornadaHoy.timeIn || jornadaHoy.timeIn === '-') return alert(`❌ Necesitas registrar entrada primero.`);
             if (jornadaHoy.timeOut && jornadaHoy.timeOut !== '-') {
-                let cambiar = confirm(`⚠️ Ya tienes una hora de salida registrada a las ${jornadaHoy.timeOut}.\n¿Deseas cambiarla por la hora actual (${horaStr})?`);
-                if (!cambiar) return;
+                if (!confirm(`⚠️ Ya tienes salida a las ${jornadaHoy.timeOut}. ¿Reemplazar por ${horaStr}?`)) return;
             }
-
             jornadaHoy.timeOut = horaStr;
             jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
             window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
-            alert(`✅ ¡SALIDA actualizada con éxito a las ${horaStr} (${esUSA ? 'Hora Miami' : 'Hora México'})!`);
+            alert(`✅ SALIDA registrada a las ${horaStr}.`);
         }
-
         showTab('weekly-tab');
-    }
-
-    function actualizarDiasSemanaManual() {
-        const weekPickerVal = document.getElementById('manualWeekPicker').value;
-        const container = document.getElementById('manualDaysCheckboxesContainer');
-        const rangeText = document.getElementById('manualWeekRangeText');
-        if (!weekPickerVal || !container) return;
-
-        const { mon, sun } = getMonToSunRange(weekPickerVal);
-        if (!mon || !sun) return;
-
-        rangeText.innerText = `Rango de la semana: Del ${formatDateShort(mon)} al ${formatDateShort(sun)}`;
-        container.innerHTML = '';
-
-        let nombresDias = [
-            { label: 'Lunes', offset: 0 },
-            { label: 'Martes', offset: 1 },
-            { label: 'Miércoles', offset: 2 },
-            { label: 'Jueves', offset: 3 },
-            { label: 'Viernes', offset: 4 },
-            { label: 'Sábado', offset: 5 },
-            { label: 'Domingo', offset: 6 }
-        ];
-
-        nombresDias.forEach(d => {
-            let fechaDia = new Date(mon);
-            fechaDia.setDate(mon.getDate() + d.offset);
-            let anio = fechaDia.getFullYear();
-            let mes = String(fechaDia.getMonth() + 1).padStart(2, '0');
-            let dia = String(fechaDia.getDate()).padStart(2, '0');
-            let fechaStr = `${anio}-${mes}-${dia}`;
-
-            container.innerHTML += `
-                <div class="col-md-3 col-6">
-                    <div class="form-check">
-                        <input class="form-check-input manual-day-checkbox" type="checkbox" value="${fechaStr}" id="chk_day_${fechaStr}" checked>
-                        <label class="form-check-label small fw-semibold" for="chk_day_${fechaStr}">
-                            ${d.label} <span class="text-muted d-block" style="font-size: 0.7rem;">(${dia}/${mes})</span>
-                        </label>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    function registrarAsistenciaManualAdmin(e) {
-        e.preventDefault();
-        const workerName = document.getElementById('manualWorkerSelect').value;
-        const projectName = document.getElementById('manualProjectSelect').value;
-        const timeIn = document.getElementById('manualTimeInInput').value;
-        const timeOut = document.getElementById('manualTimeOutInput').value;
-        const overtimeVal = parseFloat(document.getElementById('manualOvertimeInput').value) || 0;
-
-        const checkboxes = document.querySelectorAll('.manual-day-checkbox:checked');
-        if (checkboxes.length === 0) {
-            alert("❌ Debes seleccionar al menos un día de la semana.");
-            return;
-        }
-
-        if (!workerName || !projectName || !timeIn || !timeOut) {
-            alert("❌ Por favor completa los campos obligatorios.");
-            return;
-        }
-
-        let usuarios = getUsuarios();
-        let userObj = usuarios[workerName] || {};
-        let trade = userObj.trade || 'Carpintero';
-        let tarifaActual = parseFloat(userObj.rate) || 20.00;
-
-        let proyectos = getProyectos();
-        let proyectoObj = proyectos.find(p => p.name === projectName);
-        let coordsProj = proyectoObj ? { lat: proyectoObj.lat, lng: proyectoObj.lng } : { lat: 0, lng: 0 };
-        let days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-
-        let count = 0;
-        checkboxes.forEach((cb, index) => {
-            let fechaStr = cb.value;
-            let parts = fechaStr.split('-');
-            let dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-            let dayName = days[dObj.getDay()];
-
-            let registros = window.registrosGlobales || [];
-            let jornadaExistente = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === projectName);
-
-            if (jornadaExistente) {
-                jornadaExistente.timeIn = timeIn;
-                jornadaExistente.timeOut = timeOut;
-                jornadaExistente.overtime = overtimeVal;
-                jornadaExistente.trade = trade;
-                jornadaExistente.rateSnapshot = tarifaActual;
-                jornadaExistente.dayName = dayName;
-
-                window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaExistente.firebaseKey), jornadaExistente);
-            } else {
-                let nuevaJornada = {
-                    id: Date.now() + index,
-                    workerName: workerName,
-                    trade: trade,
-                    rateSnapshot: tarifaActual,
-                    date: fechaStr,
-                    dayName: dayName,
-                    job: projectName,
-                    timeIn: timeIn,
-                    timeOut: timeOut,
-                    lunch: 0.5,
-                    overtime: overtimeVal,
-                    coordsIn: coordsProj,
-                    coordsOut: coordsProj
-                };
-
-                const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
-                nuevaJornada.firebaseKey = newRef.key;
-                window.dbSet(newRef, nuevaJornada);
-            }
-            count++;
-        });
-
-        alert(`✅ ¡Registros guardados con éxito para ${count} día(s) seleccionado(s)!`);
-        showTab('weekly-tab');
-    }
-
-    function loadDirectory() {
-        const tbody = document.getElementById('directoryTbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-
-        let usuarios = getUsuarios();
-        Object.keys(usuarios).sort().forEach(user => {
-            let info = usuarios[user];
-            let phone = info.phone || 'S/N';
-            
-            let cleanPhone = phone.replace(/[^0-9]/g, '');
-            let whatsBtn = phone !== 'S/N' && cleanPhone.length >= 8 
-                ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-sm text-white me-1 shadow-sm" style="background-color: #25d366;" title="Enviar WhatsApp"><i class="fa-brands fa-whatsapp fs-5 align-middle"></i></a>` 
-                : '<span class="text-muted small">N/A</span>';
-
-            tbody.innerHTML += `<tr>
-                <td class="fw-bold ps-4 text-dark">${user}</td>
-                <td><code>${phone}</code></td>
-                <td><span class="text-muted">${info.trade || 'Carpintero'}</span></td>
-                <td class="text-end pe-4">${whatsBtn}</td>
-            </tr>`;
-        });
-    }
-
-    function guardarOEditarProyecto(e) {
-        e.preventDefault();
-        const name = document.getElementById('newProjectName').value.trim();
-        const address = document.getElementById('newProjectAddress').value.trim();
-        const lat = parseFloat(document.getElementById('newProjectLat').value);
-        const lng = parseFloat(document.getElementById('newProjectLng').value);
-        const oldName = document.getElementById('editProjectOldName').value;
-
-        if (!name || isNaN(lat) || isNaN(lng)) return;
-
-        let proyectos = [...getProyectos()];
-        if (oldName) {
-            let idx = proyectos.findIndex(p => p.name === oldName);
-            if (idx !== -1) proyectos[idx] = { name, address, lat, lng };
-        } else {
-            if (proyectos.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-                alert("Ya existe un proyecto con ese nombre.");
-                return;
-            }
-            proyectos.push({ name, address, lat, lng });
-        }
-
-        window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), proyectos);
-        alert("¡Proyecto guardado en la nube!");
-        resetProjectForm();
-        loadProjectsManagement();
-    }
-
-    function editarProyecto(name) {
-        let proyectos = getProyectos();
-        let p = proyectos.find(item => item.name === name);
-        if (!p) return;
-
-        document.getElementById('newProjectName').value = p.name;
-        document.getElementById('editProjectOldName').value = p.name;
-        document.getElementById('newProjectAddress').value = p.address || '';
-        document.getElementById('newProjectLat').value = p.lat || '';
-        document.getElementById('newProjectLng').value = p.lng || '';
-
-        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Editando Proyecto`;
-        document.getElementById('saveProjectBtn').innerHTML = `Actualizar`;
-        document.getElementById('cancelEditProjectBtn').classList.remove('hidden');
-    }
-
-    function resetProjectForm() {
-        document.getElementById('newProjectName').value = '';
-        document.getElementById('editProjectOldName').value = '';
-        document.getElementById('newProjectAddress').value = '';
-        document.getElementById('newProjectLat').value = '';
-        document.getElementById('newProjectLng').value = '';
-        document.getElementById('projectFormHeader').innerHTML = `<i class="fa-solid fa-building fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Formulario de Proyecto`;
-        document.getElementById('saveProjectBtn').innerHTML = `Guardar Proyecto`;
-        document.getElementById('cancelEditProjectBtn').classList.add('hidden');
-    }
-
-    function loadProjectsManagement() {
-        const tbody = document.getElementById('projectsTbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        let proyectos = getProyectos();
-        proyectos.forEach((p) => {
-            let deleteBtn = (proyectos.length > 1) ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarProyecto('${p.name}')"><i class="fa-solid fa-trash"></i></button>` : '';
-            tbody.innerHTML += `<tr>
-                <td class="fw-bold ps-4 text-dark">${p.name}</td>
-                <td><span class="text-muted small">${p.address || 'S/D'}</span></td>
-                <td><code style="color: var(--brand-gold);">${p.lat}, ${p.lng}</code></td>
-                <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-outline-dark me-1" style="border-color: var(--border-color);" onclick="editarProyecto('${p.name}')"><i class="fa-solid fa-pen"></i></button>
-                    ${deleteBtn}
-                </td>
-            </tr>`;
-        });
-    }
-
-    function eliminarProyecto(name) {
-        if (confirm("¿Eliminar este proyecto?")) {
-            let proyectos = getProyectos().filter(p => p.name !== name);
-            window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), proyectos);
-            loadProjectsManagement();
-        }
-    }
-
-    function guardarOEditarTrade(e) {
-        e.preventDefault();
-        const tName = document.getElementById('newTradeName').value.trim();
-        const oldName = document.getElementById('editTradeOldName').value;
-
-        if (!tName) return;
-
-        let trades = [...getTrades()];
-        if (oldName) {
-            let idx = trades.indexOf(oldName);
-            if (idx !== -1) trades[idx] = tName;
-        } else {
-            if (trades.includes(tName)) {
-                alert("La función ya existe.");
-                return;
-            }
-            trades.push(tName);
-        }
-
-        window.dbSet(window.dbRef(window.db, 'config/listaTrades'), trades);
-        alert("¡Función guardada en la nube!");
-        resetTradeForm();
-        loadTradesManagement();
-    }
-
-    function editarTrade(tName) {
-        document.getElementById('newTradeName').value = tName;
-        document.getElementById('editTradeOldName').value = tName;
-        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Editando Función`;
-        document.getElementById('saveTradeBtn').innerHTML = `Actualizar`;
-        document.getElementById('cancelEditTradeBtn').classList.remove('hidden');
-    }
-
-    function resetTradeForm() {
-        document.getElementById('newTradeName').value = '';
-        document.getElementById('editTradeOldName').value = '';
-        document.getElementById('tradeFormHeader').innerHTML = `<i class="fa-solid fa-briefcase fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Formulario de Función`;
-        document.getElementById('saveTradeBtn').innerHTML = `Añadir Función`;
-        document.getElementById('cancelEditTradeBtn').classList.add('hidden');
-    }
-
-    function loadTradesManagement() {
-        const tbody = document.getElementById('tradesTbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        let trades = getTrades();
-        trades.forEach((t) => {
-            let deleteBtn = (trades.length > 1) ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarTrade('${t}')"><i class="fa-solid fa-trash"></i></button>` : '';
-            tbody.innerHTML += `<tr>
-                <td class="fw-bold ps-4 text-dark">${t}</td>
-                <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-outline-dark me-1" style="border-color: var(--border-color);" onclick="editarTrade('${t}')"><i class="fa-solid fa-pen"></i></button>
-                    ${deleteBtn}
-                </td>
-            </tr>`;
-        });
-    }
-
-    function eliminarTrade(tName) {
-        if (confirm("¿Eliminar esta función?")) {
-            let trades = getTrades().filter(t => t !== tName);
-            window.dbSet(window.dbRef(window.db, 'config/listaTrades'), trades);
-            loadTradesManagement();
-        }
-    }
-
-    function guardarOEditarUsuarioSistema(e) {
-        e.preventDefault();
-        const userKey = document.getElementById('adminNewUser').value.trim();
-        const pass = document.getElementById('adminNewPass').value.trim();
-        const phone = document.getElementById('adminNewPhone').value.trim();
-        const rate = parseFloat(document.getElementById('adminNewRate').value) || 20.00;
-        const trade = document.getElementById('adminNewTrade').value;
-        const rol = document.getElementById('adminNewRol').value;
-
-        if (!userKey || !pass) return;
-
-        let usuarios = {...getUsuarios()};
-        usuarios[userKey] = { pass, phone, rate, trade, rol };
-
-        window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), usuarios);
-        alert(`¡Usuario "${userKey}" guardado!`);
-        resetUserForm();
-        loadUserManagement();
-    }
-
-    function editarUsuario(userKey) {
-        let usuarios = getUsuarios();
-        let info = usuarios[userKey];
-        if (!info) return;
-
-        document.getElementById('adminNewUser').value = userKey;
-        document.getElementById('adminNewUser').readOnly = true;
-        document.getElementById('adminNewPass').value = info.pass;
-        document.getElementById('adminNewPhone').value = info.phone || '';
-        document.getElementById('adminNewRate').value = info.rate || 20.00;
-        document.getElementById('adminNewTrade').value = info.trade || getTrades()[0];
-        document.getElementById('adminNewRol').value = info.rol || 'trabajador';
-
-        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-pen fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Editando Usuario`;
-        document.getElementById('saveUserBtn').innerHTML = `Actualizar`;
-        document.getElementById('cancelEditUserBtn').classList.remove('hidden');
-    }
-
-    function resetUserForm() {
-        document.getElementById('adminNewUser').value = '';
-        document.getElementById('adminNewUser').readOnly = false;
-        document.getElementById('adminNewPass').value = '';
-        document.getElementById('adminNewPhone').value = '';
-        document.getElementById('adminNewRate').value = '20.00';
-        document.getElementById('userFormHeader').innerHTML = `<i class="fa-solid fa-user-gear fa-2x mb-2" style="color: var(--brand-gold);"></i><br>Formulario de Usuario`;
-        document.getElementById('saveUserBtn').innerHTML = `Guardar Usuario`;
-        document.getElementById('cancelEditUserBtn').classList.add('hidden');
-        loadUserManagement();
-    }
-
-    function loadUserManagement() {
-        const tbody = document.getElementById('systemUsersTbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        let usuarios = getUsuarios();
-        Object.keys(usuarios).forEach(user => {
-            let info = usuarios[user];
-            let rate = info.rate ? `$${Number(info.rate).toFixed(2)}` : '$20.00';
-            let rolBadge = (info.rol === 'admin') ? '<span class="badge bg-danger">Admin</span>' : '<span class="badge text-dark" style="background-color: var(--bg-input);">Normal</span>';
-            let actions = `<button class="btn btn-sm btn-outline-dark me-1" style="border-color: var(--border-color);" onclick="editarUsuario('${user}')"><i class="fa-solid fa-pen"></i></button>`;
-            if (user.toLowerCase() !== 'fernando') {
-                actions += `<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuarioSistema('${user}')"><i class="fa-solid fa-trash"></i></button>`;
-            }
-            tbody.innerHTML += `<tr>
-                <td class="fw-bold ps-4 text-dark">${user}</td>
-                <td><code style="color: var(--brand-gold);">${info.phone || 'S/N'}</code></td>
-                <td><span class="text-success fw-bold">${rate}</span></td>
-                <td>${rolBadge}</td>
-                <td class="text-end pe-4">${actions}</td>
-            </tr>`;
-        });
-    }
-
-    function eliminarUsuarioSistema(user) {
-        if (confirm(`¿Eliminar al usuario ${user}?`)) {
-            let usuarios = {...getUsuarios()};
-            delete usuarios[user];
-            window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), usuarios);
-            loadUserManagement();
-        }
     }
 
     function setInitialWeek() {
         const now = new Date();
         const year = now.getFullYear();
         const weekNum = getISOWeek(now);
-        const picker = document.getElementById('weekPicker');
-        if (picker) picker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
-        
-        const logsPicker = document.getElementById('logsWeekPicker');
-        if (logsPicker) logsPicker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
+        const val = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
+        if (document.getElementById('weekPicker')) document.getElementById('weekPicker').value = val;
+        if (document.getElementById('logsWeekPicker')) document.getElementById('logsWeekPicker').value = val;
     }
-
     function getISOWeek(d) {
         const date = new Date(d.getTime());
         date.setHours(0, 0, 0, 0);
@@ -1863,53 +1363,56 @@
         const week1 = new Date(date.getFullYear(), 0, 4);
         return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
     }
-
     function getMonToSunRange(weekString) {
         if (!weekString) return { mon: null, sun: null };
-        const partsWeek = weekString.split('-W');
-        if (partsWeek.length < 2) return { mon: null, sun: null };
-        const year = Number(partsWeek[0]);
-        const week = Number(partsWeek[1]);
-        
-        const simple = new Date(year, 0, 1 + (week - 1) * 7);
+        const parts = weekString.split('-W');
+        const simple = new Date(Number(parts[0]), 0, 1 + (Number(parts[1]) - 1) * 7);
         const dow = simple.getDay();
-        const ISOweekStart = new Date(simple.getTime());
-        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-            
-        const mon = new Date(ISOweekStart);
-        const sun = new Date(mon);
-        sun.setDate(mon.getDate() + 6);
+        const start = new Date(simple.getTime());
+        start.setDate(simple.getDate() - (dow <= 4 ? dow - 1 : dow - 8));
+        const mon = new Date(start);
+        const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
         return { mon, sun };
     }
-
-    function formatDateShort(d) {
-        return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-    }
-
-    function redondearAMediaHora(horas) {
-        return Math.round(horas * 2) / 2;
-    }
-
-    function calcularTotalPagar(r) {
-        let net = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
-        let ot = parseFloat(r.overtime) || 0;
-        return net + ot;
-    }
-
+    function formatDateShort(d) { return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; }
+    function redondearAMediaHora(horas) { return Math.round(horas * 2) / 2; }
     function calcularHorasNetas(inTime, outTime, lunchHours) {
         if (!inTime || !outTime || inTime === '-' || outTime === '-') return 0;
         let [h1, m1] = inTime.split(':').map(Number);
         let [h2, m2] = outTime.split(':').map(Number);
-        let minsIn = h1 * 60 + m1;
-        let minsOut = h2 * 60 + m2;
-        if (minsOut <= minsIn) return 0;
+        let netMins = (h2 * 60 + m2) - (h1 * 60 + m1) - (parseFloat(lunchHours) * 60);
+        return netMins > 0 ? redondearAMediaHora(netMins / 60) : 0;
+    }
+    function calcularTotalPagar(r) { return calcularHorasNetas(r.timeIn, r.timeOut, r.lunch) + (parseFloat(r.overtime) || 0); }
+
+    function guardarAjusteSemanal(workerKey) {
+        const weekVal = document.getElementById('weekPicker').value;
+        if (!weekVal) return;
+        const ajusteSueldo = parseFloat(document.getElementById(`adj_sueldo_${workerKey}`).value) || 0;
+        const adicional = parseFloat(document.getElementById(`adj_adicional_${workerKey}`).value) || 0;
+        const deductiva = parseFloat(document.getElementById(`adj_deductiva_${workerKey}`).value) || 0;
+        const pagoRef = document.getElementById(`adj_pagoref_${workerKey}`).value.trim();
+        window.dbSet(window.dbRef(window.db, `ajustesSemanales/${weekVal}_${workerKey}`), { ajusteSueldo, adicional, deductiva, pagoRef })
+            .then(() => { recalcularFila(workerKey); });
+    }
+
+    function recalcularFila(workerKey) {
+        const baseRate = parseFloat(document.getElementById(`base_rate_${workerKey}`).value) || 0;
+        const totalHours = parseFloat(document.getElementById(`hours_span_${workerKey}`).getAttribute('data-hours')) || 0;
+        const adjSueldo = parseFloat(document.getElementById(`adj_sueldo_${workerKey}`).value) || 0;
+        const adicional = parseFloat(document.getElementById(`adj_adicional_${workerKey}`).value) || 0;
+        const deductiva = parseFloat(document.getElementById(`adj_deductiva_${workerKey}`).value) || 0;
         
-        let netMins = (minsOut - minsIn) - (parseFloat(lunchHours) * 60);
-        if (netMins <= 0) return 0;
+        const neto = ((baseRate + adjSueldo) * totalHours) + adicional - deductiva;
         
-        let horasDecimales = netMins / 60;
-        return redondearAMediaHora(horasDecimales);
+        const netoSpan = document.getElementById(`net_pay_span_${workerKey}`);
+        if(netoSpan) { netoSpan.innerText = `$${neto.toFixed(2)}`; netoSpan.setAttribute('data-net', neto); }
+        
+        let totalH = 0, totalM = 0;
+        document.querySelectorAll('.row-net-pay').forEach(el => totalM += parseFloat(el.getAttribute('data-net')) || 0);
+        document.querySelectorAll('.row-total-hours').forEach(el => totalH += parseFloat(el.getAttribute('data-hours')) || 0);
+        document.getElementById('totalWeeklyHoursBadge').innerText = `Total Horas: ${totalH.toFixed(1)} hrs`;
+        document.getElementById('totalWeeklyPayBadge').innerText = `Total a Pagar: $${totalM.toFixed(2)}`;
     }
 
     function loadWeeklySummary() {
@@ -1919,7 +1422,6 @@
         const weekVal = weekPicker.value;
         const selectedProjects = getSelectedCheckboxValues('project');
         const selectedTrades = getSelectedCheckboxValues('trade');
-        
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
 
@@ -1937,296 +1439,248 @@
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
             
-            let userObj = usuarios[r.workerName] || {};
-            let workerTrade = r.trade || userObj.trade || 'Carpintero';
+            let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
             let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
-
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
+
             return dateMatch && projMatch && tradeMatch && userMatch;
         });
 
-        let workerSummary = {};
-        filtered.forEach(r => {
-            const key = r.workerName.toLowerCase().trim();
-            if (!workerSummary[key]) {
-                let userObj = usuarios[r.workerName] || {};
-                let historicalRate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
+        const resumenContainer = document.getElementById('resumenGeneralContainer');
+        const separadasContainer = document.getElementById('tablasSeparadasContainer');
+        
+        if (filtered.length === 0) {
+            resumenContainer.innerHTML = '<div class="alert alert-light text-center p-4 border text-muted">No hay registros con los filtros seleccionados.</div>';
+            separadasContainer.innerHTML = '';
+            document.getElementById('totalWeeklyHoursBadge').innerText = 'Total Horas: 0.0 hrs';
+            document.getElementById('totalWeeklyPayBadge').innerText = 'Total a Pagar: $0.00';
+            return;
+        }
 
+        let workerSummary = {};
+        let gruposPorProyectoFuncion = {};
+        let listProyectosUnicos = Array.from(new Set(filtered.map(r => r.job || 'General')));
+
+        filtered.forEach(r => {
+            let tr = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
+            let pr = r.job || 'General';
+            const key = r.workerName.toLowerCase().trim();
+            
+            if (!workerSummary[key]) {
                 workerSummary[key] = {
-                    name: r.workerName,
-                    trade: r.trade || userObj.trade || 'Carpintero',
-                    rate: historicalRate,
+                    name: r.workerName, trade: tr,
+                    rate: r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat((usuarios[r.workerName]||{}).rate) || 20.00),
                     days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 },
-                    totalHours: 0
+                    projects: {}, totalHours: 0
                 };
             }
-            let totalPagoJornada = calcularTotalPagar(r);
-            const parts = r.date.split('-');
-            const dObj = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
-            const dayOfWeek = dObj.getDay();
+            let tp = calcularTotalPagar(r);
+            const dow = new Date(...r.date.split('-').map((v,i)=>i===1?v-1:v)).getDay();
+            workerSummary[key].days[dow] += tp;
+            workerSummary[key].projects[pr] = (workerSummary[key].projects[pr] || 0) + tp;
+            workerSummary[key].totalHours += tp;
 
-            workerSummary[key].days[dayOfWeek] += totalPagoJornada;
-            workerSummary[key].totalHours += totalPagoJornada;
+            let gKey = `${pr}___${tr}`;
+            if (!gruposPorProyectoFuncion[gKey]) gruposPorProyectoFuncion[gKey] = { proyecto: pr, funcion: tr, map: {} };
+            if (!gruposPorProyectoFuncion[gKey].map[key]) gruposPorProyectoFuncion[gKey].map[key] = { name: r.workerName, trade: tr, days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 }, total: 0, rate: workerSummary[key].rate };
+            gruposPorProyectoFuncion[gKey].map[key].days[dow] += tp;
+            gruposPorProyectoFuncion[gKey].map[key].total += tp;
         });
 
-        const tbody = document.getElementById('weeklyTbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        let ajustesMap = window.ajustesSemanalesNube || {};
+        let grandTotalHours = 0, grandTotalMoney = 0;
 
-        let grandTotalHours = 0;
-        let grandTotalMoney = 0;
-        const keys = Object.keys(workerSummary);
+        // 1. RESUMEN GENERAL (PANTALLA)
+        let htmlResumen = `
+        <h5 class="fw-bold mb-3 text-uppercase text-dark border-bottom pb-2">Resumen General</h5>
+        <div class="table-responsive rounded-3 border mb-4">
+            <table class="table table-hover table-striped table-weekly align-middle m-0">
+                <thead>
+                    <tr>
+                        <th style="width: 15%; text-align: left; padding-left: 15px;">TRABAJADOR</th>
+                        <th style="width: 12%; text-align: left;">FUNCIÓN</th>
+                        <th style="width: 4%;">LUN</th><th style="width: 4%;">MAR</th><th style="width: 4%;">MIÉ</th><th style="width: 4%;">JUE</th><th style="width: 4%;">VIE</th><th style="width: 4%;">SÁB</th><th style="width: 4%;">DOM</th>
+                        <th style="width: 6%;">HORAS</th>
+                        <th style="width: 6%;">TARIFA</th>
+                        <th style="width: 8%;">AJUSTE TARIFA</th>
+                        <th style="width: 8%;">ADICIONAL</th>
+                        <th style="width: 8%;">DEDUCTIVA</th>
+                        <th style="width: 9%;">CHEQUE / EFVO</th>
+                        <th style="width: 10%;">NETO A PAGAR</th>
+                    </tr>
+                </thead>
+                <tbody>`;
 
-        if (keys.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted p-4">No hay registros con los filtros seleccionados.</td></tr>';
-            document.getElementById('totalWeeklyHoursBadge').innerText = '0.0 hrs';
-            document.getElementById('totalWeeklyPayBadge').innerText = '$0.00';
-            return;
-        }
-
-        keys.sort().forEach(k => {
+        Object.keys(workerSummary).sort().forEach(k => {
             let w = workerSummary[k];
-            let moneyOwed = w.totalHours * w.rate;
+            let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0, adicional: 0, deductiva: 0, pagoRef: '' };
+            let neto = ((w.rate + (parseFloat(adj.ajusteSueldo)||0)) * w.totalHours) + (parseFloat(adj.adicional)||0) - (parseFloat(adj.deductiva)||0);
             grandTotalHours += w.totalHours;
-            grandTotalMoney += moneyOwed;
+            grandTotalMoney += neto;
 
-            tbody.innerHTML += `<tr>
-                <td class="worker-info fw-bold text-dark">${w.name}</td>
-                <td class="worker-info text-muted small">${w.trade}</td>
-                <td>${w.days[1] > 0 ? w.days[1].toFixed(1) : '-'}</td>
-                <td>${w.days[2] > 0 ? w.days[2].toFixed(1) : '-'}</td>
-                <td>${w.days[3] > 0 ? w.days[3].toFixed(1) : '-'}</td>
-                <td>${w.days[4] > 0 ? w.days[4].toFixed(1) : '-'}</td>
-                <td>${w.days[5] > 0 ? w.days[5].toFixed(1) : '-'}</td>
-                <td>${w.days[6] > 0 ? w.days[6].toFixed(1) : '-'}</td>
-                <td>${w.days[0] > 0 ? w.days[0].toFixed(1) : '-'}</td>
+            htmlResumen += `<tr>
+                <td class="fw-bold text-dark text-start ps-3">${w.name.toUpperCase()}</td>
+                <td class="text-muted small text-start">${w.trade}</td>
+                <td>${w.days[1]||'-'}</td><td>${w.days[2]||'-'}</td><td>${w.days[3]||'-'}</td>
+                <td>${w.days[4]||'-'}</td><td>${w.days[5]||'-'}</td><td>${w.days[6]||'-'}</td><td>${w.days[0]||'-'}</td>
+                <td class="fw-bold row-total-hours" style="color: var(--brand-gold);" id="hours_span_${k}" data-hours="${w.totalHours}">${w.totalHours.toFixed(1)}h</td>
+                <td>$${w.rate.toFixed(2)}</td>
+                <input type="hidden" id="base_rate_${k}" value="${w.rate}">
+                <td><input type="number" step="0.01" class="table-input-clean" id="adj_sueldo_${k}" value="${adj.ajusteSueldo||0}" oninput="recalcularFila('${k}')" onchange="guardarAjusteSemanal('${k}')"></td>
+                <td><input type="number" step="0.01" class="table-input-clean" id="adj_adicional_${k}" value="${adj.adicional||0}" oninput="recalcularFila('${k}')" onchange="guardarAjusteSemanal('${k}')"></td>
+                <td><input type="number" step="0.01" class="table-input-clean" id="adj_deductiva_${k}" value="${adj.deductiva||0}" oninput="recalcularFila('${k}')" onchange="guardarAjusteSemanal('${k}')"></td>
+                <td><input type="text" class="table-input-clean" id="adj_pagoref_${k}" value="${adj.pagoRef||''}" onchange="guardarAjusteSemanal('${k}')"></td>
+                <td class="fw-bold row-net-pay" style="color: #059669;" id="net_pay_span_${k}" data-net="${neto}">$${neto.toFixed(2)}</td>
+            </tr>`;
+        });
+        htmlResumen += `</tbody></table></div>`;
+
+        // 2. CONTENEDOR DE IMPRESIÓN: PRIMERA HOJA = RESUMEN EXCEL, SIGUIENTES = DETALLES
+        let htmlImpresion = '';
+
+        // --- HOJA 1 IMPRESA: Resumen General con formato idéntico al Excel ---
+        let sheet1TotalHours = 0;
+        let sheet1TotalPay = 0;
+
+        Object.values(workerSummary).forEach(w => {
+            let adj = ajustesMap[`${weekVal}_${w.name.toLowerCase().trim()}`] || { adicional: 0, deductiva: 0, ajusteSueldo: 0 };
+            let neto = ((w.rate + (parseFloat(adj.ajusteSueldo)||0)) * w.totalHours) + (parseFloat(adj.adicional)||0) - (parseFloat(adj.deductiva)||0);
+            sheet1TotalHours += w.totalHours;
+            sheet1TotalPay += neto;
+        });
+
+        htmlImpresion += `
+        <div class="print-page-break" style="page-break-before: avoid !important; break-before: avoid !important;">
+            <div class="print-section-header">
+                <h5 class="print-section-title">RESUMEN GENERAL DE PAGOS Y HORAS</h5>
+                <div class="print-section-badges">
+                    <span class="print-badge-hours">Total Horas: ${sheet1TotalHours.toFixed(1)} hrs</span>
+                    <span class="print-badge-pay">Total a Pagar: $${sheet1TotalPay.toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="text-muted small fw-bold mb-2">Semana: <span style="color: var(--brand-gold);">Semana ${weekVal.split('-W')[1]}, ${weekVal.split('-W')[0]}</span> (${formatDateShort(mon)} al ${formatDateShort(sun)})</div>
+            <div class="table-responsive rounded-3 border mb-4">
+                <table class="table table-hover table-striped table-weekly align-middle m-0" style="border: 1px solid var(--border-color);">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%; text-align: left; padding-left: 10px;">NAME</th>
+                            <th style="width: 7%;">RATE</th>
+                            <th style="width: 9%;">AJUSTE RATE</th>`;
+        
+        listProyectosUnicos.forEach(p => {
+            htmlImpresion += `<th style="width: 10%;">Total hrs ${p}</th>`;
+        });
+
+        htmlImpresion += `
+                            <th style="width: 7%; color: var(--brand-gold) !important;">Total Hrs</th>
+                            <th style="width: 7%;">Add</th>
+                            <th style="width: 7%;">Deduct</th>
+                            <th style="width: 10%;">N°CHEQUE</th>
+                            <th style="width: 13%; color: #059669 !important;">Total Neto</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        Object.keys(workerSummary).sort().forEach(k => {
+            let w = workerSummary[k];
+            let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0, adicional: 0, deductiva: 0, pagoRef: '' };
+            let neto = ((w.rate + (parseFloat(adj.ajusteSueldo)||0)) * w.totalHours) + (parseFloat(adj.adicional)||0) - (parseFloat(adj.deductiva)||0);
+
+            htmlImpresion += `<tr>
+                <td class="fw-bold text-dark text-start ps-3">${w.name.toUpperCase()}</td>
+                <td>$${w.rate.toFixed(2)}</td>
+                <td>${parseFloat(adj.ajusteSueldo)||0}</td>`;
+
+            listProyectosUnicos.forEach(p => {
+                let hrsProj = w.projects[p] || 0;
+                htmlImpresion += `<td>${hrsProj > 0 ? hrsProj.toFixed(1) : '-'}</td>`;
+            });
+
+            htmlImpresion += `
                 <td class="fw-bold" style="color: var(--brand-gold);">${w.totalHours.toFixed(1)}h</td>
-                <td><code class="text-dark bg-transparent p-0">$${w.rate.toFixed(2)}</code></td>
-                <td class="fw-bold" style="color: #059669;">$${moneyOwed.toFixed(2)}</td>
+                <td>${parseFloat(adj.adicional)||0}</td>
+                <td>${parseFloat(adj.deductiva)||0}</td>
+                <td>${adj.pagoRef||'-'}</td>
+                <td class="fw-bold text-dark">$${neto.toFixed(2)}</td>
             </tr>`;
         });
 
+        htmlImpresion += `</tbody></table></div></div>`;
+
+        // --- HOJAS SIGUIENTES IMPRESAS: Desglose por Proyecto y Función ---
+        Object.values(gruposPorProyectoFuncion).forEach(grupo => {
+            let sheetTotalHours = 0;
+            let sheetTotalPay = 0;
+
+            Object.values(grupo.map).forEach(w => {
+                let adj = ajustesMap[`${weekVal}_${w.name.toLowerCase().trim()}`] || { ajusteSueldo: 0 };
+                let tarifaFinal = w.rate + (parseFloat(adj.ajusteSueldo)||0);
+                sheetTotalHours += w.total;
+                sheetTotalPay += (tarifaFinal * w.total);
+            });
+
+            htmlImpresion += `
+            <div class="print-page-break">
+                <div class="print-section-header">
+                    <h5 class="print-section-title">
+                        PROYECTO: <span class="text-dark">${grupo.proyecto}</span> &nbsp;|&nbsp; FUNCIÓN: <span class="text-dark">${grupo.funcion}</span>
+                    </h5>
+                    <div class="print-section-badges">
+                        <span class="print-badge-hours">Total Horas: ${sheetTotalHours.toFixed(1)} hrs</span>
+                        <span class="print-badge-pay">Total a Pagar: $${sheetTotalPay.toFixed(2)}</span>
+                    </div>
+                </div>
+                <div class="text-muted small fw-bold mb-2">Semana: <span style="color: var(--brand-gold);">Semana ${weekVal.split('-W')[1]}, ${weekVal.split('-W')[0]}</span> (${formatDateShort(mon)} al ${formatDateShort(sun)})</div>
+                <div class="table-responsive rounded-3 border mb-4">
+                    <table class="table table-hover table-striped table-weekly align-middle m-0" style="border: 1px solid var(--border-color);">
+                        <thead>
+                            <tr>
+                                <th style="width: 22%; text-align: left; padding-left: 15px;">TRABAJADOR</th>
+                                <th style="width: 18%; text-align: left;">FUNCIÓN</th>
+                                <th style="width: 6%;">LUN</th><th style="width: 6%;">MAR</th><th style="width: 6%;">MIÉ</th><th style="width: 6%;">JUE</th><th style="width: 6%;">VIE</th><th style="width: 6%;">SÁB</th><th style="width: 6%;">DOM</th>
+                                <th style="width: 8%; color: var(--brand-gold) !important;">HORAS</th>
+                                <th style="width: 8%;">TARIFA/H</th>
+                                <th style="width: 11%; color: #059669 !important;">TOTAL A PAGAR</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
+            Object.keys(grupo.map).sort((a,b)=>grupo.map[a].name.localeCompare(grupo.map[b].name)).forEach(k => {
+                let w = grupo.map[k];
+                let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0 };
+                let tarifaFinal = w.rate + (parseFloat(adj.ajusteSueldo)||0);
+                let totalPagoProyecto = tarifaFinal * w.total;
+
+                htmlImpresion += `<tr>
+                    <td class="fw-bold text-dark text-start ps-3">${w.name.toUpperCase()}</td>
+                    <td class="text-muted small text-start">${w.trade}</td>
+                    <td>${w.days[1] > 0 ? w.days[1].toFixed(1) : '-'}</td>
+                    <td>${w.days[2] > 0 ? w.days[2].toFixed(1) : '-'}</td>
+                    <td>${w.days[3] > 0 ? w.days[3].toFixed(1) : '-'}</td>
+                    <td>${w.days[4] > 0 ? w.days[4].toFixed(1) : '-'}</td>
+                    <td>${w.days[5] > 0 ? w.days[5].toFixed(1) : '-'}</td>
+                    <td>${w.days[6] > 0 ? w.days[6].toFixed(1) : '-'}</td>
+                    <td>${w.days[0] > 0 ? w.days[0].toFixed(1) : '-'}</td>
+                    <td class="fw-bold" style="color: var(--brand-gold);">${w.total.toFixed(1)}h</td>
+                    <td class="text-muted small">$${tarifaFinal.toFixed(2)}</td>
+                    <td class="fw-bold text-dark">$${totalPagoProyecto.toFixed(2)}</td>
+                </tr>`;
+            });
+            htmlImpresion += `</tbody></table></div></div>`;
+        });
+
+        resumenContainer.innerHTML = htmlResumen;
+        separadasContainer.innerHTML = htmlImpresion;
+        
         document.getElementById('totalWeeklyHoursBadge').innerText = `Total Horas: ${grandTotalHours.toFixed(1)} hrs`;
-        document.getElementById('totalWeeklyPayBadge').innerText = `Total Pagar: $${grandTotalMoney.toFixed(2)}`;
+        document.getElementById('totalWeeklyPayBadge').innerText = `Total a Pagar: $${grandTotalMoney.toFixed(2)}`;
     }
 
-    function initMap() {
-        if (!map) {
-            map = L.map('map').setView([25.7617, -80.1918], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-            markersLayer = L.layerGroup().addTo(map);
-        } else {
-            map.invalidateSize();
-        }
-    }
-
-    function updateMapUserFilterDropdown() {
-        const select = document.getElementById('mapUserFilter');
-        if (!select) return;
-        let currentVal = select.value;
-        select.innerHTML = '<option value="ALL">🌐 Todos los Usuarios</option>';
-        let usuarios = getUsuarios();
-        Object.keys(usuarios).sort().forEach(user => {
-            let sel = (user === currentVal) ? 'selected' : '';
-            select.innerHTML += `<option value="${user}" ${sel}>${user}</option>`;
-        });
-    }
-
-    function loadDailyRecords() {
-        const dateFilter = document.getElementById('mapDateFilter').value;
-        const userFilter = document.getElementById('mapUserFilter').value;
-        const projectFilter = document.getElementById('mapProjectFilter') ? document.getElementById('mapProjectFilter').value : 'ALL';
-        
-        let registros = window.registrosGlobales || [];
-        let tbody = document.getElementById('dailyRecordsTbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-
-        if (markersLayer) markersLayer.clearLayers();
-
-        let filtered = registros.filter(r => {
-            let dateMatch = (!dateFilter || r.date === dateFilter);
-            let userMatch = (userFilter === 'ALL' || r.workerName.toLowerCase() === userFilter.toLowerCase());
-            let projMatch = (projectFilter === 'ALL' || (r.job && r.job.trim() === projectFilter.trim()));
-            return dateMatch && userMatch && projMatch;
-        });
-
-        if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">No hay registros para este filtro.</td></tr>';
-            return;
-        }
-
-        let bounds = [];
-
-        filtered.forEach(r => {
-            if (r.coordsIn && r.coordsIn.lat) {
-                let trIn = document.createElement('tr');
-                trIn.className = 'record-row';
-                trIn.innerHTML = `
-                    <td class="ps-3"><b class="text-dark">${r.timeIn}</b></td>
-                    <td class="text-dark">${r.workerName}</td>
-                    <td><span class="badge bg-success">ENTRADA</span></td>
-                    <td class="small text-muted pe-3">${r.job}</td>
-                `;
-                trIn.onclick = () => seleccionarRegistroEnMapa(r.coordsIn.lat, r.coordsIn.lng, `<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Entrada: ${r.timeIn} (${r.job})</span>`, trIn);
-                tbody.appendChild(trIn);
-
-                let markerIn = L.marker([r.coordsIn.lat, r.coordsIn.lng]).bindPopup(`<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Entrada: ${r.timeIn}<br>${r.job}</span>`);
-                markersLayer.addLayer(markerIn);
-                bounds.push([r.coordsIn.lat, r.coordsIn.lng]);
-            }
-
-            if (r.coordsOut && r.coordsOut.lat && r.timeOut !== '-') {
-                let trOut = document.createElement('tr');
-                trOut.className = 'record-row';
-                trOut.innerHTML = `
-                    <td class="ps-3"><b class="text-dark">${r.timeOut}</b></td>
-                    <td class="text-dark">${r.workerName}</td>
-                    <td><span class="badge bg-danger">SALIDA</span></td>
-                    <td class="small text-muted pe-3">${r.job}</td>
-                `;
-                trOut.onclick = () => seleccionarRegistroEnMapa(r.coordsOut.lat, r.coordsOut.lng, `<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Salida: ${r.timeOut} (${r.job})</span>`, trOut);
-                tbody.appendChild(trOut);
-
-                let markerOut = L.marker([r.coordsOut.lat, r.coordsOut.lng]).bindPopup(`<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Salida: ${r.timeOut}<br>${r.job}</span>`);
-                markersLayer.addLayer(markerOut);
-                bounds.push([r.coordsOut.lat, r.coordsOut.lng]);
-            }
-        });
-
-        if (bounds.length > 0 && map) {
-            map.fitBounds(bounds, { maxZoom: 15 });
-        }
-    }
-
-    function seleccionarRegistroEnMapa(lat, lng, popupText, rowElement) {
-        document.querySelectorAll('.record-row').forEach(row => row.classList.remove('table-active'));
-        rowElement.classList.add('table-active');
-
-        if (map) {
-            map.setView([lat, lng], 17);
-            L.popup().setLatLng([lat, lng]).setContent(popupText).openOn(map);
-        }
-    }
-
-    function loadDailyLogs() {
-        const logsWeekPicker = document.getElementById('logsWeekPicker');
-        const logsUserFilter = document.getElementById('logsUserFilter');
-        const logsProjectFilter = document.getElementById('logsProjectFilter');
-        const logsTradeFilter = document.getElementById('logsTradeFilter');
-
-        if (!logsWeekPicker || !logsWeekPicker.value) return;
-
-        const weekVal = logsWeekPicker.value;
-        const selectedUser = logsUserFilter ? logsUserFilter.value : 'ALL';
-        const selectedProject = logsProjectFilter ? logsProjectFilter.value : 'ALL';
-        const selectedTrade = logsTradeFilter ? logsTradeFilter.value : 'ALL';
-
-        const { mon, sun } = getMonToSunRange(weekVal);
-        if (!mon || !sun) return;
-
-        document.getElementById('logsWeekRangeLabel').innerText = `${formatDateShort(mon)} al ${formatDateShort(sun)}`;
-
-        let registros = window.registrosGlobales || [];
-        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
-        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
-
-        let usuarios = getUsuarios();
-        let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
-
-        const filtered = registros.filter(r => {
-            const parts = r.date.split('-');
-            if(parts.length < 3) return false;
-            const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
-            let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            
-            let userMatch = isAdmin 
-                ? (selectedUser === 'ALL' || r.workerName.toLowerCase() === selectedUser.toLowerCase())
-                : (r.workerName.toLowerCase() === usuarioActual.toLowerCase());
-
-            let projMatch = (selectedProject === 'ALL' || (r.job && r.job.trim() === selectedProject.trim()));
-            
-            let userObj = usuarios[r.workerName] || {};
-            let workerTrade = r.trade || userObj.trade || 'Carpintero';
-            let tradeMatch = (selectedTrade === 'ALL' || workerTrade === selectedTrade);
-
-            return dateMatch && userMatch && projMatch && tradeMatch;
-        });
-
-        let tbody = document.getElementById('logsTbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-
-        if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas con estos filtros.</td></tr>';
-            return;
-        }
-
-        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
-            let userObj = usuarios[r.workerName] || {};
-            let workerTrade = r.trade || userObj.trade || 'Carpintero';
-
-            let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
-            let ot = parseFloat(r.overtime) || 0;
-            let totalPago = netHours + ot;
-
-            tbody.innerHTML += `<tr>
-                <td class="ps-3"><strong class="text-dark">${r.date}</strong></td>
-                <td class="small text-muted text-truncate" style="max-width: 100px;" title="${r.job}">${r.job}</td>
-                <td class="text-dark fw-semibold">${r.workerName}</td>
-                <td class="small text-muted">${workerTrade}</td>
-                <td><input type="time" class="form-control form-control-sm border text-dark px-1 py-2 text-center" style="background-color: #fff; width: 105px; font-size: 0.85rem !important;" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="time" class="form-control form-control-sm border text-dark px-1 py-2 text-center" style="background-color: #fff; width: 105px; font-size: 0.85rem !important;" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border text-dark py-2" style="background-color: #fff; width: 70px;" id="lunch_${r.id}" value="${r.lunch}" onchange="actualizarJornada(${r.id})"></td>
-                <td><span class="badge py-2 px-2" style="background-color: #e2e8f0; color: #1e293b; font-size: 0.8rem;" id="net_${r.id}">${netHours.toFixed(2)}h</span></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border text-dark py-2" style="background-color: #fff; width: 70px;" id="ot_${r.id}" value="${ot}" onchange="actualizarJornada(${r.id})"></td>
-                <td><span class="badge bg-success fs-6 py-2 px-2" id="total_${r.id}">${totalPago.toFixed(2)}h</span></td>
-                <td class="text-end pe-3">
-                    <button class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" onclick="eliminarJornada('${r.firebaseKey}')"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>`;
-        });
-    }
-
-    function actualizarJornada(id) {
-        let registros = window.registrosGlobales || [];
-        let r = registros.find(item => item.id === id);
-        if (!r || !r.firebaseKey) return;
-
-        r.timeIn = document.getElementById(`in_${id}`).value || '-';
-        r.timeOut = document.getElementById(`out_${id}`).value || '-';
-        r.lunch = parseFloat(document.getElementById(`lunch_${id}`).value) || 0.5;
-        r.overtime = parseFloat(document.getElementById(`ot_${id}`).value) || 0;
-
-        window.dbSet(window.dbRef(window.db, 'jornadas/' + r.firebaseKey), r);
-        
-        let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
-        let totalPago = netHours + r.overtime;
-
-        document.getElementById(`net_${id}`).innerText = `${netHours.toFixed(2)}h`;
-        document.getElementById(`total_${id}`).innerText = `${totalPago.toFixed(2)}h`;
-    }
-
-    function eliminarJornada(firebaseKey) {
-        if (!firebaseKey) return;
-        if (confirm("¿Estás seguro de eliminar este registro de la nube?")) {
-            window.dbRemove(window.dbRef(window.db, 'jornadas/' + firebaseKey))
-                .then(() => {
-                    loadDailyLogs();
-                    loadWeeklySummary();
-                });
-        }
-    }
-
-    function exportWeeklyCSV() {
+    function exportWeeklyExcelWithFormulas() {
         const weekPicker = document.getElementById('weekPicker');
         if (!weekPicker || !weekPicker.value) return alert("Seleccione una semana.");
-
         const weekVal = weekPicker.value;
         const selectedProjects = getSelectedCheckboxValues('project');
         const selectedTrades = getSelectedCheckboxValues('trade');
@@ -2236,96 +1690,374 @@
         let registros = window.registrosGlobales || [];
         const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
         const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
-
         let usuarios = getUsuarios();
         let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
 
         const filtered = registros.filter(r => {
             const parts = r.date.split('-');
             if(parts.length < 3) return false;
-            const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+            let rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
-            
-            let userObj = usuarios[r.workerName] || {};
-            let workerTrade = r.trade || userObj.trade || 'Carpintero';
+            let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
             let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
-
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
             return dateMatch && projMatch && tradeMatch && userMatch;
         });
 
+        if (filtered.length === 0) return alert("No hay datos para exportar.");
+
+        let wb = XLSX.utils.book_new();
+
         let workerSummary = {};
-        filtered.exports = {};
         filtered.forEach(r => {
             const key = r.workerName.toLowerCase().trim();
             if (!workerSummary[key]) {
-                let userObj = usuarios[r.workerName] || {};
-                let historicalRate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
-
                 workerSummary[key] = {
-                    name: r.workerName,
-                    trade: r.trade || userObj.trade || 'Carpintero',
-                    rate: historicalRate,
-                    days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 },
-                    totalHours: 0
+                    name: r.workerName, trade: r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero',
+                    rate: r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat((usuarios[r.workerName]||{}).rate) || 20.00),
+                    projects: {}, totalHours: 0
                 };
             }
-            let totalPagoJornada = calcularTotalPagar(r);
-            const parts = r.date.split('-');
-            const dObj = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
-            const dayOfWeek = dObj.getDay();
-
-            workerSummary[key].days[dayOfWeek] += totalPagoJornada;
-            workerSummary[key].totalHours += totalPagoJornada;
+            let tp = calcularTotalPagar(r);
+            let proj = r.job || 'General';
+            workerSummary[key].projects[proj] = (workerSummary[key].projects[proj] || 0) + tp;
+            workerSummary[key].totalHours += tp;
         });
 
-        let csvContent = "\uFEFF";
-        csvContent += `RESUMEN SEMANAL DE HORAS Y PAGOS\n`;
-        csvContent += `Semana:,Del ${formatDateShort(mon)} al ${formatDateShort(sun)}\n`;
-        csvContent += `Proyectos:,${selectedProjects.join(' - ') || 'Todos'}\n`;
-        if (isAdmin) {
-            csvContent += `Funciones:,${selectedTrades.join(' - ') || 'Todas'}\n`;
-        }
-        csvContent += `\n`;
-        
-        csvContent += 'Trabajador,Función,Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo,Total Horas,Tarifa/h,Total a Pagar\n';
+        let listProyectosUnicos = Array.from(new Set(filtered.map(r => r.job || 'General')));
+        let headerResumen = ["FUNCION", "NAME", "RATE", "AJUSTE RATE"];
+        listProyectosUnicos.forEach(p => headerResumen.push(`Total hrs ${p}`));
+        headerResumen.push("Total Hrs", "Add", "Deduct", "N°CHEQE", "Total Neto");
 
-        let keys = Object.keys(workerSummary);
-        if (keys.length === 0) {
-            alert("No hay datos para exportar con los filtros seleccionados.");
-            return;
-        }
+        let rowsResumen = [
+            ["RESUMEN SEMANAL DE HORAS Y PAGOS", "", "", ""],
+            [`Semana: Del ${formatDateShort(mon)} al ${formatDateShort(sun)}`, "", "", ""],
+            [],
+            headerResumen
+        ];
 
-        keys.sort().forEach(k => {
+        let ajustesMap = window.ajustesSemanalesNube || {};
+        let rowIndex = 5;
+
+        Object.keys(workerSummary).sort().forEach(k => {
             let w = workerSummary[k];
-            let moneyOwed = w.totalHours * w.rate;
+            let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0, adicional: 0, deductiva: 0, pagoRef: '' };
             
-            let row = [
-                `"${w.name}"`,
-                `"${w.trade}"`,
-                w.days[1] > 0 ? w.days[1].toFixed(1) : '-',
-                w.days[2] > 0 ? w.days[2].toFixed(1) : '-',
-                w.days[3] > 0 ? w.days[3].toFixed(1) : '-',
-                w.days[4] > 0 ? w.days[4].toFixed(1) : '-',
-                w.days[5] > 0 ? w.days[5].toFixed(1) : '-',
-                w.days[6] > 0 ? w.days[6].toFixed(1) : '-',
-                w.days[0] > 0 ? w.days[0].toFixed(1) : '-',
-                w.totalHours.toFixed(1),
-                `"$${w.rate.toFixed(2)}"`,
-                `"$${moneyOwed.toFixed(2)}"`
-            ];
-            csvContent += row.join(",") + "\n";
+            let rowData = [w.trade, w.name, w.rate, parseFloat(adj.ajusteSueldo)||0];
+            let colStartOffset = 4;
+            let colLetters = [];
+            listProyectosUnicos.forEach((p, idx) => {
+                let colLetter = XLSX.utils.encode_col(colStartOffset + idx);
+                colLetters.push(`${colLetter}${rowIndex}`);
+                rowData.push(w.projects[p] || 0);
+            });
+
+            let rateCell = `C${rowIndex}`;
+            let adjRateCell = `D${rowIndex}`;
+            let baseIndex = 4 + listProyectosUnicos.length;
+            
+            let totalHrsCell = XLSX.utils.encode_col(baseIndex) + `${rowIndex}`;
+            let addCell      = XLSX.utils.encode_col(baseIndex + 1) + `${rowIndex}`;
+            let deductCell   = XLSX.utils.encode_col(baseIndex + 2) + `${rowIndex}`;
+            
+            let formulaTotalHrs = colLetters.length > 1 ? `=SUM(${colLetters[0]}:${colLetters[colLetters.length - 1]})` : `=${colLetters[0]}`;
+            let formulaNeto = `=(((${rateCell} + ${adjRateCell}) * ${totalHrsCell}) + ${addCell}) - ${deductCell}`;
+
+            rowData.push({ t: 'n', f: formulaTotalHrs, v: w.totalHours });
+            rowData.push(parseFloat(adj.adicional) || 0);
+            rowData.push(parseFloat(adj.deductiva) || 0);
+            rowData.push(adj.pagoRef || '');
+            rowData.push({ t: 'n', f: formulaNeto, v: 0 });
+
+            rowsResumen.push(rowData);
+            rowIndex++;
         });
 
-        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        let link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `Resumen_Oslim_${weekPicker.value}.csv`;
-        link.click();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rowsResumen), "Resumen General");
+
+        let gruposPorProyectoFuncion = {};
+        filtered.forEach(r => {
+            let tr = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
+            let pr = r.job || 'General';
+            let key = `${pr}___${tr}`;
+            if (!gruposPorProyectoFuncion[key]) gruposPorProyectoFuncion[key] = { proyecto: pr, funcion: tr, registros: [] };
+            gruposPorProyectoFuncion[key].registros.push(r);
+        });
+
+        Object.values(gruposPorProyectoFuncion).forEach(grupo => {
+            let rawName = `${grupo.proyecto.substring(0, 12)} ${grupo.funcion.substring(0, 12)}`.replace(/[^a-zA-Z0-9 ]/g, "").trim();
+            let sheetName = rawName;
+            let counter = 1;
+            while (wb.SheetNames.includes(sheetName) && counter < 20) { sheetName = `${rawName} ${counter++}`; }
+
+            let workerMap = {};
+            grupo.registros.forEach(r => {
+                let wk = r.workerName;
+                if (!workerMap[wk]) workerMap[wk] = { name: wk, trade: grupo.funcion, days: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0} };
+                let tp = calcularTotalPagar(r);
+                let dow = new Date(...r.date.split('-').map((v,i)=>i===1?v-1:v)).getDay();
+                workerMap[wk].days[dow] += tp;
+            });
+
+            let sheetRows = [
+                ["RESUMEN SEMANAL DE HORAS"],
+                [`Semana: Semana ${weekVal.split('-W')[1]}, ${weekVal.split('-W')[0]} (Del ${formatDateShort(mon)} al ${formatDateShort(sun)})`],
+                [`Proyecto: ${grupo.proyecto}`],
+                [`Función: ${grupo.funcion}`],
+                [],
+                ["Trabajador", "Función", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo", "Total Horas"]
+            ];
+
+            let sRowIndex = 7;
+            Object.values(workerMap).sort((a,b) => a.name.localeCompare(b.name)).forEach(w => {
+                let formulaRowTotal = `=SUM(C${sRowIndex}:I${sRowIndex})`;
+                sheetRows.push([
+                    w.name, w.trade, w.days[1]||0, w.days[2]||0, w.days[3]||0, w.days[4]||0, w.days[5]||0, w.days[6]||0, w.days[0]||0,
+                    { t: 'n', f: formulaRowTotal, v: 0 }
+                ]);
+                sRowIndex++;
+            });
+
+            let lastRow = sRowIndex - 1;
+            sheetRows.push([]);
+            sheetRows.push(["TOTAL DE HORAS DE LA HOJA:", "", "", "", "", "", "", "", "", { t: 'n', f: `=SUM(J7:J${lastRow})`, v: 0 }]);
+
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetRows), sheetName);
+        });
+
+        XLSX.writeFile(wb, `PAY_Oslim_${weekVal}.xlsx`);
+    }
+
+    function loadDailyRecords() {
+        const dF = document.getElementById('mapDateFilter').value;
+        const uF = document.getElementById('mapUserFilter').value;
+        const pF = document.getElementById('mapProjectFilter') ? document.getElementById('mapProjectFilter').value : 'ALL';
+        let registros = window.registrosGlobales || [];
+        let tbody = document.getElementById('dailyRecordsTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (markersLayer) markersLayer.clearLayers();
+        let filtered = registros.filter(r => (!dF || r.date === dF) && (uF === 'ALL' || r.workerName.toLowerCase() === uF.toLowerCase()) && (pF === 'ALL' || (r.job && r.job.trim() === pF.trim())));
+        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">No hay registros.</td></tr>'; return; }
+        
+        let bounds = [];
+        filtered.forEach(r => {
+            if (r.coordsIn && r.coordsIn.lat) {
+                let trIn = document.createElement('tr'); trIn.className = 'record-row';
+                trIn.innerHTML = `<td class="ps-3"><b class="text-dark">${r.timeIn}</b></td><td class="text-dark">${r.workerName}</td><td><span class="badge bg-success">ENTRADA</span></td><td class="small text-muted pe-3">${r.job}</td>`;
+                trIn.onclick = () => seleccionarRegistroEnMapa(r.coordsIn.lat, r.coordsIn.lng, `<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Entrada: ${r.timeIn}</span>`, trIn);
+                tbody.appendChild(trIn);
+                markersLayer.addLayer(L.marker([r.coordsIn.lat, r.coordsIn.lng]).bindPopup(`<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Entrada: ${r.timeIn}</span>`));
+                bounds.push([r.coordsIn.lat, r.coordsIn.lng]);
+            }
+            if (r.coordsOut && r.coordsOut.lat && r.timeOut !== '-') {
+                let trOut = document.createElement('tr'); trOut.className = 'record-row';
+                trOut.innerHTML = `<td class="ps-3"><b class="text-dark">${r.timeOut}</b></td><td class="text-dark">${r.workerName}</td><td><span class="badge bg-danger">SALIDA</span></td><td class="small text-muted pe-3">${r.job}</td>`;
+                trOut.onclick = () => seleccionarRegistroEnMapa(r.coordsOut.lat, r.coordsOut.lng, `<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Salida: ${r.timeOut}</span>`, trOut);
+                tbody.appendChild(trOut);
+                markersLayer.addLayer(L.marker([r.coordsOut.lat, r.coordsOut.lng]).bindPopup(`<b style="color:black;">${r.workerName}</b><br><span style="color:black;">Salida: ${r.timeOut}</span>`));
+                bounds.push([r.coordsOut.lat, r.coordsOut.lng]);
+            }
+        });
+        if (bounds.length > 0 && map) map.fitBounds(bounds, { maxZoom: 15 });
+    }
+
+    function seleccionarRegistroEnMapa(lat, lng, popupText, rowElement) {
+        document.querySelectorAll('.record-row').forEach(row => row.classList.remove('table-active'));
+        rowElement.classList.add('table-active');
+        if (map) { map.setView([lat, lng], 17); L.popup().setLatLng([lat, lng]).setContent(popupText).openOn(map); }
+    }
+
+    function loadDailyLogs() {
+        const weekVal = document.getElementById('logsWeekPicker').value;
+        const uF = document.getElementById('logsUserFilter') ? document.getElementById('logsUserFilter').value : 'ALL';
+        const pF = document.getElementById('logsProjectFilter') ? document.getElementById('logsProjectFilter').value : 'ALL';
+        const tF = document.getElementById('logsTradeFilter') ? document.getElementById('logsTradeFilter').value : 'ALL';
+        if (!weekVal) return;
+        const { mon, sun } = getMonToSunRange(weekVal);
+        if (!mon || !sun) return;
+        document.getElementById('logsWeekRangeLabel').innerText = `${formatDateShort(mon)} al ${formatDateShort(sun)}`;
+
+        let registros = window.registrosGlobales || [];
+        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
+        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+        let usuarios = getUsuarios();
+        let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
+
+        const filtered = registros.filter(r => {
+            const parts = r.date.split('-');
+            const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+            let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
+            return (rDate >= monTime && rDate <= sunTime) &&
+                   (isAdmin ? (uF === 'ALL' || r.workerName.toLowerCase() === uF.toLowerCase()) : r.workerName.toLowerCase() === usuarioActual.toLowerCase()) &&
+                   (pF === 'ALL' || (r.job && r.job.trim() === pF.trim())) &&
+                   (tF === 'ALL' || workerTrade === tF);
+        });
+
+        let tbody = document.getElementById('logsTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas.</td></tr>'; return; }
+
+        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+            let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
+            let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+            let totalPago = netHours + (parseFloat(r.overtime) || 0);
+            tbody.innerHTML += `<tr>
+                <td class="ps-3"><strong class="text-dark">${r.date}</strong></td>
+                <td class="small text-muted text-truncate" style="max-width: 100px;">${r.job}</td>
+                <td class="text-dark fw-semibold">${r.workerName}</td><td class="small text-muted">${workerTrade}</td>
+                <td><input type="time" class="form-control form-control-sm border text-center" style="width: 105px;" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="time" class="form-control form-control-sm border text-center" style="width: 105px;" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border" style="width: 70px;" id="lunch_${r.id}" value="${r.lunch}" onchange="actualizarJornada(${r.id})"></td>
+                <td><span class="badge bg-light text-dark py-2 px-2 border" id="net_${r.id}">${netHours.toFixed(2)}h</span></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border" style="width: 70px;" id="ot_${r.id}" value="${parseFloat(r.overtime)||0}" onchange="actualizarJornada(${r.id})"></td>
+                <td><span class="badge bg-success fs-6 py-2 px-2" id="total_${r.id}">${totalPago.toFixed(2)}h</span></td>
+                <td class="text-end pe-3"><button class="btn btn-sm btn-outline-danger" onclick="eliminarJornada('${r.firebaseKey}')"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`;
+        });
+    }
+
+    function actualizarJornada(id) {
+        let r = window.registrosGlobales.find(item => item.id === id);
+        if (!r || !r.firebaseKey) return;
+        r.timeIn = document.getElementById(`in_${id}`).value || '-';
+        r.timeOut = document.getElementById(`out_${id}`).value || '-';
+        r.lunch = parseFloat(document.getElementById(`lunch_${id}`).value) || 0.5;
+        r.overtime = parseFloat(document.getElementById(`ot_${id}`).value) || 0;
+        window.dbSet(window.dbRef(window.db, 'jornadas/' + r.firebaseKey), r);
+    }
+    function eliminarJornada(firebaseKey) {
+        if (firebaseKey && confirm("¿Eliminar este registro?")) {
+            window.dbRemove(window.dbRef(window.db, 'jornadas/' + firebaseKey)).then(() => { loadDailyLogs(); loadWeeklySummary(); });
+        }
+    }
+
+    function guardarOEditarProyecto(e) {
+        e.preventDefault();
+        let p = { name: document.getElementById('newProjectName').value.trim(), address: document.getElementById('newProjectAddress').value.trim(), lat: parseFloat(document.getElementById('newProjectLat').value), lng: parseFloat(document.getElementById('newProjectLng').value) };
+        let old = document.getElementById('editProjectOldName').value;
+        let arr = [...getProyectos()];
+        if (old) { arr[arr.findIndex(x => x.name === old)] = p; } 
+        else { if (arr.some(x => x.name.toLowerCase() === p.name.toLowerCase())) return alert("Ya existe"); arr.push(p); }
+        window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), arr);
+        alert("Guardado"); resetProjectForm(); loadProjectsManagement();
+    }
+    function editarProyecto(name) {
+        let p = getProyectos().find(x => x.name === name); if(!p) return;
+        document.getElementById('newProjectName').value = p.name; document.getElementById('editProjectOldName').value = p.name;
+        document.getElementById('newProjectAddress').value = p.address || ''; document.getElementById('newProjectLat').value = p.lat || ''; document.getElementById('newProjectLng').value = p.lng || '';
+        document.getElementById('saveProjectBtn').innerHTML = `Actualizar`; document.getElementById('cancelEditProjectBtn').classList.remove('hidden');
+    }
+    function resetProjectForm() { document.getElementById('newProjectName').value = ''; document.getElementById('editProjectOldName').value = ''; document.getElementById('newProjectAddress').value = ''; document.getElementById('newProjectLat').value = ''; document.getElementById('newProjectLng').value = ''; document.getElementById('saveProjectBtn').innerHTML = `Guardar Proyecto`; document.getElementById('cancelEditProjectBtn').classList.add('hidden'); }
+    function loadProjectsManagement() {
+        const tb = document.getElementById('projectsTbody'); if (!tb) return; tb.innerHTML = '';
+        getProyectos().forEach((p) => { tb.innerHTML += `<tr><td class="fw-bold ps-4 text-dark">${p.name}</td><td><span class="text-muted small">${p.address || 'S/D'}</span></td><td><code style="color: var(--brand-gold);">${p.lat}, ${p.lng}</code></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-dark me-1" onclick="editarProyecto('${p.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="eliminarProyecto('${p.name}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; });
+    }
+    function eliminarProyecto(name) { if (confirm("¿Eliminar proyecto?")) { window.dbSet(window.dbRef(window.db, 'config/listaProyectos'), getProyectos().filter(p => p.name !== name)); loadProjectsManagement(); } }
+
+    function guardarOEditarTrade(e) {
+        e.preventDefault();
+        let t = document.getElementById('newTradeName').value.trim(); let old = document.getElementById('editTradeOldName').value; let arr = [...getTrades()];
+        if (old) { arr[arr.indexOf(old)] = t; } else { if (arr.includes(t)) return alert("Ya existe"); arr.push(t); }
+        window.dbSet(window.dbRef(window.db, 'config/listaTrades'), arr); alert("Guardado"); resetTradeForm(); loadTradesManagement();
+    }
+    function editarTrade(tName) { document.getElementById('newTradeName').value = tName; document.getElementById('editTradeOldName').value = tName; document.getElementById('saveTradeBtn').innerHTML = `Actualizar`; document.getElementById('cancelEditTradeBtn').classList.remove('hidden'); }
+    function resetTradeForm() { document.getElementById('newTradeName').value = ''; document.getElementById('editTradeOldName').value = ''; document.getElementById('saveTradeBtn').innerHTML = `Añadir Función`; document.getElementById('cancelEditTradeBtn').classList.add('hidden'); }
+    function loadTradesManagement() {
+        const tb = document.getElementById('tradesTbody'); if (!tb) return; tb.innerHTML = '';
+        getTrades().forEach((t) => { tb.innerHTML += `<tr><td class="fw-bold ps-4 text-dark">${t}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-dark me-1" onclick="editarTrade('${t}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="eliminarTrade('${t}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; });
+    }
+    function eliminarTrade(tName) { if (confirm("¿Eliminar función?")) { window.dbSet(window.dbRef(window.db, 'config/listaTrades'), getTrades().filter(t => t !== tName)); loadTradesManagement(); } }
+
+    function guardarOEditarUsuarioSistema(e) {
+        e.preventDefault();
+        let user = document.getElementById('adminNewUser').value.trim();
+        let obj = { pass: document.getElementById('adminNewPass').value.trim(), phone: document.getElementById('adminNewPhone').value.trim(), rate: parseFloat(document.getElementById('adminNewRate').value) || 20, trade: document.getElementById('adminNewTrade').value, rol: document.getElementById('adminNewRol').value };
+        let arr = {...getUsuarios()}; arr[user] = obj;
+        window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), arr); alert("Guardado"); resetUserForm(); loadUserManagement();
+    }
+    function editarUsuario(user) {
+        let i = getUsuarios()[user]; if(!i) return;
+        document.getElementById('adminNewUser').value = user; document.getElementById('adminNewUser').readOnly = true; document.getElementById('adminNewPass').value = i.pass; document.getElementById('adminNewPhone').value = i.phone || ''; document.getElementById('adminNewRate').value = i.rate || 20; document.getElementById('adminNewTrade').value = i.trade || ''; document.getElementById('adminNewRol').value = i.rol || 'trabajador'; document.getElementById('saveUserBtn').innerHTML = `Actualizar`; document.getElementById('cancelEditUserBtn').classList.remove('hidden');
+    }
+    function resetUserForm() { document.getElementById('adminNewUser').value = ''; document.getElementById('adminNewUser').readOnly = false; document.getElementById('adminNewPass').value = ''; document.getElementById('adminNewPhone').value = ''; document.getElementById('adminNewRate').value = '20.00'; document.getElementById('saveUserBtn').innerHTML = `Guardar Usuario`; document.getElementById('cancelEditUserBtn').classList.add('hidden'); loadUserManagement(); }
+    function loadUserManagement() {
+        const tb = document.getElementById('systemUsersTbody'); if (!tb) return; tb.innerHTML = ''; let u = getUsuarios();
+        Object.keys(u).forEach(k => { let i = u[k]; let r = i.rol === 'admin' ? '<span class="badge bg-danger">Admin</span>' : '<span class="badge bg-light text-dark border">Normal</span>'; tb.innerHTML += `<tr><td class="fw-bold ps-4 text-dark">${k}</td><td><code style="color: var(--brand-gold);">${i.phone||'S/N'}</code></td><td><span class="text-success fw-bold">$${Number(i.rate||20).toFixed(2)}</span></td><td>${r}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-dark me-1" onclick="editarUsuario('${k}')"><i class="fa-solid fa-pen"></i></button>${k.toLowerCase()!=='fernando'?`<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuarioSistema('${k}')"><i class="fa-solid fa-trash"></i></button>`:''}</td></tr>`; });
+    }
+    function eliminarUsuarioSistema(user) { if (confirm(`¿Eliminar ${user}?`)) { let arr = {...getUsuarios()}; delete arr[user]; window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), arr); loadUserManagement(); } }
+
+    function loadDirectory() {
+        const tb = document.getElementById('directoryTbody'); if (!tb) return; tb.innerHTML = ''; let u = getUsuarios();
+        Object.keys(u).sort().forEach(k => {
+            let p = u[k].phone || 'S/N'; let btn = p !== 'S/N' && p.replace(/[^0-9]/g, '').length >= 8 ? `<a href="https://wa.me/${p.replace(/[^0-9]/g, '')}" target="_blank" class="btn btn-sm text-white shadow-sm" style="background-color: #25d366;"><i class="fa-brands fa-whatsapp fs-5"></i></a>` : '<span class="text-muted small">N/A</span>';
+            tb.innerHTML += `<tr><td class="fw-bold ps-4 text-dark">${k}</td><td><code>${p}</code></td><td><span class="text-muted">${u[k].trade||'Carpintero'}</span></td><td class="text-end pe-4">${btn}</td></tr>`;
+        });
+    }
+
+    function actualizarDiasSemanaManual() {
+        const weekPickerVal = document.getElementById('manualWeekPicker').value;
+        const container = document.getElementById('manualDaysCheckboxesContainer');
+        const rangeText = document.getElementById('manualWeekRangeText');
+        if (!weekPickerVal || !container) return;
+        const { mon, sun } = getMonToSunRange(weekPickerVal);
+        if (!mon || !sun) return;
+        rangeText.innerText = `Rango de la semana: Del ${formatDateShort(mon)} al ${formatDateShort(sun)}`;
+        container.innerHTML = '';
+        let nombresDias = [ { label: 'Lunes', offset: 0 }, { label: 'Martes', offset: 1 }, { label: 'Miércoles', offset: 2 }, { label: 'Jueves', offset: 3 }, { label: 'Viernes', offset: 4 }, { label: 'Sábado', offset: 5 }, { label: 'Domingo', offset: 6 } ];
+        nombresDias.forEach(d => {
+            let fechaDia = new Date(mon);
+            fechaDia.setDate(mon.getDate() + d.offset);
+            let fechaStr = `${fechaDia.getFullYear()}-${String(fechaDia.getMonth() + 1).padStart(2, '0')}-${String(fechaDia.getDate()).padStart(2, '0')}`;
+            container.innerHTML += `
+                <div class="col-md-3 col-6">
+                    <div class="form-check">
+                        <input class="form-check-input border-secondary manual-day-checkbox" type="checkbox" value="${fechaStr}" id="chk_day_${fechaStr}" checked>
+                        <label class="form-check-label small fw-semibold" for="chk_day_${fechaStr}">${d.label} <span class="text-muted d-block" style="font-size: 0.7rem;">(${fechaDia.getDate()}/${fechaDia.getMonth()+1})</span></label>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function registrarAsistenciaManualAdmin(e) {
+        e.preventDefault();
+        const workerName = document.getElementById('manualWorkerSelect').value;
+        const projectName = document.getElementById('manualProjectSelect').value;
+        const timeIn = document.getElementById('manualTimeInInput').value;
+        const timeOut = document.getElementById('manualTimeOutInput').value;
+        const overtimeVal = parseFloat(document.getElementById('manualOvertimeInput').value) || 0;
+        const checkboxes = document.querySelectorAll('.manual-day-checkbox:checked');
+        if (checkboxes.length === 0) return alert("❌ Debes seleccionar al menos un día.");
+
+        let usuarios = getUsuarios();
+        let trade = (usuarios[workerName]||{}).trade || 'Carpintero';
+        let tarifaActual = parseFloat((usuarios[workerName]||{}).rate) || 20.00;
+        let coordsProj = { lat: 0, lng: 0 };
+        let count = 0;
+
+        checkboxes.forEach((cb, index) => {
+            let fechaStr = cb.value;
+            let dObj = new Date(...fechaStr.split('-').map((v,i)=>i===1?v-1:v));
+            let dayName = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][dObj.getDay()];
+            let registros = window.registrosGlobales || [];
+            let j = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === projectName);
+
+            if (j) {
+                j.timeIn = timeIn; j.timeOut = timeOut; j.overtime = overtimeVal; j.trade = trade; j.rateSnapshot = tarifaActual; j.dayName = dayName;
+                window.dbSet(window.dbRef(window.db, 'jornadas/' + j.firebaseKey), j);
+            } else {
+                let nueva = { id: Date.now() + index, workerName, trade, rateSnapshot: tarifaActual, date: fechaStr, dayName, job: projectName, timeIn, timeOut, lunch: 0.5, overtime: overtimeVal, coordsIn: coordsProj, coordsOut: coordsProj };
+                const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
+                nueva.firebaseKey = newRef.key;
+                window.dbSet(newRef, nueva);
+            }
+            count++;
+        });
+        alert(`✅ ¡Registros guardados con éxito para ${count} día(s)!`);
+        showTab('weekly-tab');
     }
 </script>
-
 </body>
 </html>
