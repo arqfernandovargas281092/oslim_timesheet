@@ -214,13 +214,13 @@
             
             .table-weekly input.table-input-clean { font-size: 7.5pt !important; padding: 0 !important; border: none !important; color: #000 !important; background: transparent !important;}
             
-            h5 { font-size: 10pt !important; margin-bottom: 5px !important; font-weight: bold !important;}
+            h5 { font-size: 10pt !important; margin-bottom: 5pt !important; font-weight: bold !important;}
             
             .print-section-header { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 8px !important; }
-            .print-section-title { font-size: 9pt !important; color: #b45309 !important; font-weight: bold !important; text-transform: uppercase !important; margin: 0 !important; }
-            .print-section-badges { display: flex !important; gap: 8px !important; }
-            .print-badge-hours { background-color: #b45309 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 8px !important; border-radius: 4px !important; font-weight: bold !important; }
-            .print-badge-pay { background-color: #059669 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 8px !important; border-radius: 4px !important; font-weight: bold !important; }
+            .print-section-title { font-size: 8.5pt !important; color: #b45309 !important; font-weight: bold !important; text-transform: uppercase !important; margin: 0 !important; }
+            .print-section-badges { display: flex !important; gap: 6px !important; }
+            .print-badge-hours { background-color: #b45309 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
+            .print-badge-pay { background-color: #059669 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
             
             .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #fcfcfc !important; color: #000 !important; }
         }
@@ -1537,7 +1537,7 @@
         });
         htmlResumen += `</tbody></table></div>`;
 
-        // 2. CONTENEDOR DE IMPRESIÓN: PRIMERA HOJA = RESUMEN ORDENADO POR FUNCIÓN CON COLUMNA FUNCIÓN, SIGUIENTES = DETALLES
+        // 2. CONTENEDOR DE IMPRESIÓN: PRIMERA HOJA = RESUMEN, SIGUIENTES = DESGLOSE POR PROYECTO CON TOTAL A PAGAR Y NOTAS
         let htmlImpresion = '';
 
         let sheet1TotalHours = 0;
@@ -1583,7 +1583,6 @@
                     </thead>
                     <tbody>`;
 
-        // ORDENAR LA LISTA DE TRABAJADORES POR FUNCIÓN Y LUEGO POR NOMBRE
         let keysOrdenadasPorFuncion = Object.keys(workerSummary).sort((a, b) => {
             let tA = workerSummary[a].trade.toLowerCase();
             let tB = workerSummary[b].trade.toLowerCase();
@@ -1619,7 +1618,7 @@
 
         htmlImpresion += `</tbody></table></div></div>`;
 
-        // --- HOJAS SIGUIENTES IMPRESAS: Desglose por Proyecto y Función ---
+        // --- HOJAS SIGUIENTES IMPRESAS: Desglose por Proyecto con Total a Pagar y Notas ---
         Object.values(gruposPorProyectoFuncion).forEach(grupo => {
             let sheetTotalHours = 0;
             let sheetTotalPay = 0;
@@ -1647,21 +1646,34 @@
                     <table class="table table-hover table-striped table-weekly align-middle m-0" style="border: 1px solid var(--border-color);">
                         <thead>
                             <tr>
-                                <th style="width: 22%; text-align: left; padding-left: 15px;">TRABAJADOR</th>
-                                <th style="width: 18%; text-align: left;">FUNCIÓN</th>
-                                <th style="width: 6%;">LUN</th><th style="width: 6%;">MAR</th><th style="width: 6%;">MIÉ</th><th style="width: 6%;">JUE</th><th style="width: 6%;">VIE</th><th style="width: 6%;">SÁB</th><th style="width: 6%;">DOM</th>
-                                <th style="width: 8%; color: var(--brand-gold) !important;">HORAS</th>
-                                <th style="width: 8%;">TARIFA/H</th>
-                                <th style="width: 11%; color: #059669 !important;">TOTAL A PAGAR</th>
+                                <th style="width: 20%; text-align: left; padding-left: 10px;">TRABAJADOR</th>
+                                <th style="width: 15%; text-align: left;">FUNCIÓN</th>
+                                <th style="width: 4%;">LUN</th><th style="width: 4%;">MAR</th><th style="width: 4%;">MIÉ</th><th style="width: 4%;">JUE</th><th style="width: 4%;">VIE</th><th style="width: 4%;">SÁB</th><th style="width: 4%;">DOM</th>
+                                <th style="width: 6%; color: var(--brand-gold) !important;">HORAS</th>
+                                <th style="width: 6%;">TARIFA/H</th>
+                                <th style="width: 9%; color: #059669 !important;">TOTAL A PAGAR</th>
+                                <th style="width: 16%; text-align: left;">OBSERVACIONES / AJUSTES</th>
                             </tr>
                         </thead>
                         <tbody>`;
             
             Object.keys(grupo.map).sort((a,b)=>grupo.map[a].name.localeCompare(grupo.map[b].name)).forEach(k => {
                 let w = grupo.map[k];
-                let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0 };
+                let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0, adicional: 0, deductiva: 0 };
                 let tarifaFinal = w.rate + (parseFloat(adj.ajusteSueldo)||0);
                 let totalPagoProyecto = tarifaFinal * w.total;
+
+                // Nota si tiene Adicional (Add) o Deductiva (Deduct)
+                let hasAdd = parseFloat(adj.adicional) > 0;
+                let hasDeduct = parseFloat(adj.deductiva) > 0;
+                let notaAjuste = '-';
+                if (hasAdd && hasDeduct) {
+                    notaAjuste = `<span class="badge bg-warning text-dark" style="font-size:6.5pt;">⚠️ Ver Resumen: Add $${adj.adicional} / Deduct $${adj.deductiva}</span>`;
+                } else if (hasAdd) {
+                    notaAjuste = `<span class="badge bg-success text-white" style="font-size:6.5pt;">⚠️ Ver Resumen: Tiene Aditiva ($${adj.adicional})</span>`;
+                } else if (hasDeduct) {
+                    notaAjuste = `<span class="badge bg-danger text-white" style="font-size:6.5pt;">⚠️ Ver Resumen: Tiene Deductiva ($${adj.deductiva})</span>`;
+                }
 
                 htmlImpresion += `<tr>
                     <td class="fw-bold text-dark text-start ps-3">${w.name.toUpperCase()}</td>
@@ -1675,7 +1687,8 @@
                     <td>${w.days[0] > 0 ? w.days[0].toFixed(1) : '-'}</td>
                     <td class="fw-bold" style="color: var(--brand-gold);">${w.total.toFixed(1)}h</td>
                     <td class="text-muted small">$${tarifaFinal.toFixed(2)}</td>
-                    <td class="fw-bold text-dark">$${totalPagoProyecto.toFixed(2)}</td>
+                    <td class="fw-bold" style="color: #059669;">$${totalPagoProyecto.toFixed(2)}</td>
+                    <td class="text-start">${notaAjuste}</td>
                 </tr>`;
             });
             htmlImpresion += `</tbody></table></div></div>`;
@@ -1750,7 +1763,6 @@
         let ajustesMap = window.ajustesSemanalesNube || {};
         let rowIndex = 5;
 
-        // Ordenar también en el Excel por función y nombre
         let keysOrdenadasExcel = Object.keys(workerSummary).sort((a, b) => {
             let tA = workerSummary[a].trade.toLowerCase();
             let tB = workerSummary[b].trade.toLowerCase();
