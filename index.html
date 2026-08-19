@@ -576,45 +576,62 @@
             </div>
         </div>
 
-        <!-- NUEVO APARTADO: REGISTRO MANUAL DE ASISTENCIA (ADMIN) -->
+        <!-- NUEVO APARTADO: REGISTRO MANUAL POR SEMANA Y DÍAS (ADMIN) -->
         <div class="container mb-5 no-print tab-content-section" id="manual-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="card">
                         <div class="card-header card-header-custom">
-                            <span><i class="fa-solid fa-calendar-plus me-2" style="color: var(--brand-gold);"></i>Registro Manual de Asistencia (Administrador)</span>
+                            <span><i class="fa-solid fa-calendar-check me-2" style="color: var(--brand-gold);"></i>Registro Manual por Semana y Días (Administrador)</span>
                         </div>
                         <div class="card-body p-4">
-                            <p class="text-muted small mb-4">Utiliza este apartado para registrar o completar la asistencia de cualquier usuario de forma directa, sin restricciones de geocerca ni necesidad de iniciar sesión en su cuenta.</p>
+                            <p class="text-muted small mb-4">Selecciona la semana laboral, marca los días específicos que deseas registrar, define los horarios y opcionalmente añade horas extras para aplicarlo de forma masiva.</p>
                             <form onsubmit="registrarAsistenciaManualAdmin(event)">
-                                <div class="mb-3">
-                                    <label class="form-label text-uppercase">Trabajador</label>
-                                    <select class="form-select text-dark" id="manualWorkerSelect" required>
-                                        <!-- Dinámico -->
-                                    </select>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Trabajador</label>
+                                        <select class="form-select text-dark" id="manualWorkerSelect" required>
+                                            <!-- Dinámico -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-uppercase">Proyecto Asignado</label>
+                                        <select class="form-select text-dark" id="manualProjectSelect" required>
+                                            <!-- Dinámico -->
+                                        </select>
+                                    </div>
                                 </div>
+
                                 <div class="mb-3">
-                                    <label class="form-label text-uppercase">Proyecto Asignado</label>
-                                    <select class="form-select text-dark" id="manualProjectSelect" required>
-                                        <!-- Dinámico -->
-                                    </select>
+                                    <label class="form-label text-uppercase">Semana Laboral</label>
+                                    <input type="week" class="form-control" id="manualWeekPicker" required onchange="actualizarDiasSemanaManual()">
+                                    <div class="form-text small text-muted" id="manualWeekRangeText">-</div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label text-uppercase">Fecha</label>
-                                    <input type="date" class="form-control" id="manualDateInput" required>
+
+                                <div class="mb-4">
+                                    <label class="form-label text-uppercase">Selecciona los días a registrar</label>
+                                    <div class="row g-2 p-3 bg-light-dark rounded-3 border" id="manualDaysCheckboxesContainer">
+                                        <!-- Checkboxes dinámicos de Lunes a Domingo -->
+                                    </div>
                                 </div>
-                                <div class="row g-3 mb-4">
+
+                                <div class="row g-3 mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label text-uppercase">Hora de Inicio (Entrada)</label>
-                                        <input type="time" class="form-control" id="manualTimeInInput" required>
+                                        <input type="time" class="form-control" id="manualTimeInInput" value="08:00" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-uppercase">Hora de Término (Salida)</label>
-                                        <input type="time" class="form-control" id="manualTimeOutInput" required>
+                                        <input type="time" class="form-control" id="manualTimeOutInput" value="17:00" required>
                                     </div>
                                 </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-uppercase">Horas Extras por Día (Opcional)</label>
+                                    <input type="number" step="0.25" min="0" class="form-control" id="manualOvertimeInput" value="0" placeholder="Ej. 1.5">
+                                    <div class="form-text small text-muted">Se asignarán como horas extras fijas a cada uno de los días seleccionados.</div>
+                                </div>
                                 <button type="submit" class="btn btn-custom w-100 py-3 shadow-sm">
-                                    <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Registro Manual
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Registros Seleccionados
                                 </button>
                             </form>
                         </div>
@@ -1298,10 +1315,14 @@
         }
         if (tabId === 'manual-tab') {
             poblarSelectsDinamicos();
-            const manualDateInput = document.getElementById('manualDateInput');
-            if (manualDateInput && !manualDateInput.value) {
-                manualDateInput.valueAsDate = new Date();
+            const manualWeekPicker = document.getElementById('manualWeekPicker');
+            if (manualWeekPicker && !manualWeekPicker.value) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const weekNum = getISOWeek(now);
+                manualWeekPicker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
             }
+            actualizarDiasSemanaManual();
         }
         if (tabId === 'admin-users-tab') loadUserManagement();
         if (tabId === 'admin-projects-tab') loadProjectsManagement();
@@ -1451,16 +1472,65 @@
         showTab('weekly-tab');
     }
 
+    function actualizarDiasSemanaManual() {
+        const weekPickerVal = document.getElementById('manualWeekPicker').value;
+        const container = document.getElementById('manualDaysCheckboxesContainer');
+        const rangeText = document.getElementById('manualWeekRangeText');
+        if (!weekPickerVal || !container) return;
+
+        const { mon, sun } = getMonToSunRange(weekPickerVal);
+        if (!mon || !sun) return;
+
+        rangeText.innerText = `Rango de la semana: Del ${formatDateShort(mon)} al ${formatDateShort(sun)}`;
+        container.innerHTML = '';
+
+        let nombresDias = [
+            { label: 'Lunes', offset: 0 },
+            { label: 'Martes', offset: 1 },
+            { label: 'Miércoles', offset: 2 },
+            { label: 'Jueves', offset: 3 },
+            { label: 'Viernes', offset: 4 },
+            { label: 'Sábado', offset: 5 },
+            { label: 'Domingo', offset: 6 }
+        ];
+
+        nombresDias.forEach(d => {
+            let fechaDia = new Date(mon);
+            fechaDia.setDate(mon.getDate() + d.offset);
+            let anio = fechaDia.getFullYear();
+            let mes = String(fechaDia.getMonth() + 1).padStart(2, '0');
+            let dia = String(fechaDia.getDate()).padStart(2, '0');
+            let fechaStr = `${anio}-${mes}-${dia}`;
+
+            container.innerHTML += `
+                <div class="col-md-3 col-6">
+                    <div class="form-check">
+                        <input class="form-check-input manual-day-checkbox" type="checkbox" value="${fechaStr}" id="chk_day_${fechaStr}" checked>
+                        <label class="form-check-label small fw-semibold" for="chk_day_${fechaStr}">
+                            ${d.label} <span class="text-muted d-block" style="font-size: 0.7rem;">(${dia}/${mes})</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
     function registrarAsistenciaManualAdmin(e) {
         e.preventDefault();
         const workerName = document.getElementById('manualWorkerSelect').value;
         const projectName = document.getElementById('manualProjectSelect').value;
-        const dateStr = document.getElementById('manualDateInput').value;
         const timeIn = document.getElementById('manualTimeInInput').value;
         const timeOut = document.getElementById('manualTimeOutInput').value;
+        const overtimeVal = parseFloat(document.getElementById('manualOvertimeInput').value) || 0;
 
-        if (!workerName || !projectName || !dateStr || !timeIn || !timeOut) {
-            alert("❌ Por favor completa todos los campos del registro manual.");
+        const checkboxes = document.querySelectorAll('.manual-day-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert("❌ Debes seleccionar al menos un día de la semana.");
+            return;
+        }
+
+        if (!workerName || !projectName || !timeIn || !timeOut) {
+            alert("❌ Por favor completa los campos obligatorios.");
             return;
         }
 
@@ -1469,59 +1539,56 @@
         let trade = userObj.trade || 'Carpintero';
         let tarifaActual = parseFloat(userObj.rate) || 20.00;
 
-        const parts = dateStr.split('-');
-        if (parts.length < 3) return;
-        const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const dayName = days[dObj.getDay()];
-
         let proyectos = getProyectos();
         let proyectoObj = proyectos.find(p => p.name === projectName);
         let coordsProj = proyectoObj ? { lat: proyectoObj.lat, lng: proyectoObj.lng } : { lat: 0, lng: 0 };
+        let days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-        let registros = window.registrosGlobales || [];
-        let jornadaExistente = registros.find(j => j.workerName === workerName && j.date === dateStr && j.job === projectName);
+        let count = 0;
+        checkboxes.forEach((cb, index) => {
+            let fechaStr = cb.value;
+            let parts = fechaStr.split('-');
+            let dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            let dayName = days[dObj.getDay()];
 
-        if (jornadaExistente) {
-            let actualizar = confirm(`⚠️ Ya existe un registro para ${workerName} en el proyecto ${projectName} en la fecha ${dateStr}.\n¿Deseas sobrescribirlo con las nuevas horas (${timeIn} - ${timeOut})?`);
-            if (!actualizar) return;
+            let registros = window.registrosGlobales || [];
+            let jornadaExistente = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === projectName);
 
-            jornadaExistente.timeIn = timeIn;
-            jornadaExistente.timeOut = timeOut;
-            jornadaExistente.trade = trade;
-            jornadaExistente.rateSnapshot = tarifaActual;
-            jornadaExistente.dayName = dayName;
+            if (jornadaExistente) {
+                jornadaExistente.timeIn = timeIn;
+                jornadaExistente.timeOut = timeOut;
+                jornadaExistente.overtime = overtimeVal;
+                jornadaExistente.trade = trade;
+                jornadaExistente.rateSnapshot = tarifaActual;
+                jornadaExistente.dayName = dayName;
 
-            window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaExistente.firebaseKey), jornadaExistente)
-                .then(() => {
-                    alert("✅ ¡Registro de asistencia actualizado correctamente!");
-                    showTab('logs-tab');
-                });
-        } else {
-            let nuevaJornada = {
-                id: Date.now(),
-                workerName: workerName,
-                trade: trade,
-                rateSnapshot: tarifaActual,
-                date: dateStr,
-                dayName: dayName,
-                job: projectName,
-                timeIn: timeIn,
-                timeOut: timeOut,
-                lunch: 0.5,
-                overtime: 0,
-                coordsIn: coordsProj,
-                coordsOut: coordsProj
-            };
+                window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaExistente.firebaseKey), jornadaExistente);
+            } else {
+                let nuevaJornada = {
+                    id: Date.now() + index,
+                    workerName: workerName,
+                    trade: trade,
+                    rateSnapshot: tarifaActual,
+                    date: fechaStr,
+                    dayName: dayName,
+                    job: projectName,
+                    timeIn: timeIn,
+                    timeOut: timeOut,
+                    lunch: 0.5,
+                    overtime: overtimeVal,
+                    coordsIn: coordsProj,
+                    coordsOut: coordsProj
+                };
 
-            const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
-            nuevaJornada.firebaseKey = newRef.key;
-            window.dbSet(newRef, nuevaJornada)
-                .then(() => {
-                    alert("✅ ¡Registro manual agregado con éxito!");
-                    showTab('logs-tab');
-                });
-        }
+                const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
+                nuevaJornada.firebaseKey = newRef.key;
+                window.dbSet(newRef, nuevaJornada);
+            }
+            count++;
+        });
+
+        alert(`✅ ¡Registros guardados con éxito para ${count} día(s) seleccionado(s)!`);
+        showTab('weekly-tab');
     }
 
     function loadDirectory() {
