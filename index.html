@@ -9,17 +9,16 @@
     <!-- Leaflet CSS para Mapas -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* PALETA REFINADA: GRIS CLARO / BLANCO CON ACENTO COBRE ELEGANTE Y DISEÑO POWER BI */
         :root {
-            --bg-app: #f4f5f7;          /* Fondo general gris muy claro, limpio y moderno */
-            --bg-card: #ffffff;         /* Tarjetas en blanco puro */
-            --bg-input: #eef2f6;        /* Campos de texto y elementos secundarios en gris sutil */
-            --brand-accent: #111827;    /* Texto oscuro de alta legibilidad */
-            --brand-gold: #b45309;      /* Acento cobre/dorado elegante y profesional */
-            --accent-teal: #b45309;     /* Sincronizado con brand-gold para mantener la identidad */
-            --text-main: #1f2937;       /* Texto principal oscuro para contraste perfecto */
-            --text-muted: #6b7280;      /* Texto secundario gris */
-            --border-color: #d1d5db;    /* Bordes limpios y definidos */
+            --bg-app: #f4f5f7;
+            --bg-card: #ffffff;
+            --bg-input: #eef2f6;
+            --brand-accent: #111827;
+            --brand-gold: #b45309;
+            --accent-teal: #b45309;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #d1d5db;
         }
 
         body { 
@@ -29,7 +28,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* --- LOGIN SCREEN ESTILO ELEGANTE --- */
         .login-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -66,7 +64,6 @@
             box-shadow: 0 4px 12px rgba(180, 83, 9, 0.25);
         }
 
-        /* --- NAVBAR & MENÚ LATERAL OCULTO --- */
         .navbar-custom { 
             background-color: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
@@ -98,7 +95,6 @@
         .btn-logout { background-color: rgba(239, 68, 68, 0.08); color: #dc2626; margin-top: auto; }
         .btn-logout:hover { background-color: #dc2626; color: white; }
 
-        /* --- COMPONENTES UI Y POWER BI --- */
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -127,7 +123,7 @@
         .btn-custom:hover { background-color: #92400e; color: #fff; transform: translateY(-1px); }
 
         .form-label { color: var(--text-muted) !important; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
-        .form-control, .form-select, input[type="date"], input[type="time"], input[type="week"] {
+        .form-control, .form-select, input[type="date"], input[type="time"], input[type="week"], input[type="month"] {
             background-color: var(--bg-input);
             border: 1px solid var(--border-color);
             color: var(--text-main) !important;
@@ -146,7 +142,6 @@
         .text-muted { color: var(--text-muted) !important; }
         .bg-light-dark { background-color: #f8fafc !important; border: 1px solid var(--border-color); }
 
-        /* --- ESTILOS ESPECÍFICOS PARA EL DASHBOARD EJECUTIVO TIPO POWER BI --- */
         .bi-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -290,7 +285,6 @@
 
         #dashMap { height: 320px; width: 100%; border-radius: 12px; border: 1px solid var(--border-color); }
 
-        /* --- TABLAS MODO CLARO ELEGANTE --- */
         .table { color: var(--text-main); border-color: var(--border-color); }
         .table > :not(caption) > * > * { background-color: transparent; color: var(--text-main); border-bottom-color: var(--border-color); }
         .table-hover tbody tr:hover { background-color: rgba(180, 83, 9, 0.04) !important; color: var(--text-main); }
@@ -300,7 +294,6 @@
         .table-weekly td { vertical-align: middle; text-align: center; color: var(--text-main); }
         .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #f8fafc; color: var(--text-main); }
 
-        /* --- DROPDOWNS Y CHECKBOXES --- */
         .dropdown-menu-checkboxes {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -317,7 +310,6 @@
 
         .hidden { display: none !important; }
 
-        /* --- IMPRESIÓN CORREGIDA --- */
         @media print {
             @page { size: letter landscape; margin: 0.3in; }
             body { background: white !important; font-size: 9pt; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -432,11 +424,10 @@
             
             <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px;">General</p>
             <button type="button" class="nav-menu-btn" onclick="showTab('entry-tab'); closeMenu();"><i class="fa-solid fa-user-clock"></i>Registrar Asistencia</button>
-            <button type="button" class="nav-menu-btn" onclick="showTab('weekly-tab'); loadWeeklySummary(); closeMenu();"><i class="fa-solid fa-calendar-week"></i>Resumen Semanal</button>
+            <button type="button" class="nav-menu-btn" onclick="showTab('weekly-tab'); loadWeeklySummary(); closeMenu();"><i class="fa-solid fa-calendar-week"></i>Resumen y Reportes</button>
             
             <div id="admin-menu-section" class="hidden mt-3 d-flex flex-column gap-1">
                 <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px; color: var(--brand-gold) !important;">Administración</p>
-                <!-- BOTÓN PARA EL DASHBOARD EJECUTIVO TIPO POWER BI -->
                 <button type="button" id="admin-bi-dashboard-btn" class="nav-menu-btn hidden" onclick="showTab('bi-dashboard-tab'); initBIDashboard(); closeMenu();"><i class="fa-solid fa-chart-pie"></i>Dashboard Ejecutivo (BI)</button>
                 <button type="button" id="admin-daily-btn" class="nav-menu-btn hidden" onclick="showTab('daily-tab'); loadDailyRecords(); closeMenu();"><i class="fa-solid fa-map-location-dot"></i>Registros por Día y Mapa</button>
                 <button type="button" id="admin-logs-btn" class="nav-menu-btn hidden" onclick="showTab('logs-tab'); loadDailyLogs(); closeMenu();"><i class="fa-solid fa-pen-to-square"></i>Edición de Horas</button>
@@ -514,28 +505,49 @@
             </div>
         </div>
 
-        <!-- TAB: DASHBOARD EJECUTIVO TIPO POWER BI (ACTUALIZACIÓN AUTOMÁTICA EN TIEMPO REAL SIN BOTÓN) -->
+        <!-- TAB: DASHBOARD EJECUTIVO TIPO POWER BI (CORREGIDO CON SELECTORES DINÁMICOS DE MES/AÑO/SEMANA/DÍA) -->
         <div class="container-fluid px-4 mb-5 tab-content-section" id="bi-dashboard-tab" style="display:none;">
             <div class="card mb-4 bg-light-dark">
                 <div class="card-body p-3">
                     <div class="row g-3 align-items-center">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label text-uppercase mb-1">Proyecto</label>
                             <select class="form-select text-dark" id="biProjectFilter" onchange="initBIDashboard()">
                                 <option value="ALL">🌐 Todos los Proyectos</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label text-uppercase mb-1">Filtro Temporal</label>
-                            <select class="form-select text-dark" id="biTimeFilter" onchange="initBIDashboard()">
+                            <select class="form-select text-dark" id="biTimeFilter" onchange="toggleBITimeInputs()">
                                 <option value="ALL">♾️ Total Vida del Proyecto</option>
-                                <option value="YEAR">📅 Este Año</option>
-                                <option value="MONTH">📆 Este Mes</option>
-                                <option value="WEEK">📆 Esta Semana</option>
-                                <option value="DAY">📍 Por Día Específico</option>
+                                <option value="YEAR">📅 Año Específico</option>
+                                <option value="MONTH">📆 Mes Específico</option>
+                                <option value="WEEK">📆 Semana Específica</option>
+                                <option value="DAY">📍 Día Específico</option>
                             </select>
                         </div>
-                        <div class="col-md-4" id="biSpecificDateContainer" style="display: none;">
+                        
+                        <!-- Selectores dinámicos para el BI corregidos -->
+                        <div class="col-md-3" id="biContainerMonthPicker" style="display: none;">
+                            <label class="form-label text-uppercase mb-1">Selecc. Mes</label>
+                            <input type="month" class="form-control" id="biMonthPicker" onchange="initBIDashboard()">
+                        </div>
+                        
+                        <div class="col-md-3" id="biContainerYearPicker" style="display: none;">
+                            <label class="form-label text-uppercase mb-1">Selecc. Año</label>
+                            <select class="form-select text-dark" id="biYearPicker" onchange="initBIDashboard()">
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3" id="biContainerWeekPicker" style="display: none;">
+                            <label class="form-label text-uppercase mb-1">Selecc. Semana</label>
+                            <input type="week" class="form-control" id="biWeekPicker" onchange="initBIDashboard()">
+                        </div>
+
+                        <div class="col-md-3" id="biSpecificDateContainer" style="display: none;">
                             <label class="form-label text-uppercase mb-1">Seleccionar Día</label>
                             <input type="date" class="form-control" id="biSpecificDateInput" onchange="initBIDashboard()">
                         </div>
@@ -543,10 +555,8 @@
                 </div>
             </div>
 
-            <!-- CONTENEDOR ESTILO POWER BI (Métricas, Mapa, Donut, Gráficos) -->
             <div class="dashboard-container">
                 <div class="row g-3 mb-3">
-                    <!-- Bloque 1: Gasto Total / Costo -->
                     <div class="col-lg-3 col-md-4">
                         <div class="bi-card">
                             <div class="bi-title">Gasto Total Acumulado ($)</div>
@@ -554,15 +564,11 @@
                             <div class="text-muted small mt-2"><i class="fa-solid fa-arrow-trend-up text-success me-1"></i>Suma de sueldos y horas</div>
                         </div>
                     </div>
-
-                    <!-- Bloque 2: Mapa GIS con Georeferencia del Proyecto -->
                     <div class="col-lg-6 col-md-8">
                         <div class="bi-card p-1">
                             <div id="dashMap"></div>
                         </div>
                     </div>
-
-                    <!-- Bloque 3: Distribución por Función (Trades) -->
                     <div class="col-lg-3">
                         <div class="bi-card">
                             <div class="bi-title">Gasto / Horas por Función</div>
@@ -575,7 +581,6 @@
                 </div>
 
                 <div class="row g-3">
-                    <!-- Bloque 4: Horas Totales y Jornadas por Semana -->
                     <div class="col-lg-4">
                         <div class="bi-card">
                             <div class="bi-title">Total Horas y Jornadas por Semana</div>
@@ -592,8 +597,6 @@
                             <div class="chart-box" id="biStatusChart"></div>
                         </div>
                     </div>
-
-                    <!-- Bloque 5: Tendencia de Costos ($) por Semana -->
                     <div class="col-lg-4">
                         <div class="bi-card">
                             <div class="bi-title">Tendencia de Costos ($) por Semana</div>
@@ -603,8 +606,6 @@
                             <div class="chart-box" id="biTrendChart"></div>
                         </div>
                     </div>
-
-                    <!-- Bloque 6: Desglose por Proyecto (Top Costos) -->
                     <div class="col-lg-4">
                         <div class="bi-card">
                             <div class="bi-title">Gasto por Proyecto</div>
@@ -615,11 +616,11 @@
             </div>
         </div>
 
-        <!-- TAB 2: RESUMEN SEMANAL -->
+        <!-- TAB 2: RESUMEN Y REPORTES -->
         <div class="container-fluid px-4 mb-5 tab-content-section" id="weekly-tab" style="display:none;">
             <div class="card">
                 <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
-                    <span><i class="fa-solid fa-chart-bar me-2" style="color: var(--brand-gold);"></i>Resumen Semanal de Horas</span>
+                    <span><i class="fa-solid fa-chart-bar me-2" style="color: var(--brand-gold);"></i>Resumen y Reportes de Horas</span>
                     <div class="no-print d-flex gap-2">
                         <button type="button" class="btn btn-sm text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" onclick="exportWeeklyCSV()"><i class="fa-solid fa-file-csv me-1"></i>Excel</button>
                         <button type="button" class="btn btn-sm btn-outline-dark fw-bold" style="border-radius: 8px; border-color: var(--border-color);" onclick="window.print()"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
@@ -627,11 +628,38 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-3 align-items-center mb-4 p-3 rounded-3 bg-light-dark border">
-                        <div class="col-md-3">
-                            <label class="form-label text-uppercase mb-1">Semana</label>
+                        
+                        <!-- SELECTOR DE TIPO DE PERIODO -->
+                        <div class="col-md-2">
+                            <label class="form-label text-uppercase mb-1">Filtrar por</label>
+                            <select class="form-select text-dark" id="reportTimeMode" onchange="toggleReportTimeInputs()">
+                                <option value="WEEK" selected>📅 Semana</option>
+                                <option value="MONTH">📆 Mes</option>
+                                <option value="YEAR">📊 Año</option>
+                            </select>
+                        </div>
+
+                        <!-- CONTENEDORES DINÁMICOS -->
+                        <div class="col-md-2" id="containerWeekPicker">
+                            <label class="form-label text-uppercase mb-1">Selecc. Semana</label>
                             <input type="week" class="form-control" id="weekPicker" onchange="loadWeeklySummary()">
                         </div>
                         
+                        <div class="col-md-2" id="containerMonthPicker" style="display: none;">
+                            <label class="form-label text-uppercase mb-1">Selecc. Mes</label>
+                            <input type="month" class="form-control" id="monthPicker" onchange="loadWeeklySummary()">
+                        </div>
+                        
+                        <div class="col-md-2" id="containerYearPicker" style="display: none;">
+                            <label class="form-label text-uppercase mb-1">Selecc. Año</label>
+                            <select class="form-select text-dark" id="yearPicker" onchange="loadWeeklySummary()">
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Proyectos -->
                         <div class="col-md-3">
                             <label class="form-label text-uppercase mb-1">Proyectos</label>
                             <div class="dropdown">
@@ -649,6 +677,7 @@
                             </div>
                         </div>
 
+                        <!-- Funciones -->
                         <div class="col-md-3 admin-trade-filter-control">
                             <label class="form-label text-uppercase mb-1">Funciones</label>
                             <div class="dropdown">
@@ -665,33 +694,28 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-3 text-end ms-auto d-flex flex-column align-items-end justify-content-center">
-                            <span class="badge py-2 px-3 fs-6 mb-1 text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" id="totalWeeklyHoursBadge">Total Horas: 0.0 hrs</span>
-                            <span class="badge py-2 px-3 fs-6 shadow-sm" style="background-color: #059669; color: white; border-radius: 8px;" id="totalWeeklyPayBadge">Total a Pagar: $0.00</span>
-                        </div>
                     </div>
                     
-                    <div class="mb-3 text-dark small">
-                        <b>Rango Activo:</b> <span id="weekRangeLabel" style="color: var(--brand-gold); font-weight: 600;">-</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-white border rounded-3 shadow-sm">
+                        <div>
+                            <b>Período Activo:</b> <span id="weekRangeLabel" style="color: var(--brand-gold); font-weight: 600;">-</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <span class="badge py-2 px-3 fs-6 text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" id="totalWeeklyHoursBadge">Total Horas: 0.0 hrs</span>
+                            <span class="badge py-2 px-3 fs-6 text-white fw-bold shadow-sm" style="background-color: #059669; border-radius: 8px;" id="totalWeeklyPayBadge">Total a Pagar: $0.00</span>
+                        </div>
                     </div>
 
                     <div class="table-responsive rounded-3 border" style="border-color: var(--border-color) !important;">
                         <table class="table table-hover table-striped table-weekly align-middle m-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 18%;" class="text-start">Trabajador</th>
-                                    <th style="width: 12%;" class="text-start">Función</th>
-                                    <th style="width: 6%;">Lun</th>
-                                    <th style="width: 6%;">Mar</th>
-                                    <th style="width: 6%;">Mié</th>
-                                    <th style="width: 6%;">Jue</th>
-                                    <th style="width: 6%;">Vie</th>
-                                    <th style="width: 6%;">Sáb</th>
-                                    <th style="width: 6%;">Dom</th>
-                                    <th style="width: 10%; color: var(--brand-gold) !important;">Horas</th>
-                                    <th style="width: 10%;">Tarifa/h</th>
-                                    <th style="width: 16%; color: #059669 !important;">Total a Pagar</th>
+                                    <th style="width: 22%;" class="text-start">Trabajador</th>
+                                    <th style="width: 15%;" class="text-start">Función</th>
+                                    <th style="width: 15%; color: var(--brand-gold) !important;">Total Horas</th>
+                                    <th style="width: 15%;">Tarifa/h</th>
+                                    <th style="width: 18%; color: #059669 !important;">Total a Pagar</th>
+                                    <th style="width: 15%;">Detalle / Periodo</th>
                                 </tr>
                             </thead>
                             <tbody id="weeklyTbody"></tbody>
@@ -1184,6 +1208,15 @@
         document.getElementById('mapDateFilter').valueAsDate = new Date();
         const biDateInput = document.getElementById('biSpecificDateInput');
         if (biDateInput) biDateInput.valueAsDate = new Date();
+
+        // Inicializar valor por defecto para el mes actual en BI
+        const biMonthInput = document.getElementById('biMonthPicker');
+        if (biMonthInput) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            biMonthInput.value = `${y}-${m}`;
+        }
     });
 
     function closeMenu() {
@@ -1544,7 +1577,7 @@
             setTimeout(() => { initEntryMap(); }, 200);
         }
         if (tabId === 'bi-dashboard-tab') {
-            setTimeout(() => { initBIDashboard(); }, 250);
+            setTimeout(() => { toggleBITimeInputs(); }, 250);
         }
         if (tabId === 'weekly-tab') {
             poblarSelectsDinamicos();
@@ -1579,18 +1612,29 @@
         if (tabId === 'directory-tab') loadDirectory();
     }
 
-    /* --- LÓGICA COMPLETA DEL DASHBOARD EJECUTIVO (BI) CON GRÁFICOS POR SEMANA --- */
+    /* --- FUNCIÓN PARA ALTERNAR VISIBILIDAD DE SELECTORES EN EL BI --- */
+    function toggleBITimeInputs() {
+        const mode = document.getElementById('biTimeFilter').value;
+        const mContainer = document.getElementById('biContainerMonthPicker');
+        const yContainer = document.getElementById('biContainerYearPicker');
+        const wContainer = document.getElementById('biContainerWeekPicker');
+        const dContainer = document.getElementById('biSpecificDateContainer');
+
+        if (mContainer) mContainer.style.display = (mode === 'MONTH') ? 'block' : 'none';
+        if (yContainer) yContainer.style.display = (mode === 'YEAR') ? 'block' : 'none';
+        if (wContainer) wContainer.style.display = (mode === 'WEEK') ? 'block' : 'none';
+        if (dContainer) dContainer.style.display = (mode === 'DAY') ? 'block' : 'none';
+
+        initBIDashboard();
+    }
+
     function initBIDashboard() {
         const timeFilter = document.getElementById('biTimeFilter').value;
         const projectFilter = document.getElementById('biProjectFilter').value;
         const specificDateVal = document.getElementById('biSpecificDateInput').value;
-
-        const dateContainer = document.getElementById('biSpecificDateContainer');
-        if (timeFilter === 'DAY') {
-            dateContainer.style.display = 'block';
-        } else {
-            dateContainer.style.display = 'none';
-        }
+        const specificMonthVal = document.getElementById('biMonthPicker').value;
+        const specificYearVal = document.getElementById('biYearPicker').value;
+        const specificWeekVal = document.getElementById('biWeekPicker').value;
 
         if (!dashMap) {
             dashMap = L.map('dashMap', { zoomControl: false, attributionControl: false }).setView([25.7617, -80.1918], 11);
@@ -1603,7 +1647,6 @@
         let usuarios = getUsuarios();
         let proyectos = getProyectos();
 
-        // Filtrar registros según los requerimientos del usuario
         let filteredRegistros = registros.filter(r => {
             if (projectFilter !== 'ALL' && (!r.job || r.job.trim() !== projectFilter.trim())) {
                 return false;
@@ -1613,25 +1656,26 @@
                 let parts = r.date.split('-');
                 if (parts.length === 3) {
                     let rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                    let now = new Date();
 
                     if (timeFilter === 'DAY' && specificDateVal) {
                         if (r.date !== specificDateVal) return false;
-                    } else if (timeFilter === 'WEEK') {
-                        let currentWeekNum = getISOWeek(now);
-                        let rWeekNum = getISOWeek(rDate);
-                        if (rDate.getFullYear() !== now.getFullYear() || rWeekNum !== currentWeekNum) return false;
-                    } else if (timeFilter === 'MONTH') {
-                        if (rDate.getFullYear() !== now.getFullYear() || rDate.getMonth() !== now.getMonth()) return false;
-                    } else if (timeFilter === 'YEAR') {
-                        if (rDate.getFullYear() !== now.getFullYear()) return false;
+                    } else if (timeFilter === 'WEEK' && specificWeekVal) {
+                        let { mon, sun } = getMonToSunRange(specificWeekVal);
+                        if (mon && sun) {
+                            let rTime = rDate.getTime();
+                            if (rTime < mon.getTime() || rTime > sun.getTime()) return false;
+                        }
+                    } else if (timeFilter === 'MONTH' && specificMonthVal) {
+                        let [targetYear, targetMonth] = specificMonthVal.split('-').map(Number);
+                        if (rDate.getFullYear() !== targetYear || (rDate.getMonth() + 1) !== targetMonth) return false;
+                    } else if (timeFilter === 'YEAR' && specificYearVal) {
+                        if (rDate.getFullYear() !== Number(specificYearVal)) return false;
                     }
                 }
             }
             return true;
         });
 
-        // Calcular Métricas Principales y Agrupaciones por Semana
         let totalCost = 0;
         let totalHours = 0;
         let totalShifts = filteredRegistros.length;
@@ -1639,7 +1683,6 @@
         let projectCostCount = {};
         let weeklyCostMap = {};
         let weeklyHoursMap = {};
-        let weeklyShiftsMap = {};
 
         filteredRegistros.forEach(r => {
             let netH = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
@@ -1658,7 +1701,6 @@
             let proj = r.job || 'General';
             projectCostCount[proj] = (projectCostCount[proj] || 0) + costoJornada;
 
-            // Agrupación por semana (ej. "2026-W33")
             if (r.date) {
                 let parts = r.date.split('-');
                 if (parts.length === 3) {
@@ -1668,17 +1710,14 @@
 
                     weeklyCostMap[wKey] = (weeklyCostMap[wKey] || 0) + costoJornada;
                     weeklyHoursMap[wKey] = (weeklyHoursMap[wKey] || 0) + netHoursJornada;
-                    weeklyShiftsMap[wKey] = (weeklyShiftsMap[wKey] || 0) + 1;
                 }
             }
         });
 
-        // Actualizar UI de Tarjetas Principales
         document.getElementById('biTotalCost').innerText = `$${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         document.getElementById('biTotalHours').innerText = `${totalHours.toFixed(1)} hrs`;
         document.getElementById('biTotalShifts').innerText = totalShifts.toLocaleString();
 
-        // Actualizar Mapa con Georeferencia de Proyectos
         dashMap.eachLayer((layer) => {
             if (layer instanceof L.CircleMarker || layer instanceof L.Marker) dashMap.removeLayer(layer);
         });
@@ -1699,7 +1738,6 @@
             dashMap.fitBounds(bounds, { maxZoom: 14 });
         }
 
-        // Gráfico Donut por Función (Trade)
         let totalTradeVal = Object.values(tradesCount).reduce((a,b)=>a+b, 0) || 1;
         let legendHTML = '';
         let colors = ['#b45309', '#d97706', '#f59e0b', '#fde68a', '#78350f'];
@@ -1728,7 +1766,6 @@
         }
         document.getElementById('biDonutLegend').innerHTML = legendHTML;
 
-        // Gráfico de Barras: Total Horas y Jornadas por Semana
         const statusContainer = document.getElementById('biStatusChart');
         statusContainer.innerHTML = '';
         let sortedWeeks = Object.keys(weeklyHoursMap).sort();
@@ -1748,7 +1785,6 @@
             });
         }
 
-        // Gráfico de Tendencia: Costos ($) por Semana
         const trendContainer = document.getElementById('biTrendChart');
         trendContainer.innerHTML = '';
         let sortedCostWeeks = Object.keys(weeklyCostMap).sort();
@@ -1768,7 +1804,6 @@
             });
         }
 
-        // Top Proyectos (Barras Horizontales de Gasto)
         const topContainer = document.getElementById('biTopContainer');
         topContainer.innerHTML = '';
         let maxProjVal = Math.max(...Object.values(projectCostCount), 1);
@@ -2286,6 +2321,15 @@
         const picker = document.getElementById('weekPicker');
         if (picker) picker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
         
+        const monthPicker = document.getElementById('monthPicker');
+        if (monthPicker) {
+            const mNum = String(now.getMonth() + 1).padStart(2, '0');
+            monthPicker.value = `${year}-${mNum}`;
+        }
+
+        const yearPicker = document.getElementById('yearPicker');
+        if (yearPicker) yearPicker.value = `${year}`;
+        
         const logsPicker = document.getElementById('logsWeekPicker');
         if (logsPicker) logsPicker.value = `${year}-W${weekNum < 10 ? '0' + weekNum : weekNum}`;
     }
@@ -2336,23 +2380,61 @@
         return redondearAMediaHora(netMins / 60);
     }
 
+    function toggleReportTimeInputs() {
+        const mode = document.getElementById('reportTimeMode').value;
+        const wContainer = document.getElementById('containerWeekPicker');
+        const mContainer = document.getElementById('containerMonthPicker');
+        const yContainer = document.getElementById('containerYearPicker');
+
+        if (wContainer) wContainer.style.display = (mode === 'WEEK') ? 'block' : 'none';
+        if (mContainer) mContainer.style.display = (mode === 'MONTH') ? 'block' : 'none';
+        if (yContainer) yContainer.style.display = (mode === 'YEAR') ? 'block' : 'none';
+
+        loadWeeklySummary();
+    }
+
     function loadWeeklySummary() {
-        const weekPicker = document.getElementById('weekPicker');
-        if (!weekPicker || !weekPicker.value) return;
-        
-        const weekVal = weekPicker.value;
+        const mode = document.getElementById('reportTimeMode') ? document.getElementById('reportTimeMode').value : 'WEEK';
+        let startTime = 0;
+        let endTime = 0;
+        let rangeLabelText = "";
+
+        if (mode === 'WEEK') {
+            const weekPicker = document.getElementById('weekPicker');
+            if (!weekPicker || !weekPicker.value) return;
+            const { mon, sun } = getMonToSunRange(weekPicker.value);
+            if (!mon || !sun) return;
+            startTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
+            endTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+            rangeLabelText = `Semana: Del ${formatDateShort(mon)} al ${formatDateShort(sun)}`;
+        } else if (mode === 'MONTH') {
+            const monthPicker = document.getElementById('monthPicker');
+            if (!monthPicker || !monthPicker.value) return;
+            const parts = monthPicker.value.split('-');
+            const year = Number(parts[0]);
+            const month = Number(parts[1]) - 1;
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0, 23, 59, 59);
+            startTime = firstDay.getTime();
+            endTime = lastDay.getTime();
+            const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            rangeLabelText = `Mes completo: ${mesesNombres[month]} de ${year}`;
+        } else if (mode === 'YEAR') {
+            const yearPicker = document.getElementById('yearPicker');
+            if (!yearPicker || !yearPicker.value) return;
+            const year = Number(yearPicker.value);
+            startTime = new Date(year, 0, 1).getTime();
+            endTime = new Date(year, 11, 31, 23, 59, 59).getTime();
+            rangeLabelText = `Año completo: ${year}`;
+        }
+
+        const rangeLabel = document.getElementById('weekRangeLabel');
+        if (rangeLabel) rangeLabel.innerText = rangeLabelText;
+
         const selectedProjects = getSelectedCheckboxValues('project');
         const selectedTrades = getSelectedCheckboxValues('trade');
-        
-        const { mon, sun } = getMonToSunRange(weekVal);
-        if (!mon || !sun) return;
-
-        document.getElementById('weekRangeLabel').innerText = `${formatDateShort(mon)} al ${formatDateShort(sun)}`;
 
         let registros = window.registrosGlobales || [];
-        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
-        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
-
         let usuarios = getUsuarios();
         let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
 
@@ -2360,7 +2442,7 @@
             const parts = r.date.split('-');
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
-            let dateMatch = (rDate >= monTime && rDate <= sunTime);
+            let dateMatch = (rDate >= startTime && rDate <= endTime);
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
@@ -2379,17 +2461,13 @@
                     name: r.workerName,
                     trade: r.trade || userObj.trade || 'Carpintero',
                     rate: historicalRate,
-                    days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 },
-                    totalHours: 0
+                    totalHours: 0,
+                    jornadasCount: 0
                 };
             }
             let totalPagoJornada = calcularTotalPagar(r);
-            const parts = r.date.split('-');
-            const dObj = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
-            const dayOfWeek = dObj.getDay();
-
-            workerSummary[key].days[dayOfWeek] += totalPagoJornada;
             workerSummary[key].totalHours += totalPagoJornada;
+            workerSummary[key].jornadasCount += 1;
         });
 
         const tbody = document.getElementById('weeklyTbody');
@@ -2401,7 +2479,7 @@
         const keys = Object.keys(workerSummary);
 
         if (keys.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted p-4">No hay registros con los filtros seleccionados.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-4">No hay registros con los filtros seleccionados.</td></tr>';
             document.getElementById('totalWeeklyHoursBadge').innerText = 'Total Horas: 0.0 hrs';
             document.getElementById('totalWeeklyPayBadge').innerText = 'Total a Pagar: $0.00';
             return;
@@ -2414,18 +2492,12 @@
             grandTotalMoney += moneyOwed;
 
             tbody.innerHTML += `<tr>
-                <td class="worker-info fw-bold text-dark">${w.name}</td>
-                <td class="worker-info text-muted small">${w.trade}</td>
-                <td>${w.days[1] > 0 ? w.days[1].toFixed(1) : '-'}</td>
-                <td>${w.days[2] > 0 ? w.days[2].toFixed(1) : '-'}</td>
-                <td>${w.days[3] > 0 ? w.days[3].toFixed(1) : '-'}</td>
-                <td>${w.days[4] > 0 ? w.days[4].toFixed(1) : '-'}</td>
-                <td>${w.days[5] > 0 ? w.days[5].toFixed(1) : '-'}</td>
-                <td>${w.days[6] > 0 ? w.days[6].toFixed(1) : '-'}</td>
-                <td>${w.days[0] > 0 ? w.days[0].toFixed(1) : '-'}</td>
+                <td class="worker-info fw-bold text-dark text-start">${w.name}</td>
+                <td class="worker-info text-muted small text-start">${w.trade}</td>
                 <td class="fw-bold" style="color: var(--brand-gold);">${w.totalHours.toFixed(1)}h</td>
                 <td><code class="text-dark bg-transparent p-0">$${w.rate.toFixed(2)}</code></td>
                 <td class="fw-bold" style="color: #059669;">$${moneyOwed.toFixed(2)}</td>
+                <td><span class="badge bg-light text-dark border">${w.jornadasCount} registros</span></td>
             </tr>`;
         });
 
@@ -2639,19 +2711,41 @@
     }
 
     function exportWeeklyCSV() {
-        const weekPicker = document.getElementById('weekPicker');
-        if (!weekPicker || !weekPicker.value) return alert("Seleccione una semana.");
+        const mode = document.getElementById('reportTimeMode') ? document.getElementById('reportTimeMode').value : 'WEEK';
+        let startTime = 0;
+        let endTime = 0;
+        let periodDesc = "";
 
-        const weekVal = weekPicker.value;
+        if (mode === 'WEEK') {
+            const weekPicker = document.getElementById('weekPicker');
+            if (!weekPicker || !weekPicker.value) return alert("Seleccione una semana.");
+            const { mon, sun } = getMonToSunRange(weekPicker.value);
+            if (!mon || !sun) return;
+            startTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
+            endTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+            periodDesc = `Semana: Del ${formatDateShort(mon)} al ${formatDateShort(sun)}`;
+        } else if (mode === 'MONTH') {
+            const monthPicker = document.getElementById('monthPicker');
+            if (!monthPicker || !monthPicker.value) return alert("Seleccione un mes.");
+            const parts = monthPicker.value.split('-');
+            const year = Number(parts[0]);
+            const month = Number(parts[1]) - 1;
+            startTime = new Date(year, month, 1).getTime();
+            endTime = new Date(year, month + 1, 0, 23, 59, 59).getTime();
+            periodDesc = `Mes: ${monthPicker.value}`;
+        } else if (mode === 'YEAR') {
+            const yearPicker = document.getElementById('yearPicker');
+            if (!yearPicker || !yearPicker.value) return alert("Seleccione un año.");
+            const year = Number(yearPicker.value);
+            startTime = new Date(year, 0, 1).getTime();
+            endTime = new Date(year, 11, 31, 23, 59, 59).getTime();
+            periodDesc = `Año: ${year}`;
+        }
+
         const selectedProjects = getSelectedCheckboxValues('project');
         const selectedTrades = getSelectedCheckboxValues('trade');
-        const { mon, sun } = getMonToSunRange(weekVal);
-        if (!mon || !sun) return;
 
         let registros = window.registrosGlobales || [];
-        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
-        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
-
         let usuarios = getUsuarios();
         let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
 
@@ -2659,7 +2753,7 @@
             const parts = r.date.split('-');
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
-            let dateMatch = (rDate >= monTime && rDate <= sunTime);
+            let dateMatch = (rDate >= startTime && rDate <= endTime);
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
@@ -2678,26 +2772,22 @@
                     name: r.workerName,
                     trade: r.trade || userObj.trade || 'Carpintero',
                     rate: historicalRate,
-                    days: { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0 },
-                    totalHours: 0
+                    totalHours: 0,
+                    jornadasCount: 0
                 };
             }
             let totalPagoJornada = calcularTotalPagar(r);
-            const parts = r.date.split('-');
-            const dObj = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
-            const dayOfWeek = dObj.getDay();
-
-            workerSummary[key].days[dayOfWeek] += totalPagoJornada;
             workerSummary[key].totalHours += totalPagoJornada;
+            workerSummary[key].jornadasCount += 1;
         });
 
         let csvContent = "\uFEFF";
-        csvContent += `RESUMEN SEMANAL DE HORAS Y PAGOS\n`;
-        csvContent += `Semana:,Del ${formatDateShort(mon)} al ${formatDateShort(sun)}\n`;
+        csvContent += `REPORTE DE HORAS Y PAGOS OSILM\n`;
+        csvContent += `Período:,${periodDesc}\n`;
         csvContent += `Proyectos:,${selectedProjects.join(' - ') || 'Todos'}\n`;
         if (isAdmin) { csvContent += `Funciones:,${selectedTrades.join(' - ') || 'Todas'}\n`; }
         csvContent += `\n`;
-        csvContent += 'Trabajador,Función,Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo,Total Horas,Tarifa/h,Total a Pagar\n';
+        csvContent += 'Trabajador,Función,Total Horas,Tarifa/h,Total a Pagar,Registros Totales\n';
 
         let keys = Object.keys(workerSummary);
         if (keys.length === 0) {
@@ -2710,16 +2800,10 @@
             let moneyOwed = w.totalHours * w.rate;
             let row = [
                 `"${w.name}"`, `"${w.trade}"`,
-                w.days[1] > 0 ? w.days[1].toFixed(1) : '-',
-                w.days[2] > 0 ? w.days[2].toFixed(1) : '-',
-                w.days[3] > 0 ? w.days[3].toFixed(1) : '-',
-                w.days[4] > 0 ? w.days[4].toFixed(1) : '-',
-                w.days[5] > 0 ? w.days[5].toFixed(1) : '-',
-                w.days[6] > 0 ? w.days[6].toFixed(1) : '-',
-                w.days[0] > 0 ? w.days[0].toFixed(1) : '-',
                 w.totalHours.toFixed(1),
                 `"$${w.rate.toFixed(2)}"`,
-                `"$${moneyOwed.toFixed(2)}"`
+                `"$${moneyOwed.toFixed(2)}"`,
+                w.jornadasCount
             ];
             csvContent += row.join(",") + "\n";
         });
@@ -2727,7 +2811,7 @@
         let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         let link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `Resumen_Oslim_${weekPicker.value}.csv`;
+        link.download = `Reporte_Oslim_${mode}.csv`;
         link.click();
     }
 </script>
