@@ -1537,10 +1537,9 @@
         });
         htmlResumen += `</tbody></table></div>`;
 
-        // 2. CONTENEDOR DE IMPRESIÓN: PRIMERA HOJA = RESUMEN EXCEL, SIGUIENTES = DETALLES
+        // 2. CONTENEDOR DE IMPRESIÓN: PRIMERA HOJA = RESUMEN ORDENADO POR FUNCIÓN CON COLUMNA FUNCIÓN, SIGUIENTES = DETALLES
         let htmlImpresion = '';
 
-        // --- HOJA 1 IMPRESA: Resumen General con formato idéntico al Excel ---
         let sheet1TotalHours = 0;
         let sheet1TotalPay = 0;
 
@@ -1554,7 +1553,7 @@
         htmlImpresion += `
         <div class="print-page-break" style="page-break-before: avoid !important; break-before: avoid !important;">
             <div class="print-section-header">
-                <h5 class="print-section-title">RESUMEN GENERAL DE PAGOS Y HORAS</h5>
+                <h5 class="print-section-title">RESUMEN GENERAL DE PAGOS Y HORAS (ORDENADO POR FUNCIÓN)</h5>
                 <div class="print-section-badges">
                     <span class="print-badge-hours">Total Horas: ${sheet1TotalHours.toFixed(1)} hrs</span>
                     <span class="print-badge-pay">Total a Pagar: $${sheet1TotalPay.toFixed(2)}</span>
@@ -1565,31 +1564,42 @@
                 <table class="table table-hover table-striped table-weekly align-middle m-0" style="border: 1px solid var(--border-color);">
                     <thead>
                         <tr>
-                            <th style="width: 20%; text-align: left; padding-left: 10px;">NAME</th>
-                            <th style="width: 7%;">RATE</th>
-                            <th style="width: 9%;">AJUSTE RATE</th>`;
+                            <th style="width: 16%; text-align: left; padding-left: 10px;">FUNCION</th>
+                            <th style="width: 17%; text-align: left;">NAME</th>
+                            <th style="width: 6%;">RATE</th>
+                            <th style="width: 8%;">AJUSTE RATE</th>`;
         
         listProyectosUnicos.forEach(p => {
-            htmlImpresion += `<th style="width: 10%;">Total hrs ${p}</th>`;
+            htmlImpresion += `<th style="width: 9%;">Total hrs ${p}</th>`;
         });
 
         htmlImpresion += `
                             <th style="width: 7%; color: var(--brand-gold) !important;">Total Hrs</th>
-                            <th style="width: 7%;">Add</th>
-                            <th style="width: 7%;">Deduct</th>
-                            <th style="width: 10%;">N°CHEQUE</th>
-                            <th style="width: 13%; color: #059669 !important;">Total Neto</th>
+                            <th style="width: 6%;">Add</th>
+                            <th style="width: 6%;">Deduct</th>
+                            <th style="width: 8%;">N°CHEQUE</th>
+                            <th style="width: 11%; color: #059669 !important;">Total Neto</th>
                         </tr>
                     </thead>
                     <tbody>`;
 
-        Object.keys(workerSummary).sort().forEach(k => {
+        // ORDENAR LA LISTA DE TRABAJADORES POR FUNCIÓN Y LUEGO POR NOMBRE
+        let keysOrdenadasPorFuncion = Object.keys(workerSummary).sort((a, b) => {
+            let tA = workerSummary[a].trade.toLowerCase();
+            let tB = workerSummary[b].trade.toLowerCase();
+            if (tA < tB) return -1;
+            if (tA > tB) return 1;
+            return workerSummary[a].name.localeCompare(workerSummary[b].name);
+        });
+
+        keysOrdenadasPorFuncion.forEach(k => {
             let w = workerSummary[k];
             let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0, adicional: 0, deductiva: 0, pagoRef: '' };
             let neto = ((w.rate + (parseFloat(adj.ajusteSueldo)||0)) * w.totalHours) + (parseFloat(adj.adicional)||0) - (parseFloat(adj.deductiva)||0);
 
             htmlImpresion += `<tr>
-                <td class="fw-bold text-dark text-start ps-3">${w.name.toUpperCase()}</td>
+                <td class="text-muted text-start ps-3 fw-semibold">${w.trade}</td>
+                <td class="fw-bold text-dark text-start">${w.name.toUpperCase()}</td>
                 <td>$${w.rate.toFixed(2)}</td>
                 <td>${parseFloat(adj.ajusteSueldo)||0}</td>`;
 
@@ -1728,7 +1738,7 @@
         let listProyectosUnicos = Array.from(new Set(filtered.map(r => r.job || 'General')));
         let headerResumen = ["FUNCION", "NAME", "RATE", "AJUSTE RATE"];
         listProyectosUnicos.forEach(p => headerResumen.push(`Total hrs ${p}`));
-        headerResumen.push("Total Hrs", "Add", "Deduct", "N°CHEQE", "Total Neto");
+        headerResumen.push("Total Hrs", "Add", "Deduct", "N°CHEQUE", "Total Neto");
 
         let rowsResumen = [
             ["RESUMEN SEMANAL DE HORAS Y PAGOS", "", "", ""],
@@ -1740,7 +1750,16 @@
         let ajustesMap = window.ajustesSemanalesNube || {};
         let rowIndex = 5;
 
-        Object.keys(workerSummary).sort().forEach(k => {
+        // Ordenar también en el Excel por función y nombre
+        let keysOrdenadasExcel = Object.keys(workerSummary).sort((a, b) => {
+            let tA = workerSummary[a].trade.toLowerCase();
+            let tB = workerSummary[b].trade.toLowerCase();
+            if (tA < tB) return -1;
+            if (tA > tB) return 1;
+            return workerSummary[a].name.localeCompare(workerSummary[b].name);
+        });
+
+        keysOrdenadasExcel.forEach(k => {
             let w = workerSummary[k];
             let adj = ajustesMap[`${weekVal}_${k}`] || { ajusteSueldo: 0, adicional: 0, deductiva: 0, pagoRef: '' };
             
