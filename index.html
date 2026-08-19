@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OSLIM CONSTRUCTION — Control de Asistencia</title>
+    <title>OSLIM CONSTRUCTION — Dashboard Ejecutivo y Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS para Mapas -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* PALETA REFINADA: GRIS CLARO / BLANCO CON ACENTO COBRE ELEGANTE */
+        /* PALETA REFINADA: GRIS CLARO / BLANCO CON ACENTO COBRE ELEGANTE Y DISEÑO POWER BI */
         :root {
             --bg-app: #f4f5f7;          /* Fondo general gris muy claro, limpio y moderno */
             --bg-card: #ffffff;         /* Tarjetas en blanco puro */
             --bg-input: #eef2f6;        /* Campos de texto y elementos secundarios en gris sutil */
             --brand-accent: #111827;    /* Texto oscuro de alta legibilidad */
             --brand-gold: #b45309;      /* Acento cobre/dorado elegante y profesional */
+            --accent-teal: #b45309;     /* Sincronizado con brand-gold para mantener la identidad */
             --text-main: #1f2937;       /* Texto principal oscuro para contraste perfecto */
             --text-muted: #6b7280;      /* Texto secundario gris */
             --border-color: #d1d5db;    /* Bordes limpios y definidos */
@@ -97,7 +98,7 @@
         .btn-logout { background-color: rgba(239, 68, 68, 0.08); color: #dc2626; margin-top: auto; }
         .btn-logout:hover { background-color: #dc2626; color: white; }
 
-        /* --- COMPONENTES UI --- */
+        /* --- COMPONENTES UI Y POWER BI --- */
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -145,6 +146,150 @@
         .text-muted { color: var(--text-muted) !important; }
         .bg-light-dark { background-color: #f8fafc !important; border: 1px solid var(--border-color); }
 
+        /* --- ESTILOS ESPECÍFICOS PARA EL DASHBOARD EJECUTIVO TIPO POWER BI --- */
+        .bi-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            padding: 18px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .bi-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .bi-big-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.1;
+        }
+        .chart-box {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 140px;
+            padding-top: 10px;
+            border-bottom: 2px solid #f1f5f9;
+            overflow-x: auto;
+        }
+        .chart-col {
+            flex: 1;
+            min-width: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .chart-bar-fill {
+            width: 100%;
+            background-color: var(--brand-gold);
+            border-radius: 3px 3px 0 0;
+            transition: height 0.3s;
+        }
+        .chart-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+        .donut-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 140px;
+        }
+        .donut-graphic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #b45309 0% 65%, 
+                #d97706 65% 88%, 
+                #f59e0b 88% 95%, 
+                #fde68a 95% 100%
+            );
+            position: relative;
+            box-shadow: inset 0 0 0 2px white;
+            flex-shrink: 0;
+        }
+        .donut-graphic::after {
+            content: "";
+            position: absolute;
+            top: 30px; left: 30px;
+            width: 60px; height: 60px;
+            background: white;
+            border-radius: 50%;
+        }
+        .donut-legend {
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-grow: 1;
+            padding-left: 12px;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .legend-color {
+            width: 9px; height: 9px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .horizontal-bar-row {
+            display: flex;
+            align-items: center;
+            font-size: 0.72rem;
+            margin-bottom: 8px;
+        }
+        .horizontal-bar-label {
+            width: 110px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .horizontal-bar-track {
+            flex-grow: 1;
+            background: #f1f5f9;
+            height: 14px;
+            border-radius: 3px;
+            margin: 0 8px;
+            overflow: hidden;
+        }
+        .horizontal-bar-fill {
+            background-color: var(--brand-gold);
+            height: 100%;
+            border-radius: 3px;
+        }
+        .horizontal-bar-value {
+            width: 55px;
+            text-align: right;
+            font-weight: 700;
+        }
+
+        #dashMap { height: 320px; width: 100%; border-radius: 12px; border: 1px solid var(--border-color); }
+
         /* --- TABLAS MODO CLARO ELEGANTE --- */
         .table { color: var(--text-main); border-color: var(--border-color); }
         .table > :not(caption) > * > * { background-color: transparent; color: var(--text-main); border-bottom-color: var(--border-color); }
@@ -172,7 +317,7 @@
 
         .hidden { display: none !important; }
 
-        /* --- IMPRESIÓN CORREGIDA (INCLUYENDO FILTROS VISIBLES) --- */
+        /* --- IMPRESIÓN CORREGIDA --- */
         @media print {
             @page { size: letter landscape; margin: 0.3in; }
             body { background: white !important; font-size: 9pt; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -182,18 +327,8 @@
             .card-header { background-color: #f8f9fa !important; color: #000 !important; border-bottom: 2px solid #000 !important; padding: 0.5rem !important; }
             .bg-light-dark { background-color: #fff !important; border: 1px solid #ccc !important; padding: 10px !important; margin-bottom: 10px !important; }
             .text-main, .text-muted, .table { color: #000 !important; }
-            
-            .col-md-3 { display: inline-block !important; width: 23% !important; margin-right: 15px !important; vertical-align: top !important; }
-            .col-md-3 label { font-size: 8pt !important; color: #000 !important; display: block !important; margin-bottom: 2px !important; }
-            .dropdown, .dropdown-menu-checkboxes, input[type="week"] { display: block !important; }
-            
-            #projectDropdownBtn, #tradeDropdownBtn { display: flex !important; background: #fff !important; border: 1px solid #999 !important; font-size: 8pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; box-shadow: none !important; }
-            #weekPicker { display: block !important; background: #fff !important; border: 1px solid #999 !important; font-size: 8pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; }
-            .dropdown-menu { display: none !important; }
-
             .table-weekly th { background-color: #eee !important; color: #000 !important; border-bottom: 2px solid #000 !important; font-size: 8pt !important; padding: 4px !important; }
             .table-weekly td { color: #000 !important; padding: 4px !important; font-size: 8pt !important; }
-            .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #f9f9f9 !important; color: #000 !important; }
         }
     </style>
 </head>
@@ -301,6 +436,8 @@
             
             <div id="admin-menu-section" class="hidden mt-3 d-flex flex-column gap-1">
                 <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px; color: var(--brand-gold) !important;">Administración</p>
+                <!-- BOTÓN PARA EL DASHBOARD EJECUTIVO TIPO POWER BI -->
+                <button type="button" id="admin-bi-dashboard-btn" class="nav-menu-btn hidden" onclick="showTab('bi-dashboard-tab'); initBIDashboard(); closeMenu();"><i class="fa-solid fa-chart-pie"></i>Dashboard Ejecutivo (BI)</button>
                 <button type="button" id="admin-daily-btn" class="nav-menu-btn hidden" onclick="showTab('daily-tab'); loadDailyRecords(); closeMenu();"><i class="fa-solid fa-map-location-dot"></i>Registros por Día y Mapa</button>
                 <button type="button" id="admin-logs-btn" class="nav-menu-btn hidden" onclick="showTab('logs-tab'); loadDailyLogs(); closeMenu();"><i class="fa-solid fa-pen-to-square"></i>Edición de Horas</button>
                 <button type="button" id="admin-manual-btn" class="nav-menu-btn hidden" onclick="showTab('manual-tab'); closeMenu();"><i class="fa-solid fa-calendar-plus"></i>Registro Manual Admin</button>
@@ -371,6 +508,107 @@
                                     <div id="entryMap"></div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: DASHBOARD EJECUTIVO TIPO POWER BI (ACTUALIZACIÓN AUTOMÁTICA EN TIEMPO REAL SIN BOTÓN) -->
+        <div class="container-fluid px-4 mb-5 tab-content-section" id="bi-dashboard-tab" style="display:none;">
+            <div class="card mb-4 bg-light-dark">
+                <div class="card-body p-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label text-uppercase mb-1">Proyecto</label>
+                            <select class="form-select text-dark" id="biProjectFilter" onchange="initBIDashboard()">
+                                <option value="ALL">🌐 Todos los Proyectos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-uppercase mb-1">Filtro Temporal</label>
+                            <select class="form-select text-dark" id="biTimeFilter" onchange="initBIDashboard()">
+                                <option value="ALL">♾️ Total Vida del Proyecto</option>
+                                <option value="YEAR">📅 Este Año</option>
+                                <option value="MONTH">📆 Este Mes</option>
+                                <option value="WEEK">📆 Esta Semana</option>
+                                <option value="DAY">📍 Por Día Específico</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" id="biSpecificDateContainer" style="display: none;">
+                            <label class="form-label text-uppercase mb-1">Seleccionar Día</label>
+                            <input type="date" class="form-control" id="biSpecificDateInput" onchange="initBIDashboard()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR ESTILO POWER BI (Métricas, Mapa, Donut, Gráficos) -->
+            <div class="dashboard-container">
+                <div class="row g-3 mb-3">
+                    <!-- Bloque 1: Gasto Total / Costo -->
+                    <div class="col-lg-3 col-md-4">
+                        <div class="bi-card">
+                            <div class="bi-title">Gasto Total Acumulado ($)</div>
+                            <div class="bi-big-number" id="biTotalCost">$0.00</div>
+                            <div class="text-muted small mt-2"><i class="fa-solid fa-arrow-trend-up text-success me-1"></i>Suma de sueldos y horas</div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 2: Mapa GIS con Georeferencia del Proyecto -->
+                    <div class="col-lg-6 col-md-8">
+                        <div class="bi-card p-1">
+                            <div id="dashMap"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 3: Distribución por Función (Trades) -->
+                    <div class="col-lg-3">
+                        <div class="bi-card">
+                            <div class="bi-title">Gasto / Horas por Función</div>
+                            <div class="donut-container">
+                                <div class="donut-graphic" id="biDonutGraphic"></div>
+                                <div class="donut-legend" id="biDonutLegend"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Bloque 4: Horas Totales y Jornadas por Semana -->
+                    <div class="col-lg-4">
+                        <div class="bi-card">
+                            <div class="bi-title">Total Horas y Jornadas por Semana</div>
+                            <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
+                                <div>
+                                    <div class="text-muted small text-uppercase">Horas Netas</div>
+                                    <div class="fs-4 fw-bold text-dark" id="biTotalHours">0.0 hrs</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-muted small text-uppercase">Total Jornadas</div>
+                                    <div class="fs-4 fw-bold" style="color: var(--brand-gold);" id="biTotalShifts">0</div>
+                                </div>
+                            </div>
+                            <div class="chart-box" id="biStatusChart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 5: Tendencia de Costos ($) por Semana -->
+                    <div class="col-lg-4">
+                        <div class="bi-card">
+                            <div class="bi-title">Tendencia de Costos ($) por Semana</div>
+                            <div class="d-flex align-items-center mb-2" style="min-height: 24px;">
+                                <div class="text-muted small">Evolución del costo por semana laboral</div>
+                            </div>
+                            <div class="chart-box" id="biTrendChart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 6: Desglose por Proyecto (Top Costos) -->
+                    <div class="col-lg-4">
+                        <div class="bi-card">
+                            <div class="bi-title">Gasto por Proyecto</div>
+                            <div id="biTopContainer" style="display: flex; flex-direction: column; justify-content: space-around; height: 100%;"></div>
                         </div>
                     </div>
                 </div>
@@ -463,7 +701,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS (CON FILTRO DE PROYECTO) -->
+        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS -->
         <div class="container mb-5 no-print tab-content-section" id="daily-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-12">
@@ -576,7 +814,7 @@
             </div>
         </div>
 
-        <!-- NUEVO APARTADO: REGISTRO MANUAL POR SEMANA Y DÍAS (ADMIN) -->
+        <!-- APARTADO: REGISTRO MANUAL POR SEMANA Y DÍAS (ADMIN) -->
         <div class="container mb-5 no-print tab-content-section" id="manual-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
@@ -611,7 +849,7 @@
                                 <div class="mb-4">
                                     <label class="form-label text-uppercase">Selecciona los días a registrar</label>
                                     <div class="row g-2 p-3 bg-light-dark rounded-3 border" id="manualDaysCheckboxesContainer">
-                                        <!-- Checkboxes dinámicos de Lunes a Domingo -->
+                                        <!-- Checkboxes dinámicos -->
                                     </div>
                                 </div>
 
@@ -879,6 +1117,7 @@
       if (typeof loadWeeklySummary === 'function') loadWeeklySummary();
       if (typeof loadDailyRecords === 'function') loadDailyRecords();
       if (typeof loadDailyLogs === 'function') loadDailyLogs();
+      if (typeof initBIDashboard === 'function') initBIDashboard();
   });
 
   onValue(ref(db, 'config/usuariosSistema'), (snapshot) => {
@@ -922,12 +1161,12 @@
     let entryMap = null;
     let entryMarker = null;
     let projectCircle = null;
+    let dashMap = null;
 
     window.addEventListener('DOMContentLoaded', () => {
         setInitialWeek();
         obtenerGPSReal();
         
-        // Ver si hay sesión guardada al recargar
         const sesionGuardada = localStorage.getItem('oslim_usuario_actual');
         if (sesionGuardada) {
             setTimeout(() => {
@@ -943,6 +1182,8 @@
             poblarSelectsDinamicos();
         }, 1000);
         document.getElementById('mapDateFilter').valueAsDate = new Date();
+        const biDateInput = document.getElementById('biSpecificDateInput');
+        if (biDateInput) biDateInput.valueAsDate = new Date();
     });
 
     function closeMenu() {
@@ -964,6 +1205,16 @@
             entryJob.innerHTML = '';
             proyectos.forEach(p => {
                 entryJob.innerHTML += `<option value="${p.name}">${p.name} (${p.address})</option>`;
+            });
+        }
+
+        const biProjectFilter = document.getElementById('biProjectFilter');
+        if (biProjectFilter) {
+            let currentVal = biProjectFilter.value;
+            biProjectFilter.innerHTML = '<option value="ALL">🌐 Todos los Proyectos</option>';
+            proyectos.forEach(p => {
+                let sel = (p.name === currentVal) ? 'selected' : '';
+                biProjectFilter.innerHTML += `<option value="${p.name}" ${sel}>${p.name}</option>`;
             });
         }
 
@@ -1069,10 +1320,7 @@
         const selectAll = document.getElementById(type === 'project' ? 'checkAllProjects' : 'checkAllTrades');
         const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
         
-        checkboxes.forEach(cb => {
-            cb.checked = selectAll.checked;
-        });
-        
+        checkboxes.forEach(cb => { cb.checked = selectAll.checked; });
         updateDropdownButtonText(type);
         loadWeeklySummary();
     }
@@ -1090,9 +1338,7 @@
     function getSelectedCheckboxValues(type) {
         const checkboxes = document.querySelectorAll(type === 'project' ? '.project-checkbox' : '.trade-checkbox');
         let selected = [];
-        checkboxes.forEach(cb => {
-            if (cb.checked) selected.push(cb.value);
-        });
+        checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
         return selected;
     }
 
@@ -1130,9 +1376,7 @@
                 gpsText.innerHTML = `✅ GPS Activo — Lat: <b>${currentCoords.lat.toFixed(5)}</b>, Lng: <b>${currentCoords.lng.toFixed(5)}</b>`;
                 if (entryMap) actualizarMapaProyectoSeleccionado();
             },
-            (err) => {
-                gpsText.innerHTML = "⚠️ No se pudo obtener la posición GPS.";
-            },
+            (err) => { gpsText.innerHTML = "⚠️ No se pudo obtener la posición GPS."; },
             { enableHighAccuracy: true }
         );
     }
@@ -1174,9 +1418,7 @@
                     alert("✅ ¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión.");
                     volverAlLogin();
                 })
-                .catch((err) => {
-                    alert("❌ Error al actualizar en la base de datos.");
-                });
+                .catch((err) => { alert("❌ Error al actualizar en la base de datos."); });
         } else {
             alert("❌ Los datos de verificación (Celular o Tarifa/Sueldo) no coinciden con nuestros registros.");
         }
@@ -1212,6 +1454,7 @@
         
         if (datosUser.rol === 'admin') {
             adminSection.classList.remove('hidden');
+            document.getElementById('admin-bi-dashboard-btn').classList.remove('hidden');
             document.getElementById('admin-daily-btn').classList.remove('hidden');
             document.getElementById('admin-logs-btn').classList.remove('hidden');
             document.getElementById('admin-manual-btn').classList.remove('hidden');
@@ -1222,6 +1465,7 @@
             adminTradeElements.forEach(el => el.classList.remove('hidden'));
         } else {
             adminSection.classList.add('hidden');
+            document.getElementById('admin-bi-dashboard-btn').classList.add('hidden');
             document.getElementById('admin-daily-btn').classList.add('hidden');
             document.getElementById('admin-logs-btn').classList.add('hidden');
             document.getElementById('admin-manual-btn').classList.add('hidden');
@@ -1254,6 +1498,7 @@
         
         if (datosUser.rol === 'admin') {
             adminSection.classList.remove('hidden');
+            document.getElementById('admin-bi-dashboard-btn').classList.remove('hidden');
             document.getElementById('admin-daily-btn').classList.remove('hidden');
             document.getElementById('admin-logs-btn').classList.remove('hidden');
             document.getElementById('admin-manual-btn').classList.remove('hidden');
@@ -1264,6 +1509,7 @@
             adminTradeElements.forEach(el => el.classList.remove('hidden'));
         } else {
             adminSection.classList.add('hidden');
+            document.getElementById('admin-bi-dashboard-btn').classList.add('hidden');
             document.getElementById('admin-daily-btn').classList.add('hidden');
             document.getElementById('admin-logs-btn').classList.add('hidden');
             document.getElementById('admin-manual-btn').classList.add('hidden');
@@ -1297,6 +1543,9 @@
         if (tabId === 'entry-tab') {
             setTimeout(() => { initEntryMap(); }, 200);
         }
+        if (tabId === 'bi-dashboard-tab') {
+            setTimeout(() => { initBIDashboard(); }, 250);
+        }
         if (tabId === 'weekly-tab') {
             poblarSelectsDinamicos();
             loadWeeklySummary();
@@ -1328,6 +1577,219 @@
         if (tabId === 'admin-projects-tab') loadProjectsManagement();
         if (tabId === 'admin-trades-tab') loadTradesManagement();
         if (tabId === 'directory-tab') loadDirectory();
+    }
+
+    /* --- LÓGICA COMPLETA DEL DASHBOARD EJECUTIVO (BI) CON GRÁFICOS POR SEMANA --- */
+    function initBIDashboard() {
+        const timeFilter = document.getElementById('biTimeFilter').value;
+        const projectFilter = document.getElementById('biProjectFilter').value;
+        const specificDateVal = document.getElementById('biSpecificDateInput').value;
+
+        const dateContainer = document.getElementById('biSpecificDateContainer');
+        if (timeFilter === 'DAY') {
+            dateContainer.style.display = 'block';
+        } else {
+            dateContainer.style.display = 'none';
+        }
+
+        if (!dashMap) {
+            dashMap = L.map('dashMap', { zoomControl: false, attributionControl: false }).setView([25.7617, -80.1918], 11);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(dashMap);
+        } else {
+            dashMap.invalidateSize();
+        }
+
+        let registros = window.registrosGlobales || [];
+        let usuarios = getUsuarios();
+        let proyectos = getProyectos();
+
+        // Filtrar registros según los requerimientos del usuario
+        let filteredRegistros = registros.filter(r => {
+            if (projectFilter !== 'ALL' && (!r.job || r.job.trim() !== projectFilter.trim())) {
+                return false;
+            }
+
+            if (timeFilter !== 'ALL' && r.date) {
+                let parts = r.date.split('-');
+                if (parts.length === 3) {
+                    let rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                    let now = new Date();
+
+                    if (timeFilter === 'DAY' && specificDateVal) {
+                        if (r.date !== specificDateVal) return false;
+                    } else if (timeFilter === 'WEEK') {
+                        let currentWeekNum = getISOWeek(now);
+                        let rWeekNum = getISOWeek(rDate);
+                        if (rDate.getFullYear() !== now.getFullYear() || rWeekNum !== currentWeekNum) return false;
+                    } else if (timeFilter === 'MONTH') {
+                        if (rDate.getFullYear() !== now.getFullYear() || rDate.getMonth() !== now.getMonth()) return false;
+                    } else if (timeFilter === 'YEAR') {
+                        if (rDate.getFullYear() !== now.getFullYear()) return false;
+                    }
+                }
+            }
+            return true;
+        });
+
+        // Calcular Métricas Principales y Agrupaciones por Semana
+        let totalCost = 0;
+        let totalHours = 0;
+        let totalShifts = filteredRegistros.length;
+        let tradesCount = {};
+        let projectCostCount = {};
+        let weeklyCostMap = {};
+        let weeklyHoursMap = {};
+        let weeklyShiftsMap = {};
+
+        filteredRegistros.forEach(r => {
+            let netH = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+            let ot = parseFloat(r.overtime) || 0;
+            let netHoursJornada = netH + ot;
+            totalHours += netHoursJornada;
+
+            let userObj = usuarios[r.workerName] || {};
+            let rate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
+            let costoJornada = netHoursJornada * rate;
+            totalCost += costoJornada;
+
+            let trade = r.trade || userObj.trade || 'Carpintero';
+            tradesCount[trade] = (tradesCount[trade] || 0) + costoJornada;
+
+            let proj = r.job || 'General';
+            projectCostCount[proj] = (projectCostCount[proj] || 0) + costoJornada;
+
+            // Agrupación por semana (ej. "2026-W33")
+            if (r.date) {
+                let parts = r.date.split('-');
+                if (parts.length === 3) {
+                    let dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                    let wNum = getISOWeek(dObj);
+                    let wKey = `${dObj.getFullYear()}-W${wNum < 10 ? '0' + wNum : wNum}`;
+
+                    weeklyCostMap[wKey] = (weeklyCostMap[wKey] || 0) + costoJornada;
+                    weeklyHoursMap[wKey] = (weeklyHoursMap[wKey] || 0) + netHoursJornada;
+                    weeklyShiftsMap[wKey] = (weeklyShiftsMap[wKey] || 0) + 1;
+                }
+            }
+        });
+
+        // Actualizar UI de Tarjetas Principales
+        document.getElementById('biTotalCost').innerText = `$${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('biTotalHours').innerText = `${totalHours.toFixed(1)} hrs`;
+        document.getElementById('biTotalShifts').innerText = totalShifts.toLocaleString();
+
+        // Actualizar Mapa con Georeferencia de Proyectos
+        dashMap.eachLayer((layer) => {
+            if (layer instanceof L.CircleMarker || layer instanceof L.Marker) dashMap.removeLayer(layer);
+        });
+
+        let bounds = [];
+        proyectos.forEach(p => {
+            if (projectFilter === 'ALL' || p.name === projectFilter) {
+                if (p.lat && p.lng) {
+                    let projCost = projectCostCount[p.name] || 0;
+                    let marker = L.circleMarker([p.lat, p.lng], { radius: 8, color: '#b45309', fillColor: '#f59e0b', fillOpacity: 0.9, weight: 2 })
+                      .addTo(dashMap)
+                      .bindPopup(`<b style="color:black;">${p.name}</b><br><span style="color:black;">${p.address}</span><br><b>Gasto: $${projCost.toFixed(2)}</b>`);
+                    bounds.push([p.lat, p.lng]);
+                }
+            }
+        });
+        if (bounds.length > 0 && dashMap) {
+            dashMap.fitBounds(bounds, { maxZoom: 14 });
+        }
+
+        // Gráfico Donut por Función (Trade)
+        let totalTradeVal = Object.values(tradesCount).reduce((a,b)=>a+b, 0) || 1;
+        let legendHTML = '';
+        let colors = ['#b45309', '#d97706', '#f59e0b', '#fde68a', '#78350f'];
+        let gradStops = [];
+        let currentPct = 0;
+        let idx = 0;
+
+        Object.keys(tradesCount).forEach(trade => {
+            let cost = tradesCount[trade];
+            let pct = Math.round((cost / totalTradeVal) * 100);
+            let nextPct = currentPct + pct;
+            gradStops.push(`${colors[idx % colors.length]} ${currentPct}% ${nextPct}%`);
+            legendHTML += `<div class="legend-item"><div class="legend-color" style="background:${colors[idx % colors.length]}"></div><span class="text-truncate">${trade} ($${cost.toFixed(0)})</span></div>`;
+            currentPct = nextPct;
+            idx++;
+        });
+
+        if (Object.keys(tradesCount).length === 0) {
+            gradStops.push('#b45309 0% 100%');
+            legendHTML = '<div class="text-muted small">Sin datos de funciones</div>';
+        }
+
+        const donutGraphic = document.getElementById('biDonutGraphic');
+        if(donutGraphic) {
+            donutGraphic.style.background = `conic-gradient(${gradStops.join(', ')})`;
+        }
+        document.getElementById('biDonutLegend').innerHTML = legendHTML;
+
+        // Gráfico de Barras: Total Horas y Jornadas por Semana
+        const statusContainer = document.getElementById('biStatusChart');
+        statusContainer.innerHTML = '';
+        let sortedWeeks = Object.keys(weeklyHoursMap).sort();
+        if (sortedWeeks.length === 0) {
+            statusContainer.innerHTML = '<div class="text-muted small text-center w-100 py-4">Sin datos por semana.</div>';
+        } else {
+            let maxHoursVal = Math.max(...Object.values(weeklyHoursMap), 1);
+            sortedWeeks.slice(-8).forEach(w => {
+                let hrs = weeklyHoursMap[w];
+                let pct = Math.round((hrs / maxHoursVal) * 100);
+                statusContainer.innerHTML += `
+                    <div class="chart-col" title="Semana ${w}: ${hrs.toFixed(1)} hrs">
+                        <div style="font-size:0.55rem; font-weight:700; margin-bottom:2px;">${hrs.toFixed(0)}h</div>
+                        <div class="chart-bar-fill" style="height: ${Math.max(pct, 8)}%;"></div>
+                        <div class="chart-label">${w.replace('2026-', '')}</div>
+                    </div>`;
+            });
+        }
+
+        // Gráfico de Tendencia: Costos ($) por Semana
+        const trendContainer = document.getElementById('biTrendChart');
+        trendContainer.innerHTML = '';
+        let sortedCostWeeks = Object.keys(weeklyCostMap).sort();
+        if (sortedCostWeeks.length === 0) {
+            trendContainer.innerHTML = '<div class="text-muted small text-center w-100 py-4">Sin datos de tendencia semanal.</div>';
+        } else {
+            let maxCostVal = Math.max(...Object.values(weeklyCostMap), 1);
+            sortedCostWeeks.slice(-8).forEach(w => {
+                let cost = weeklyCostMap[w];
+                let pct = Math.round((cost / maxCostVal) * 100);
+                trendContainer.innerHTML += `
+                    <div class="chart-col" title="Semana ${w}: $${cost.toFixed(2)}">
+                        <div style="font-size:0.55rem; font-weight:700;">$${(cost/1000).toFixed(1)}k</div>
+                        <div class="chart-bar-fill" style="height: ${Math.max(pct, 8)}%;"></div>
+                        <div class="chart-label">${w.replace('2026-', '')}</div>
+                    </div>`;
+            });
+        }
+
+        // Top Proyectos (Barras Horizontales de Gasto)
+        const topContainer = document.getElementById('biTopContainer');
+        topContainer.innerHTML = '';
+        let maxProjVal = Math.max(...Object.values(projectCostCount), 1);
+        let topSorted = Object.keys(projectCostCount).sort((a,b) => projectCostCount[b] - projectCostCount[a]).slice(0, 4);
+        
+        if(topSorted.length === 0) {
+            topContainer.innerHTML = '<div class="text-muted small text-center">No hay gastos en proyectos.</div>';
+        } else {
+            topSorted.forEach(proj => {
+                let cost = projectCostCount[proj];
+                let pct = Math.round((cost / maxProjVal) * 100);
+                topContainer.innerHTML += `
+                    <div class="horizontal-bar-row">
+                        <div class="horizontal-bar-label">${proj}</div>
+                        <div class="horizontal-bar-track">
+                            <div class="horizontal-bar-fill" style="width: ${Math.max(pct, 10)}%;"></div>
+                        </div>
+                        <div class="horizontal-bar-value">$${cost.toFixed(0)}</div>
+                    </div>`;
+            });
+        }
     }
 
     function initEntryMap() {
@@ -1408,7 +1870,6 @@
         const fechaStr = `${anio}-${mes}-${dia}`;
 
         const horaStr = String(fechaLocalObj.getHours()).padStart(2, '0') + ":" + String(fechaLocalObj.getMinutes()).padStart(2, '0');
-        
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
         let usuarios = getUsuarios();
@@ -1438,35 +1899,28 @@
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 jornadaHoy.firebaseKey = newRef.key;
                 window.dbSet(newRef, jornadaHoy);
-                alert(`✅ ¡ENTRADA registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
+                alert(`✅ ¡ENTRADA registrada con éxito!`);
             } else {
                 if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
                 if (jornadaHoy.timeIn && jornadaHoy.timeIn !== '-') {
-                    alert(`⚠️ Ya registraste una entrada a las ${jornadaHoy.timeIn} hoy para este proyecto. Si necesitas cambiarla, hazlo desde la sección de administración.`);
+                    alert(`⚠️ Ya registraste una entrada a las ${jornadaHoy.timeIn} hoy para este proyecto.`);
                     return;
                 }
                 jornadaHoy.timeIn = horaStr;
                 jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
                 window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
-                alert(`✅ ¡ENTRADA registrada con éxito (${esUSA ? 'Hora Miami' : 'Hora México'})! Estás a ${Math.round(distancia)}m del proyecto.`);
+                alert(`✅ ¡ENTRADA registrada con éxito!`);
             }
         } else if (tipo === 'SALIDA') {
             if (!jornadaHoy || !jornadaHoy.timeIn || jornadaHoy.timeIn === '-') {
-                alert(`❌ No puedes registrar la salida porque aún no tienes una entrada registrada hoy para este proyecto.`);
+                alert(`❌ No puedes registrar la salida porque aún no tienes una entrada registrada hoy.`);
                 return;
             }
-
             if (!jornadaHoy.rateSnapshot) jornadaHoy.rateSnapshot = tarifaActual;
-
-            if (jornadaHoy.timeOut && jornadaHoy.timeOut !== '-') {
-                let cambiar = confirm(`⚠️ Ya tienes una hora de salida registrada a las ${jornadaHoy.timeOut}.\n¿Deseas cambiarla por la hora actual (${horaStr})?`);
-                if (!cambiar) return;
-            }
-
             jornadaHoy.timeOut = horaStr;
             jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
             window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
-            alert(`✅ ¡SALIDA actualizada con éxito a las ${horaStr} (${esUSA ? 'Hora Miami' : 'Hora México'})!`);
+            alert(`✅ ¡SALIDA registrada con éxito a las ${horaStr}!`);
         }
 
         showTab('weekly-tab');
@@ -1485,13 +1939,9 @@
         container.innerHTML = '';
 
         let nombresDias = [
-            { label: 'Lunes', offset: 0 },
-            { label: 'Martes', offset: 1 },
-            { label: 'Miércoles', offset: 2 },
-            { label: 'Jueves', offset: 3 },
-            { label: 'Viernes', offset: 4 },
-            { label: 'Sábado', offset: 5 },
-            { label: 'Domingo', offset: 6 }
+            { label: 'Lunes', offset: 0 }, { label: 'Martes', offset: 1 },
+            { label: 'Miércoles', offset: 2 }, { label: 'Jueves', offset: 3 },
+            { label: 'Viernes', offset: 4 }, { label: 'Sábado', offset: 5 }, { label: 'Domingo', offset: 6 }
         ];
 
         nombresDias.forEach(d => {
@@ -1529,11 +1979,6 @@
             return;
         }
 
-        if (!workerName || !projectName || !timeIn || !timeOut) {
-            alert("❌ Por favor completa los campos obligatorios.");
-            return;
-        }
-
         let usuarios = getUsuarios();
         let userObj = usuarios[workerName] || {};
         let trade = userObj.trade || 'Carpintero';
@@ -1561,7 +2006,6 @@
                 jornadaExistente.trade = trade;
                 jornadaExistente.rateSnapshot = tarifaActual;
                 jornadaExistente.dayName = dayName;
-
                 window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaExistente.firebaseKey), jornadaExistente);
             } else {
                 let nuevaJornada = {
@@ -1579,7 +2023,6 @@
                     coordsIn: coordsProj,
                     coordsOut: coordsProj
                 };
-
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 nuevaJornada.firebaseKey = newRef.key;
                 window.dbSet(newRef, nuevaJornada);
@@ -1587,7 +2030,7 @@
             count++;
         });
 
-        alert(`✅ ¡Registros guardados con éxito para ${count} día(s) seleccionado(s)!`);
+        alert(`✅ ¡Registros guardados con éxito para ${count} día(s)!`);
         showTab('weekly-tab');
     }
 
@@ -1600,7 +2043,6 @@
         Object.keys(usuarios).sort().forEach(user => {
             let info = usuarios[user];
             let phone = info.phone || 'S/N';
-            
             let cleanPhone = phone.replace(/[^0-9]/g, '');
             let whatsBtn = phone !== 'S/N' && cleanPhone.length >= 8 
                 ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-sm text-white me-1 shadow-sm" style="background-color: #25d366;" title="Enviar WhatsApp"><i class="fa-brands fa-whatsapp fs-5 align-middle"></i></a>` 
@@ -1630,10 +2072,6 @@
             let idx = proyectos.findIndex(p => p.name === oldName);
             if (idx !== -1) proyectos[idx] = { name, address, lat, lng };
         } else {
-            if (proyectos.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-                alert("Ya existe un proyecto con ese nombre.");
-                return;
-            }
             proyectos.push({ name, address, lat, lng });
         }
 
@@ -1709,10 +2147,6 @@
             let idx = trades.indexOf(oldName);
             if (idx !== -1) trades[idx] = tName;
         } else {
-            if (trades.includes(tName)) {
-                alert("La función ya existe.");
-                return;
-            }
             trades.push(tName);
         }
 
@@ -1887,15 +2321,8 @@
         return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
     }
 
-    function redondearAMediaHora(horas) {
-        return Math.round(horas * 2) / 2;
-    }
-
-    function calcularTotalPagar(r) {
-        let net = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
-        let ot = parseFloat(r.overtime) || 0;
-        return net + ot;
-    }
+    function redondearAMediaHora(horas) { return Math.round(horas * 2) / 2; }
+    function calcularTotalPagar(r) { return calcularHorasNetas(r.timeIn, r.timeOut, r.lunch) + (parseFloat(r.overtime) || 0); }
 
     function calcularHorasNetas(inTime, outTime, lunchHours) {
         if (!inTime || !outTime || inTime === '-' || outTime === '-') return 0;
@@ -1904,12 +2331,9 @@
         let minsIn = h1 * 60 + m1;
         let minsOut = h2 * 60 + m2;
         if (minsOut <= minsIn) return 0;
-        
         let netMins = (minsOut - minsIn) - (parseFloat(lunchHours) * 60);
         if (netMins <= 0) return 0;
-        
-        let horasDecimales = netMins / 60;
-        return redondearAMediaHora(horasDecimales);
+        return redondearAMediaHora(netMins / 60);
     }
 
     function loadWeeklySummary() {
@@ -1937,13 +2361,10 @@
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
-            
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
             let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
-
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
             return dateMatch && projMatch && tradeMatch && userMatch;
         });
@@ -1954,7 +2375,6 @@
             if (!workerSummary[key]) {
                 let userObj = usuarios[r.workerName] || {};
                 let historicalRate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
-
                 workerSummary[key] = {
                     name: r.workerName,
                     trade: r.trade || userObj.trade || 'Carpintero',
@@ -1982,8 +2402,8 @@
 
         if (keys.length === 0) {
             tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted p-4">No hay registros con los filtros seleccionados.</td></tr>';
-            document.getElementById('totalWeeklyHoursBadge').innerText = '0.0 hrs';
-            document.getElementById('totalWeeklyPayBadge').innerText = '$0.00';
+            document.getElementById('totalWeeklyHoursBadge').innerText = 'Total Horas: 0.0 hrs';
+            document.getElementById('totalWeeklyPayBadge').innerText = 'Total a Pagar: $0.00';
             return;
         }
 
@@ -2010,7 +2430,7 @@
         });
 
         document.getElementById('totalWeeklyHoursBadge').innerText = `Total Horas: ${grandTotalHours.toFixed(1)} hrs`;
-        document.getElementById('totalWeeklyPayBadge').innerText = `Total Pagar: $${grandTotalMoney.toFixed(2)}`;
+        document.getElementById('totalWeeklyPayBadge').innerText = `Total a Pagar: $${grandTotalMoney.toFixed(2)}`;
     }
 
     function initMap() {
@@ -2062,7 +2482,6 @@
         }
 
         let bounds = [];
-
         filtered.forEach(r => {
             if (r.coordsIn && r.coordsIn.lat) {
                 let trIn = document.createElement('tr');
@@ -2144,17 +2563,13 @@
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            
             let userMatch = isAdmin 
                 ? (selectedUser === 'ALL' || r.workerName.toLowerCase() === selectedUser.toLowerCase())
                 : (r.workerName.toLowerCase() === usuarioActual.toLowerCase());
-
             let projMatch = (selectedProject === 'ALL' || (r.job && r.job.trim() === selectedProject.trim()));
-            
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
             let tradeMatch = (selectedTrade === 'ALL' || workerTrade === selectedTrade);
-
             return dateMatch && userMatch && projMatch && tradeMatch;
         });
 
@@ -2245,25 +2660,20 @@
             if(parts.length < 3) return false;
             const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let dateMatch = (rDate >= monTime && rDate <= sunTime);
-            
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
-            
             let userObj = usuarios[r.workerName] || {};
             let workerTrade = r.trade || userObj.trade || 'Carpintero';
             let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
-
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
             return dateMatch && projMatch && tradeMatch && userMatch;
         });
 
         let workerSummary = {};
-        filtered.exports = {};
         filtered.forEach(r => {
             const key = r.workerName.toLowerCase().trim();
             if (!workerSummary[key]) {
                 let userObj = usuarios[r.workerName] || {};
                 let historicalRate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat(userObj.rate) || 20.00);
-
                 workerSummary[key] = {
                     name: r.workerName,
                     trade: r.trade || userObj.trade || 'Carpintero',
@@ -2285,11 +2695,8 @@
         csvContent += `RESUMEN SEMANAL DE HORAS Y PAGOS\n`;
         csvContent += `Semana:,Del ${formatDateShort(mon)} al ${formatDateShort(sun)}\n`;
         csvContent += `Proyectos:,${selectedProjects.join(' - ') || 'Todos'}\n`;
-        if (isAdmin) {
-            csvContent += `Funciones:,${selectedTrades.join(' - ') || 'Todas'}\n`;
-        }
+        if (isAdmin) { csvContent += `Funciones:,${selectedTrades.join(' - ') || 'Todas'}\n`; }
         csvContent += `\n`;
-        
         csvContent += 'Trabajador,Función,Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo,Total Horas,Tarifa/h,Total a Pagar\n';
 
         let keys = Object.keys(workerSummary);
@@ -2301,10 +2708,8 @@
         keys.sort().forEach(k => {
             let w = workerSummary[k];
             let moneyOwed = w.totalHours * w.rate;
-            
             let row = [
-                `"${w.name}"`,
-                `"${w.trade}"`,
+                `"${w.name}"`, `"${w.trade}"`,
                 w.days[1] > 0 ? w.days[1].toFixed(1) : '-',
                 w.days[2] > 0 ? w.days[2].toFixed(1) : '-',
                 w.days[3] > 0 ? w.days[3].toFixed(1) : '-',
