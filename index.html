@@ -8,8 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS para Mapas -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Chart.js para Gráficos del Dashboard -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS CDN para Exportación Excel Avanzada -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -130,7 +128,7 @@
         .btn-custom:hover { background-color: #92400e; color: #fff; transform: translateY(-1px); }
 
         .form-label { color: var(--text-muted) !important; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; }
-        .form-control, .form-select, input[type="date"], input[type="time"], input[type="week"], input[type="month"] {
+        .form-control, .form-select, input[type="date"], input[type="time"], input[type="week"] {
             background-color: var(--bg-input);
             border: 1px solid var(--border-color);
             color: var(--text-main) !important;
@@ -175,10 +173,9 @@
         .record-row { cursor: pointer; transition: background-color 0.15s; }
         .record-row.table-active { background-color: rgba(180, 83, 9, 0.1) !important; }
 
-        #map, #entryMap, #dashboardMap { height: 380px; width: 100%; border-radius: 16px; border: 1px solid var(--border-color); }
+        #map, #entryMap { height: 380px; width: 100%; border-radius: 16px; border: 1px solid var(--border-color); }
 
         .hidden { display: none !important; }
-
         .print-only-tables { display: none; }
 
         /* --- ESTILOS DE IMPRESIÓN OPTIMIZADOS --- */
@@ -325,7 +322,6 @@
             <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px;">General</p>
             <button type="button" class="nav-menu-btn" onclick="showTab('entry-tab'); closeMenu();"><i class="fa-solid fa-user-clock"></i>Registrar Asistencia</button>
             <button type="button" class="nav-menu-btn" onclick="showTab('weekly-tab'); loadWeeklySummary(); closeMenu();"><i class="fa-solid fa-calendar-week"></i>Resumen Semanal</button>
-            <button type="button" class="nav-menu-btn" onclick="showTab('dashboard-tab'); loadDashboardData(); closeMenu();"><i class="fa-solid fa-chart-pie" style="color: var(--brand-gold);"></i>Dashboard Gerencial</button>
             
             <div id="admin-menu-section" class="hidden mt-3 d-flex flex-column gap-1">
                 <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px; color: var(--brand-gold) !important;">Administración</p>
@@ -467,118 +463,6 @@
 
                     <div id="resumenGeneralContainer" class="screen-only-summary"></div>
                     <div id="tablasSeparadasContainer" class="print-only-tables"></div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: DASHBOARD GERENCIAL -->
-        <div class="container-fluid px-4 mb-5 tab-content-section" id="dashboard-tab" style="display:none;">
-            <div class="card mb-4 border-0 shadow-none bg-transparent">
-                <div class="card-body p-0">
-                    
-                    <div class="row g-3 mb-4 p-3 rounded-3 bg-white border shadow-sm align-items-center">
-                        <div class="col-md-3">
-                            <label class="form-label text-uppercase mb-1">Filtrar por Proyecto</label>
-                            <select class="form-select text-dark" id="dashProjectFilter" onchange="loadDashboardData()">
-                                <option value="ALL">🌐 Todos los Proyectos</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label text-uppercase mb-1">Tipo de Periodo</label>
-                            <select class="form-select text-dark" id="dashPeriodType" onchange="actualizarSelectorPeriodoDashboard()">
-                                <option value="ALL">♾️ Vida Útil (Histórico)</option>
-                                <option value="WEEK">📅 Semana Específica</option>
-                                <option value="MONTH">🗓️ Mes Específico</option>
-                                <option value="YEAR">📆 Año Específico</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label text-uppercase mb-1">Seleccionar Periodo</label>
-                            <div id="dashPeriodInputContainer">
-                                <input type="text" class="form-control" value="Histórico Completo" disabled>
-                            </div>
-                        </div>
-                        <div class="col-md-3 text-end pt-3">
-                            <button class="btn btn-custom w-100" onclick="loadDashboardData()"><i class="fa-solid fa-rotate-right me-1"></i> Actualizar Métricas</button>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-3">
-                            <div class="card p-4 h-100 d-flex flex-column justify-content-between border">
-                                <div>
-                                    <div class="text-muted small text-uppercase fw-bold mb-2">Gasto Total Acumulado ($)</div>
-                                    <h2 class="fw-bold mb-1" style="color: var(--brand-accent);" id="dashTotalSpent">$0.00</h2>
-                                </div>
-                                <div class="text-muted small mt-4 pt-3 border-top">
-                                    <i class="fa-solid fa-chart-line text-success me-1"></i> Suma de sueldos, aditivas y deductivas
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="card p-3 h-100 border">
-                                <div class="text-muted small text-uppercase fw-bold mb-2">Geolocalización de Proyectos</div>
-                                <div id="dashboardMap"></div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card p-3 h-100 border">
-                                <div class="text-muted small text-uppercase fw-bold mb-2">Gasto / Horas por Función</div>
-                                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                                    <table class="table table-hover align-middle m-0" style="font-size: 0.8rem;">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th class="text-white">Función</th>
-                                                <th class="text-center text-white">Hrs</th>
-                                                <th class="text-center text-white" title="Número promedio de trabajadores por día">Trabs/Día</th>
-                                                <th class="text-end text-white">% Costo</th>
-                                                <th class="text-end text-white">Total ($)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="dashTradesTableBody"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="card p-4 h-100 border">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <div class="text-muted small text-uppercase fw-bold">Total Horas y Jornadas</div>
-                                        <h4 class="fw-bold m-0" style="color: var(--brand-gold);" id="dashTotalHours">0.0 hrs</h4>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="text-muted small text-uppercase fw-bold">Total Jornadas</div>
-                                        <h4 class="fw-bold m-0 text-dark" id="dashTotalRecords">0</h4>
-                                    </div>
-                                </div>
-                                <div style="height: 200px; position: relative;">
-                                    <canvas id="chartHoursLine"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card p-4 h-100 border">
-                                <div class="text-muted small text-uppercase fw-bold mb-1">Tendencia de Costos ($)</div>
-                                <div class="text-muted small mb-2">Evolución del costo por semana laboral</div>
-                                <div style="height: 210px; position: relative;">
-                                    <canvas id="chartCostsLine"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card p-4 h-100 border">
-                                <div class="text-muted small text-uppercase fw-bold mb-3">Gasto por Proyecto</div>
-                                <div style="height: 230px; position: relative;">
-                                    <canvas id="chartProjectsHorizontal"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                 </div>
             </div>
@@ -996,14 +880,12 @@
       if (typeof loadWeeklySummary === 'function') loadWeeklySummary();
       if (typeof loadDailyRecords === 'function') loadDailyRecords();
       if (typeof loadDailyLogs === 'function') loadDailyLogs();
-      if (typeof loadDashboardData === 'function') loadDashboardData();
   });
 
   window.ajustesSemanalesNube = {};
   onValue(ref(db, 'ajustesSemanales'), (snapshot) => {
       window.ajustesSemanalesNube = snapshot.val() || {};
       if (typeof loadWeeklySummary === 'function') loadWeeklySummary();
-      if (typeof loadDashboardData === 'function') loadDashboardData();
   });
 
   onValue(ref(db, 'config/usuariosSistema'), (snapshot) => {
@@ -1019,7 +901,6 @@
       if (data) {
           window.listaProyectosNube = data;
           if (typeof poblarSelectsDinamicos === 'function') poblarSelectsDinamicos();
-          if (typeof poblarFiltroProyectoDashboard === 'function') poblarFiltroProyectoDashboard();
       }
   });
 
@@ -1046,13 +927,8 @@
     let map = null;
     let markersLayer = null;
     let entryMap = null;
-    let dashboardMap = null;
     let entryMarker = null;
     let projectCircle = null;
-
-    let chartHoursLineInstance = null;
-    let chartCostsLineInstance = null;
-    let chartProjectsHorizontalInstance = null;
 
     function obtenerDeviceId() {
         let deviceId = localStorage.getItem('oslim_device_uuid');
@@ -1081,7 +957,6 @@
 
         setTimeout(() => {
             poblarSelectsDinamicos();
-            poblarFiltroProyectoDashboard();
         }, 1000);
         document.getElementById('mapDateFilter').valueAsDate = new Date();
     });
@@ -1105,17 +980,6 @@
         Object.keys(usuarios).sort().forEach(user => {
             let sel = (user.toLowerCase() === currentVal.toLowerCase()) ? 'selected' : '';
             userFilter.innerHTML += `<option value="${user}" ${sel}>${user}</option>`;
-        });
-    }
-
-    function poblarFiltroProyectoDashboard() {
-        const dashFilter = document.getElementById('dashProjectFilter');
-        if (!dashFilter) return;
-        let currentVal = dashFilter.value;
-        dashFilter.innerHTML = '<option value="ALL">🌐 Todos los Proyectos</option>';
-        getProyectos().forEach(p => {
-            let sel = (p.name === currentVal) ? 'selected' : '';
-            dashFilter.innerHTML += `<option value="${p.name}" ${sel}>${p.name}</option>`;
         });
     }
 
@@ -1223,7 +1087,6 @@
             });
         }
         updateMapUserFilterDropdown();
-        poblarFiltroProyectoDashboard();
     }
 
     function toggleAllCheckboxes(type) {
@@ -1335,12 +1198,27 @@
         let userData = usuarios[matchedKey];
         let currentDeviceId = obtenerDeviceId();
 
+        // 1. VALIDACIÓN: SI EL USUARIO YA ESTÁ LIGADO A OTRO DISPOSITIVO
         if (userData.deviceId && userData.deviceId !== currentDeviceId && userData.rol !== 'admin') {
             errDiv.classList.remove('hidden');
-            errDiv.innerText = "❌ Este usuario ya está vinculado a otro celular. No puedes iniciar sesión desde un dispositivo diferente.";
+            errDiv.innerText = "❌ Este usuario ya está vinculado a otro celular. No puedes acceder desde un dispositivo diferente.";
             return;
         }
 
+        // 2. VALIDACIÓN BIDIRECCIONAL: QUE ESTE CELULAR NO PERTENEZCA A OTRO TRABAJADOR
+        if (userData.rol !== 'admin') {
+            const otroUsuarioMismoDispositivo = Object.keys(usuarios).find(usrKey => {
+                return usrKey.toLowerCase() !== matchedKey.toLowerCase() && usuarios[usrKey].deviceId === currentDeviceId;
+            });
+
+            if (otroUsuarioMismoDispositivo) {
+                errDiv.classList.remove('hidden');
+                errDiv.innerText = `❌ Este celular ya fue registrado por el usuario (${otroUsuarioMismoDispositivo.toUpperCase()}). No se permiten dos usuarios en un mismo celular.`;
+                return;
+            }
+        }
+
+        // 3. VINCULACIÓN DE PRIMER ACCESO
         if (!userData.deviceId && userData.rol !== 'admin') {
             userData.deviceId = currentDeviceId;
             window.dbSet(window.dbRef(window.db, 'config/usuariosSistema/' + matchedKey), userData);
@@ -1411,7 +1289,6 @@
 
         if (tabId === 'entry-tab') { setTimeout(() => { initEntryMap(); }, 200); }
         if (tabId === 'weekly-tab') { poblarSelectsDinamicos(); loadWeeklySummary(); }
-        if (tabId === 'dashboard-tab') { setTimeout(() => { initDashboardMap(); actualizarSelectorPeriodoDashboard(); loadDashboardData(); }, 200); }
         if (tabId === 'daily-tab') { updateMapUserFilterDropdown(); poblarSelectsDinamicos(); setTimeout(() => { initMap(); loadDailyRecords(); }, 250); }
         if (tabId === 'logs-tab') { poblarSelectsDinamicos(); loadDailyLogs(); }
         if (tabId === 'manual-tab') {
@@ -1447,35 +1324,6 @@
             entryMap.invalidateSize();
         }
         actualizarMapaProyectoSeleccionado();
-    }
-
-    function initDashboardMap() {
-        if (!dashboardMap) {
-            dashboardMap = L.map('dashboardMap').setView([25.7617, -80.1918], 12);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(dashboardMap);
-        } else { dashboardMap.invalidateSize(); }
-        
-        let proyectos = getProyectos();
-        let bounds = [];
-        proyectos.forEach(p => {
-            if(p.lat && p.lng) {
-                L.circleMarker([p.lat, p.lng], {
-                    radius: 8,
-                    fillColor: "#b45309",
-                    color: "#ffffff",
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.9
-                }).addTo(dashboardMap)
-                  .bindPopup(`<b style="color:var(--brand-gold);">${p.name}</b><br><span style="color:#333;">${p.address}</span>`);
-                bounds.push([p.lat, p.lng]);
-            }
-        });
-        if(bounds.length > 0) dashboardMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
     }
 
     function actualizarMapaProyectoSeleccionado() {
@@ -1901,274 +1749,6 @@
         
         document.getElementById('totalWeeklyHoursBadge').innerText = `Total Horas: ${grandTotalHours.toFixed(1)} hrs`;
         document.getElementById('totalWeeklyPayBadge').innerText = `Total a Pagar: $${grandTotalMoney.toFixed(2)}`;
-    }
-
-    function actualizarSelectorPeriodoDashboard() {
-        const periodType = document.getElementById('dashPeriodType').value;
-        const container = document.getElementById('dashPeriodInputContainer');
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentWeekNum = getISOWeek(now);
-        const currentWeekStr = `${currentYear}-W${currentWeekNum < 10 ? '0' + currentWeekNum : currentWeekNum}`;
-        const currentMonthStr = `${currentYear}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-        if (periodType === 'ALL') {
-            container.innerHTML = `<input type="text" class="form-control" value="Histórico Completo" disabled>`;
-        } else if (periodType === 'WEEK') {
-            container.innerHTML = `<input type="week" class="form-control" id="dashSelectedWeek" value="${currentWeekStr}" onchange="loadDashboardData()">`;
-        } else if (periodType === 'MONTH') {
-            container.innerHTML = `<input type="month" class="form-control" id="dashSelectedMonth" value="${currentMonthStr}" onchange="loadDashboardData()">`;
-        } else if (periodType === 'YEAR') {
-            container.innerHTML = `<input type="number" min="2020" max="2035" class="form-control" id="dashSelectedYear" value="${currentYear}" onchange="loadDashboardData()">`;
-        }
-        loadDashboardData();
-    }
-
-    function loadDashboardData() {
-        let registros = window.registrosGlobales || [];
-        let usuarios = getUsuarios();
-        let ajustesMap = window.ajustesSemanalesNube || {};
-        
-        const selectedProjectFilter = document.getElementById('dashProjectFilter') ? document.getElementById('dashProjectFilter').value : 'ALL';
-        const periodType = document.getElementById('dashPeriodType') ? document.getElementById('dashPeriodType').value : 'ALL';
-
-        let targetWeek = '', targetMonth = '', targetYear = '';
-        if (periodType === 'WEEK') {
-            let el = document.getElementById('dashSelectedWeek');
-            if (el) targetWeek = el.value;
-        } else if (periodType === 'MONTH') {
-            let el = document.getElementById('dashSelectedMonth');
-            if (el) targetMonth = el.value;
-        } else if (periodType === 'YEAR') {
-            let el = document.getElementById('dashSelectedYear');
-            if (el) targetYear = el.value;
-        }
-
-        let filteredRegistros = registros.filter(r => {
-            if (selectedProjectFilter !== 'ALL' && (r.job || 'General').trim() !== selectedProjectFilter.trim()) {
-                return false;
-            }
-            if (!r.date) return false;
-            let parts = r.date.split('-');
-            if (parts.length < 3) return false;
-            let rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-            let rYear = parts[0];
-            let rMonth = `${parts[0]}-${parts[1]}`;
-            let rWeekNum = getISOWeek(rDate);
-            let rWeekStr = `${rYear}-W${rWeekNum < 10 ? '0' + rWeekNum : rWeekNum}`;
-
-            if (periodType === 'WEEK') return rWeekStr === targetWeek;
-            if (periodType === 'MONTH') return rMonth === targetMonth;
-            if (periodType === 'YEAR') return rYear === targetYear;
-            return true;
-        });
-
-        let totalHoursAll = 0;
-        let totalRecordsAll = filteredRegistros.length;
-        let totalSpentAll = 0;
-
-        let tradeMap = {}; 
-        let hoursPerWeekMap = {}; 
-        let costPerWeekMap = {}; 
-        let projectCostMap = {}; 
-
-        function getWeekLabelFromDate(dateStr) {
-            let parts = dateStr.split('-');
-            if (parts.length < 3) return 'General';
-            let d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-            let weekNum = getISOWeek(d);
-            return `W${weekNum}`;
-        }
-
-        filteredRegistros.forEach(r => {
-            let tp = calcularTotalPagar(r);
-            totalHoursAll += tp;
-            let rate = r.rateSnapshot !== undefined ? parseFloat(r.rateSnapshot) : (parseFloat((usuarios[r.workerName]||{}).rate) || 20.00);
-            let cost = tp * rate;
-            totalSpentAll += cost;
-
-            let trade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
-            if (!tradeMap[trade]) {
-                tradeMap[trade] = { cost: 0, hours: 0, workersByDate: {} };
-            }
-            tradeMap[trade].cost += cost;
-            tradeMap[trade].hours += tp;
-            
-            if (!tradeMap[trade].workersByDate[r.date]) {
-                tradeMap[trade].workersByDate[r.date] = new Set();
-            }
-            tradeMap[trade].workersByDate[r.date].add(r.workerName);
-
-            let proj = r.job || 'General';
-            projectCostMap[proj] = (projectCostMap[proj] || 0) + cost;
-
-            let wLabel = getWeekLabelFromDate(r.date);
-            hoursPerWeekMap[wLabel] = (hoursPerWeekMap[wLabel] || 0) + tp;
-            costPerWeekMap[wLabel] = (costPerWeekMap[wLabel] || 0) + cost;
-        });
-
-        Object.keys(ajustesMap).forEach(k => {
-            let parts = k.split('_');
-            let weekKey = parts[0]; 
-            let workerKey = parts[1];
-
-            if (periodType === 'WEEK' && weekKey !== targetWeek) return;
-            if (periodType === 'MONTH' && !weekKey.startsWith(targetMonth.split('-')[0])) return;
-            if (periodType === 'YEAR' && !weekKey.startsWith(targetYear)) return;
-
-            let adj = ajustesMap[k];
-            let addVal = parseFloat(adj.adicional) || 0;
-            let dedVal = parseFloat(adj.deductiva) || 0;
-            let netAdj = addVal - dedVal;
-
-            totalSpentAll += netAdj;
-
-            let wLabel = weekKey.includes('-W') ? `W${weekKey.split('-W')[1]}` : 'General';
-            costPerWeekMap[wLabel] = (costPerWeekMap[wLabel] || 0) + netAdj;
-
-            let registroDelTrabajador = filteredRegistros.find(r => r.workerName.toLowerCase().trim() === workerKey.toLowerCase().trim());
-            let workerTrade = registroDelTrabajador ? (registroDelTrabajador.trade || (usuarios[workerKey] || {}).trade || 'Carpintero') : ((usuarios[workerKey] || {}).trade || 'Carpintero');
-
-            if (!tradeMap[workerTrade]) {
-                tradeMap[workerTrade] = { cost: 0, hours: 0, workersByDate: {} };
-            }
-            tradeMap[workerTrade].cost += netAdj;
-        });
-
-        document.getElementById('dashTotalSpent').innerText = `$${totalSpentAll.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('dashTotalHours').innerText = `${totalHoursAll.toFixed(1)} hrs`;
-        document.getElementById('dashTotalRecords').innerText = totalRecordsAll;
-
-        renderTradesBreakdownTable(tradeMap, totalSpentAll);
-        renderHoursLineChart(hoursPerWeekMap);
-        renderCostsLineChart(costPerWeekMap);
-        renderProjectsHorizontalChart(projectCostMap);
-    }
-
-    function renderTradesBreakdownTable(tradeMap, totalSpentAll) {
-        const tbody = document.getElementById('dashTradesTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-
-        let tradesKeys = Object.keys(tradeMap);
-        if (tradesKeys.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No hay registros en este periodo.</td></tr>`;
-            return;
-        }
-
-        tradesKeys.sort((a, b) => tradeMap[b].cost - tradeMap[a].cost);
-
-        tradesKeys.forEach(trade => {
-            let item = tradeMap[trade];
-            let percent = totalSpentAll > 0 ? (item.cost / totalSpentAll) * 100 : 0;
-            
-            let datesKeys = Object.keys(item.workersByDate || {});
-            let avgWorkersPerDay = 0;
-            if (datesKeys.length > 0) {
-                let totalWorkerDays = 0;
-                datesKeys.forEach(d => { totalWorkerDays += item.workersByDate[d].size; });
-                avgWorkersPerDay = totalWorkerDays / datesKeys.length;
-            }
-
-            tbody.innerHTML += `
-                <tr>
-                    <td class="fw-bold text-dark">${trade}</td>
-                    <td class="text-center">${item.hours.toFixed(1)}h</td>
-                    <td class="text-center fw-semibold text-secondary">${avgWorkersPerDay > 0 ? avgWorkersPerDay.toFixed(1) : '-'}</td>
-                    <td class="text-end">
-                        <div class="d-flex align-items-center justify-content-end gap-1">
-                            <div class="progress" style="width: 40px; height: 6px; background-color: var(--bg-input);">
-                                <div class="progress-bar" style="width: ${percent.toFixed(0)}%; background-color: #059669;"></div>
-                            </div>
-                            <span class="small text-muted">${percent.toFixed(0)}%</span>
-                        </div>
-                    </td>
-                    <td class="text-end fw-bold text-success">$${item.cost.toFixed(2)}</td>
-                </tr>
-            `;
-        });
-    }
-
-    function renderHoursLineChart(hoursMap) {
-        const ctx = document.getElementById('chartHoursLine').getContext('2d');
-        let labels = Object.keys(hoursMap).sort();
-        let data = labels.map(l => hoursMap[l]);
-
-        if (chartHoursLineInstance) chartHoursLineInstance.destroy();
-        chartHoursLineInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels.length > 0 ? labels : ['W33', 'W34'],
-                datasets: [{
-                    data: data.length > 0 ? data : [1710, 786],
-                    borderColor: '#b45309',
-                    backgroundColor: 'rgba(180, 83, 9, 0.15)',
-                    fill: true,
-                    tension: 0.3,
-                    borderWidth: 2.5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    function renderCostsLineChart(costsMap) {
-        const ctx = document.getElementById('chartCostsLine').getContext('2d');
-        let labels = Object.keys(costsMap).sort();
-        let data = labels.map(l => costsMap[l]);
-
-        if (chartCostsLineInstance) chartCostsLineInstance.destroy();
-        chartCostsLineInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels.length > 0 ? labels : ['W33', 'W34'],
-                datasets: [{
-                    data: data.length > 0 ? data : [50200, 22700],
-                    borderColor: '#b45309',
-                    backgroundColor: 'rgba(180, 83, 9, 0.15)',
-                    fill: true,
-                    tension: 0.3,
-                    borderWidth: 2.5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    function renderProjectsHorizontalChart(projMap) {
-        const ctx = document.getElementById('chartProjectsHorizontal').getContext('2d');
-        let labels = Object.keys(projMap);
-        let data = labels.map(l => projMap[l]);
-
-        if (chartProjectsHorizontalInstance) chartProjectsHorizontalInstance.destroy();
-        chartProjectsHorizontalInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels.length > 0 ? labels : ['Bay Harbor Islands'],
-                datasets: [{
-                    data: data.length > 0 ? data : [72866],
-                    backgroundColor: '#b45309',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { x: { beginAtZero: true } }
-            }
-        });
     }
 
     function exportWeeklyExcelWithFormulas() {
