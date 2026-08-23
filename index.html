@@ -178,45 +178,34 @@
         .hidden { display: none !important; }
         .print-only-tables { display: none; }
 
-        /* --- ESTILOS DE IMPRESIÓN OPTIMIZADOS --- */
         @media print {
             @page { size: landscape; margin: 0.3in; }
             body { font-size: 7.5pt !important; background: white !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print, nav, .navbar, .btn, .offcanvas { display: none !important; }
-            
             .screen-only-summary { display: none !important; }
             .print-only-tables { display: block !important; }
-            
             .container, .container-fluid { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
             .card { border: none !important; box-shadow: none !important; margin: 0 !important; }
             .card-header { display: none !important; }
-            
             .bg-light-dark { background-color: #fff !important; border: 1px solid #ccc !important; padding: 8px !important; margin-bottom: 10px !important; border-radius: 8px !important; }
             .col-md-3 { display: inline-block !important; width: 23% !important; margin-right: 1%; vertical-align: top !important; }
             .col-md-3 label { font-size: 7.5pt !important; color: #000 !important; display: block !important; margin-bottom: 2px !important; font-weight: bold !important;}
             .dropdown, .dropdown-menu-checkboxes, input[type="week"] { display: block !important; }
             #projectDropdownBtn, #tradeDropdownBtn, #weekPicker { display: flex !important; background: #fff !important; border: 1px solid #999 !important; font-size: 7.5pt !important; padding: 4px 8px !important; color: #000 !important; width: 100% !important; box-shadow: none !important; border-radius: 6px !important; height: auto !important;}
             .dropdown-menu { display: none !important; }
-            
             #totalWeeklyHoursBadge { background-color: #b45309 !important; color: white !important; border: none !important; font-size: 8.5pt !important; padding: 4px 8px !important; border-radius: 6px !important;}
             #totalWeeklyPayBadge { background-color: #059669 !important; color: white !important; border: none !important; font-size: 8.5pt !important; padding: 4px 8px !important; border-radius: 6px !important;}
-            
             .print-page-break { page-break-before: always !important; break-before: page !important; margin-top: 15px !important; }
-            
             table { width: 100% !important; border-collapse: collapse !important; border: 1px solid #ddd !important; }
             .table-weekly th { background-color: #f1f5f9 !important; color: #000 !important; border-bottom: 2px solid #b45309 !important; font-size: 7pt !important; padding: 4px !important; text-transform: uppercase !important; font-weight: bold !important; }
             .table-weekly td { color: #000 !important; padding: 4px !important; font-size: 7.5pt !important; border-bottom: 1px solid #eee !important; vertical-align: middle !important;}
-            
             .table-weekly input.table-input-clean { font-size: 7.5pt !important; padding: 0 !important; border: none !important; color: #000 !important; background: transparent !important;}
-            
             h5 { font-size: 10pt !important; margin-bottom: 5pt !important; font-weight: bold !important;}
-            
             .print-section-header { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 8px !important; }
             .print-section-title { font-size: 8.5pt !important; color: #b45309 !important; font-weight: bold !important; text-transform: uppercase !important; margin: 0 !important; }
             .print-section-badges { display: flex !important; gap: 6px !important; }
             .print-badge-hours { background-color: #b45309 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
             .print-badge-pay { background-color: #059669 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
-            
             .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #fcfcfc !important; color: #000 !important; }
         }
     </style>
@@ -699,6 +688,7 @@
                                             <th class="text-white">Usuario</th>
                                             <th class="text-white">Contacto</th>
                                             <th class="text-white">Tarifa</th>
+                                            <th class="text-white">Dispositivo</th>
                                             <th class="text-white">Rol</th>
                                             <th class="text-end text-white">Acciones</th>
                                         </tr>
@@ -1201,7 +1191,7 @@
         // 1. VALIDACIÓN: SI EL USUARIO YA ESTÁ LIGADO A OTRO DISPOSITIVO
         if (userData.deviceId && userData.deviceId !== currentDeviceId && userData.rol !== 'admin') {
             errDiv.classList.remove('hidden');
-            errDiv.innerText = "❌ Este usuario ya está vinculado a otro celular. No puedes acceder desde un dispositivo diferente.";
+            errDiv.innerText = "❌ Este usuario ya está vinculado a otro celular. Pide al administrador desvincular tu equipo anterior.";
             return;
         }
 
@@ -2091,21 +2081,25 @@
         let oldObj = getUsuarios()[user] || {};
         let obj = { pass: document.getElementById('adminNewPass').value.trim(), phone: document.getElementById('adminNewPhone').value.trim(), rate: parseFloat(document.getElementById('adminNewRate').value) || 20, trade: document.getElementById('adminNewTrade').value, rol: document.getElementById('adminNewRol').value, deviceId: oldObj.deviceId || null };
         let arr = {...getUsuarios()}; arr[user] = obj;
-        window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), arr); alert("Guardado"); resetUserForm(); loadUserManagement();
+        window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), arr); alert("Usuario Guardado con Éxito"); resetUserForm(); loadUserManagement();
     }
     function editarUsuario(user) {
         let i = getUsuarios()[user]; if(!i) return;
-        document.getElementById('adminNewUser').value = user; document.getElementById('adminNewUser').readOnly = true; document.getElementById('adminNewPass').value = i.pass; document.getElementById('adminNewPhone').value = i.phone || ''; document.getElementById('adminNewRate').value = i.rate || 20; document.getElementById('adminNewTrade').value = i.trade || ''; document.getElementById('adminNewRol').value = i.rol || 'trabajador'; document.getElementById('saveUserBtn').innerHTML = `Actualizar`; document.getElementById('cancelEditUserBtn').classList.remove('hidden');
+        document.getElementById('adminNewUser').value = user; document.getElementById('adminNewUser').readOnly = true; document.getElementById('adminNewPass').value = i.pass; document.getElementById('adminNewPhone').value = i.phone || ''; document.getElementById('adminNewRate').value = i.rate || 20; document.getElementById('adminNewTrade').value = i.trade || ''; document.getElementById('adminNewRol').value = i.rol || 'trabajador'; document.getElementById('saveUserBtn').innerHTML = `Actualizar Usuario`; document.getElementById('cancelEditUserBtn').classList.remove('hidden');
     }
     function resetUserForm() { document.getElementById('adminNewUser').value = ''; document.getElementById('adminNewUser').readOnly = false; document.getElementById('adminNewPass').value = ''; document.getElementById('adminNewPhone').value = ''; document.getElementById('adminNewRate').value = '20.00'; document.getElementById('saveUserBtn').innerHTML = `Guardar Usuario`; document.getElementById('cancelEditUserBtn').classList.add('hidden'); loadUserManagement(); }
     
+    // FUNCION PARA DESVINCULAR Y BORRAR EL DEVICEID EN FIREBASE
     function desvincularDispositivoUsuario(user) {
-        if (confirm(`¿Desvincular el teléfono de ${user}? Esto le permitirá volver a registrarse desde otro celular.`)) {
+        if (confirm(`📱 ¿Deseas reiniciar y desvincular el dispositivo de ${user}? \n\nEsto borrará el registro de su celular actual y le permitirá iniciar sesión desde un teléfono nuevo.`)) {
             let usuarios = {...getUsuarios()};
             if (usuarios[user]) {
                 usuarios[user].deviceId = null;
                 window.dbSet(window.dbRef(window.db, 'config/usuariosSistema/' + user), usuarios[user])
-                    .then(() => alert(`✅ Dispositivo desvinculado de ${user}.`));
+                    .then(() => {
+                        alert(`✅ El celular de ${user} ha sido desvinculado con éxito. Ahora puede registrar un dispositivo nuevo.`);
+                        loadUserManagement();
+                    });
             }
         }
     }
@@ -2114,12 +2108,30 @@
         const tb = document.getElementById('systemUsersTbody'); if (!tb) return; tb.innerHTML = ''; let u = getUsuarios();
         Object.keys(u).forEach(k => { 
             let i = u[k]; 
-            let r = i.rol === 'admin' ? '<span class="badge bg-danger">Admin</span>' : '<span class="badge bg-light text-dark border">Normal</span>'; 
-            let btnDev = i.deviceId ? `<button class="btn btn-sm btn-outline-warning me-1" title="Desvincular Celular" onclick="desvincularDispositivoUsuario('${k}')"><i class="fa-solid fa-mobile-screen-button"></i></button>` : '';
-            tb.innerHTML += `<tr><td class="fw-bold ps-4 text-dark">${k}</td><td><code style="color: var(--brand-gold);">${i.phone||'S/N'}</code></td><td><span class="text-success fw-bold">$${Number(i.rate||20).toFixed(2)}</span></td><td>${r}</td><td class="text-end pe-4">${btnDev}<button class="btn btn-sm btn-outline-dark me-1" onclick="editarUsuario('${k}')"><i class="fa-solid fa-pen"></i></button>${k.toLowerCase()!=='fernando'?`<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuarioSistema('${k}')"><i class="fa-solid fa-trash"></i></button>`:''}</td></tr>`; 
+            let r = i.rol === 'admin' ? '<span class="badge bg-danger">Admin</span>' : '<span class="badge bg-light text-dark border">Trabajador</span>'; 
+            let deviceBadge = i.deviceId 
+                ? `<span class="badge bg-success" title="ID: ${i.deviceId}"><i class="fa-solid fa-mobile-screen me-1"></i>VINCULADO</span>` 
+                : `<span class="badge bg-secondary"><i class="fa-solid fa-circle-minus me-1"></i>PENDIENTE</span>`;
+            
+            let btnResetDev = i.deviceId 
+                ? `<button class="btn btn-sm btn-warning me-1 text-dark fw-bold" title="Borrar / Reiniciar Dispositivo Celular" onclick="desvincularDispositivoUsuario('${k}')"><i class="fa-solid fa-mobile-screen-button"></i> Reiniciar</button>` 
+                : `<button class="btn btn-sm btn-outline-secondary me-1" disabled><i class="fa-solid fa-mobile-screen-button"></i></button>`;
+
+            tb.innerHTML += `<tr>
+                <td class="fw-bold ps-3 text-dark">${k}</td>
+                <td><code style="color: var(--brand-gold);">${i.phone||'S/N'}</code></td>
+                <td><span class="text-success fw-bold">$${Number(i.rate||20).toFixed(2)}</span></td>
+                <td>${deviceBadge}</td>
+                <td>${r}</td>
+                <td class="text-end pe-3">
+                    ${btnResetDev}
+                    <button class="btn btn-sm btn-outline-dark me-1" onclick="editarUsuario('${k}')"><i class="fa-solid fa-pen"></i></button>
+                    ${k.toLowerCase() !== 'fernando' ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuarioSistema('${k}')"><i class="fa-solid fa-trash"></i></button>` : ''}
+                </td>
+            </tr>`; 
         });
     }
-    function eliminarUsuarioSistema(user) { if (confirm(`¿Eliminar ${user}?`)) { let arr = {...getUsuarios()}; delete arr[user]; window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), arr); loadUserManagement(); } }
+    function eliminarUsuarioSistema(user) { if (confirm(`¿Eliminar al usuario ${user}?`)) { let arr = {...getUsuarios()}; delete arr[user]; window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), arr); loadUserManagement(); } }
 
     function loadDirectory() {
         const tb = document.getElementById('directoryTbody'); if (!tb) return; tb.innerHTML = ''; let u = getUsuarios();
