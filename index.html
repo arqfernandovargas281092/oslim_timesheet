@@ -177,6 +177,7 @@
 
         .hidden { display: none !important; }
         .print-only-tables { display: none; }
+        .print-daily-container { display: none; }
 
         @media print {
             @page { size: landscape; margin: 0.3in; }
@@ -184,6 +185,7 @@
             .no-print, nav, .navbar, .btn, .offcanvas { display: none !important; }
             .screen-only-summary { display: none !important; }
             .print-only-tables { display: block !important; }
+            .print-daily-container { display: block !important; }
             .container, .container-fluid { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
             .card { border: none !important; box-shadow: none !important; margin: 0 !important; }
             .card-header { display: none !important; }
@@ -207,6 +209,10 @@
             .print-badge-hours { background-color: #b45309 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
             .print-badge-pay { background-color: #059669 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
             .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #fcfcfc !important; color: #000 !important; }
+
+            /* ESTILOS REPORTE DIARIO IMPRESO */
+            .print-trade-header { background-color: #1f2937 !important; color: #ffffff !important; padding: 6px 10px !important; font-weight: bold !important; font-size: 8.5pt !important; text-transform: uppercase !important; }
+            .print-trade-subtotal { background-color: #f8fafc !important; font-weight: bold !important; text-align: right !important; padding: 6px 10px !important; border-top: 2px solid #b45309 !important; }
         }
     </style>
 </head>
@@ -458,15 +464,16 @@
         </div>
 
         <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS -->
-        <div class="container mb-5 no-print tab-content-section" id="daily-tab" style="display:none;">
+        <div class="container mb-5 tab-content-section" id="daily-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-12">
                     <div class="card mb-4">
-                        <div class="card-header card-header-custom">
+                        <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
                             <span><i class="fa-solid fa-map-location-dot me-2" style="color: var(--brand-gold);"></i>Registros Diarios y Mapa GPS</span>
+                            <button type="button" class="btn btn-sm btn-outline-dark fw-bold" style="border-radius: 8px;" onclick="imprimirReporteDiario()"><i class="fa-solid fa-print me-1"></i>Imprimir Reporte Diario</button>
                         </div>
                         <div class="card-body p-4">
-                            <div class="row g-3 mb-4 bg-light-dark p-3 rounded-3 border">
+                            <div class="row g-3 mb-4 bg-light-dark p-3 rounded-3 border no-print">
                                 <div class="col-md-4">
                                     <label class="form-label text-uppercase">Fecha</label>
                                     <input type="date" class="form-control" id="mapDateFilter" onchange="loadDailyRecords()">
@@ -484,7 +491,8 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row g-4">
+                            
+                            <div class="row g-4 no-print">
                                 <div class="col-md-7">
                                     <div class="table-responsive border rounded-3" style="border-color: var(--border-color) !important; max-height: 420px; overflow-y: auto;">
                                         <table class="table table-hover align-middle m-0" style="font-size: 0.85rem;">
@@ -504,6 +512,10 @@
                                     <div id="map"></div>
                                 </div>
                             </div>
+
+                            <!-- VISTA EXCLUSIVA PARA IMPRESIÓN DEL REPORTE DIARIO CON RESUMEN EN 1ª HOJA -->
+                            <div id="dailyPrintReportContainer" class="print-daily-container"></div>
+
                         </div>
                     </div>
                 </div>
@@ -1188,14 +1200,12 @@
         let userData = usuarios[matchedKey];
         let currentDeviceId = obtenerDeviceId();
 
-        // 1. VALIDACIÓN: SI EL USUARIO YA ESTÁ LIGADO A OTRO DISPOSITIVO
         if (userData.deviceId && userData.deviceId !== currentDeviceId && userData.rol !== 'admin') {
             errDiv.classList.remove('hidden');
             errDiv.innerText = "❌ Este usuario ya está vinculado a otro celular. Pide al administrador desvincular tu equipo anterior.";
             return;
         }
 
-        // 2. VALIDACIÓN BIDIRECCIONAL: QUE ESTE CELULAR NO PERTENEZCA A OTRO TRABAJADOR
         if (userData.rol !== 'admin') {
             const otroUsuarioMismoDispositivo = Object.keys(usuarios).find(usrKey => {
                 return usrKey.toLowerCase() !== matchedKey.toLowerCase() && usuarios[usrKey].deviceId === currentDeviceId;
@@ -1208,7 +1218,6 @@
             }
         }
 
-        // 3. VINCULACIÓN DE PRIMER ACCESO
         if (!userData.deviceId && userData.rol !== 'admin') {
             userData.deviceId = currentDeviceId;
             window.dbSet(window.dbRef(window.db, 'config/usuariosSistema/' + matchedKey), userData);
@@ -1330,6 +1339,7 @@
         projectCircle = L.circle([proyectoObj.lat, proyectoObj.lng], { color: '#b45309', fillColor: '#b45309', fillOpacity: 0.25, radius: 150 }).addTo(entryMap).bindPopup(`<b style='color:black;'>Proyecto: ${proyectoObj.name}</b>`);
         entryMap.setView([proyectoObj.lat, proyectoObj.lng], 15);
     }
+
     function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
@@ -1339,6 +1349,7 @@
         const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
+
     function registrarAsistenciaConGeocerca(tipo) {
         const workerName = document.getElementById('loggedWorkerName').value;
         const trade = document.getElementById('loggedWorkerTrade').value;
@@ -1920,6 +1931,7 @@
 
         if (filtered.length === 0) { 
             tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">No hay registros con los filtros seleccionados.</td></tr>'; 
+            generarTablaImpresionDiaria([], dF, pF);
             return; 
         }
         
@@ -1965,6 +1977,198 @@
         if (bounds.length > 0 && map) {
             map.fitBounds(bounds, { maxZoom: 15 });
         }
+
+        generarTablaImpresionDiaria(filtered, dF, pF);
+    }
+
+    function generarTablaImpresionDiaria(filtered, fechaStr, proyectoStr) {
+        const container = document.getElementById('dailyPrintReportContainer');
+        if (!container) return;
+
+        let fechaFormateada = fechaStr;
+        if (fechaStr && fechaStr.includes('-')) {
+            let [y, m, d] = fechaStr.split('-');
+            fechaFormateada = `${d}/${m}/${y}`;
+        }
+
+        if (!filtered || filtered.length === 0) {
+            container.innerHTML = `<div class="text-center p-4"><b>No hay registros para la fecha seleccionada (${fechaFormateada || 'Sin fecha'}).</b></div>`;
+            return;
+        }
+
+        let usuarios = getUsuarios();
+        
+        let jornadasUnicas = {};
+        filtered.forEach(r => {
+            let key = `${r.workerName.toLowerCase().trim()}_${(r.job || '').trim()}`;
+            if (!jornadasUnicas[key]) {
+                jornadasUnicas[key] = { ...r };
+            } else {
+                if (r.timeIn && r.timeIn !== '-') jornadasUnicas[key].timeIn = r.timeIn;
+                if (r.timeOut && r.timeOut !== '-') jornadasUnicas[key].timeOut = r.timeOut;
+                if (r.overtime) jornadasUnicas[key].overtime = r.overtime;
+                if (r.lunch) jornadasUnicas[key].lunch = r.lunch;
+            }
+        });
+
+        let listaJornadas = Object.values(jornadasUnicas);
+
+        let agrupadoPorFuncion = {};
+        listaJornadas.forEach(r => {
+            let tr = r.trade || (usuarios[r.workerName] || {}).trade || 'Sin Función';
+            if (!agrupadoPorFuncion[tr]) agrupadoPorFuncion[tr] = [];
+            agrupadoPorFuncion[tr].push(r);
+        });
+
+        let totalPersonasDia = 0;
+        let totalHorasDia = 0;
+
+        // HOJA 1: RESUMEN EJECUTIVO MEJORADO VISUALMENTE
+        let htmlResumen = `
+            <div class="print-page-break">
+                <div style="background-color: #111827; color: #ffffff; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; border-bottom: 4px solid #b45309;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 14pt; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">OSLIM <span style="font-weight: 300; color: #9ca3af;">CONSTRUCTION</span></h3>
+                            <div style="font-size: 8.5pt; text-transform: uppercase; letter-spacing: 1.5px; color: #b45309; font-weight: 700; margin-top: 2px;">Control de Asistencia — Reporte Diario</div>
+                        </div>
+                        <div style="text-align: right; font-size: 8pt; color: #d1d5db;">
+                            <div><b>FECHA:</b> ${fechaFormateada}</div>
+                            <div><b>PROYECTO:</b> ${proyectoStr === 'ALL' ? 'Todos los Proyectos' : proyectoStr}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px; font-weight: 800; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.5px; color: #111827; border-left: 3px solid #b45309; padding-left: 8px;">
+                    Resumen de Personal Activo por Función
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; border: 1px solid #e5e7eb; font-size: 8pt;">
+                    <thead>
+                        <tr style="background-color: #f3f4f6; border-bottom: 2px solid #b45309;">
+                            <th style="padding: 8px 12px; text-align: left; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">FUNCIÓN / ESPECIALIDAD</th>
+                            <th style="padding: 8px 12px; text-align: center; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px; width: 25%;">PERSONAL ACTIVO</th>
+                            <th style="padding: 8px 12px; text-align: center; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px; width: 25%;">HORAS ACUMULADAS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        Object.keys(agrupadoPorFuncion).sort().forEach((funcion, index) => {
+            let lista = agrupadoPorFuncion[funcion];
+            let subtotalHoras = 0;
+
+            lista.forEach(r => {
+                let netas = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+                let extras = parseFloat(r.overtime) || 0;
+                subtotalHoras += (netas + extras);
+            });
+
+            totalPersonasDia += lista.length;
+            totalHorasDia += subtotalHoras;
+
+            let bgRow = (index % 2 === 0) ? '#ffffff' : '#f9fafb';
+
+            htmlResumen += `
+                <tr style="background-color: ${bgRow}; border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 8px 12px; text-align: left; font-weight: 700; color: #111827;">${funcion.toUpperCase()}</td>
+                    <td style="padding: 8px 12px; text-align: center; color: #4b5563;">${lista.length} persona(s)</td>
+                    <td style="padding: 8px 12px; text-align: center; font-weight: 700; color: #b45309;">${subtotalHoras.toFixed(1)} hrs</td>
+                </tr>
+            `;
+        });
+
+        htmlResumen += `
+                    </tbody>
+                </table>
+
+                <div style="background-color: #f8fafc; border: 1px solid #d1d5db; padding: 14px 18px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 9.5pt; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <span style="color: #111827; text-transform: uppercase; letter-spacing: 0.5px;">TOTAL GENERAL DEL DÍA:</span>
+                    <div style="display: flex; gap: 15px;">
+                        <span style="background-color: #111827; color: #ffffff; padding: 4px 10px; border-radius: 6px;">${totalPersonasDia} TRABAJADORES</span>
+                        <span style="background-color: #b45309; color: #ffffff; padding: 4px 10px; border-radius: 6px;">${totalHorasDia.toFixed(1)} HORAS</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // HOJA 2 EN ADELANTE: DESGLOSE DETALLADO LIMPIO Y ESTILIZADO
+        let htmlDetalle = `
+            <div>
+                <div style="border-bottom: 2px solid #111827; padding-bottom: 6px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 11pt; font-weight: 800; color: #111827; text-transform: uppercase;">OSLIM CONSTRUCTION — DESGLOSE DETALLADO</h4>
+                        <div style="font-size: 7.5pt; color: #6b7280; font-weight: 600;">REGISTRO DE JORNADA INDIVIDUAL</div>
+                    </div>
+                    <div style="font-size: 8pt; color: #111827; text-align: right;">
+                        <b>FECHA:</b> ${fechaFormateada} &nbsp;|&nbsp; <b>PROYECTO:</b> ${proyectoStr === 'ALL' ? 'Todos los Proyectos' : proyectoStr}
+                    </div>
+                </div>
+        `;
+
+        Object.keys(agrupadoPorFuncion).sort().forEach(funcion => {
+            let lista = agrupadoPorFuncion[funcion];
+            let subtotalHorasFuncion = 0;
+
+            htmlDetalle += `
+                <div style="background-color: #111827; color: #ffffff; padding: 5px 10px; font-weight: 800; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid #b45309; margin-top: 14px;">
+                    ${funcion.toUpperCase()}
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 0; border: 1px solid #e5e7eb; font-size: 7.5pt;">
+                    <thead>
+                        <tr style="background-color: #f3f4f6; border-bottom: 1px solid #d1d5db; color: #374151;">
+                            <th style="padding: 6px 10px; text-align: left; width: 28%;">TRABAJADOR</th>
+                            <th style="padding: 6px 10px; text-align: left; width: 22%;">PROYECTO</th>
+                            <th style="padding: 6px 10px; text-align: center; width: 10%;">ENTRADA</th>
+                            <th style="padding: 6px 10px; text-align: center; width: 10%;">SALIDA</th>
+                            <th style="padding: 6px 10px; text-align: center; width: 10%;">COMIDA</th>
+                            <th style="padding: 6px 10px; text-align: center; width: 10%;">EXTRAS</th>
+                            <th style="padding: 6px 10px; text-align: center; width: 10%;">HORAS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            lista.sort((a, b) => a.workerName.localeCompare(b.workerName)).forEach((r, idx) => {
+                let netas = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+                let extras = parseFloat(r.overtime) || 0;
+                let totalRow = netas + extras;
+                subtotalHorasFuncion += totalRow;
+
+                let rowBg = (idx % 2 === 0) ? '#ffffff' : '#f9fafb';
+
+                htmlDetalle += `
+                    <tr style="background-color: ${rowBg}; border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 5px 10px; font-weight: 700; color: #111827;">${r.workerName.toUpperCase()}</td>
+                        <td style="padding: 5px 10px; color: #4b5563;">${r.job || '-'}</td>
+                        <td style="padding: 5px 10px; text-align: center; font-weight: 600;">${r.timeIn || '-'}</td>
+                        <td style="padding: 5px 10px; text-align: center; font-weight: 600;">${r.timeOut || '-'}</td>
+                        <td style="padding: 5px 10px; text-align: center; color: #6b7280;">${r.lunch !== undefined ? r.lunch + 'h' : '0.5h'}</td>
+                        <td style="padding: 5px 10px; text-align: center; color: ${extras > 0 ? '#b45309' : '#9ca3af'}; font-weight: ${extras > 0 ? '700' : 'normal'};">${extras > 0 ? extras.toFixed(1) + 'h' : '-'}</td>
+                        <td style="padding: 5px 10px; text-align: center; font-weight: 700; color: #059669;">${totalRow.toFixed(1)}h</td>
+                    </tr>
+                `;
+            });
+
+            htmlDetalle += `
+                    </tbody>
+                </table>
+                <div style="background-color: #f8fafc; padding: 5px 10px; font-weight: 700; font-size: 7.5pt; text-align: right; border: 1px solid #e5e7eb; border-top: 2px solid #b45309; margin-bottom: 12px; color: #1f2937;">
+                    SUBTOTAL ${funcion.toUpperCase()}: <span style="color: #111827;">${lista.length} PERSONA(S)</span> &nbsp;|&nbsp; TOTAL HORAS: <span style="color: #b45309;">${subtotalHorasFuncion.toFixed(1)} hrs</span>
+                </div>
+            `;
+        });
+
+        htmlDetalle += `</div>`;
+
+        container.innerHTML = htmlResumen + htmlDetalle;
+    }
+
+    function imprimirReporteDiario() {
+        loadDailyRecords();
+        setTimeout(() => {
+            window.print();
+        }, 150);
     }
 
     function seleccionarRegistroEnMapa(lat, lng, popupText, rowElement) {
@@ -2089,7 +2293,6 @@
     }
     function resetUserForm() { document.getElementById('adminNewUser').value = ''; document.getElementById('adminNewUser').readOnly = false; document.getElementById('adminNewPass').value = ''; document.getElementById('adminNewPhone').value = ''; document.getElementById('adminNewRate').value = '20.00'; document.getElementById('saveUserBtn').innerHTML = `Guardar Usuario`; document.getElementById('cancelEditUserBtn').classList.add('hidden'); loadUserManagement(); }
     
-    // FUNCION PARA DESVINCULAR Y BORRAR EL DEVICEID EN FIREBASE
     function desvincularDispositivoUsuario(user) {
         if (confirm(`📱 ¿Deseas reiniciar y desvincular el dispositivo de ${user}? \n\nEsto borrará el registro de su celular actual y le permitirá iniciar sesión desde un teléfono nuevo.`)) {
             let usuarios = {...getUsuarios()};
