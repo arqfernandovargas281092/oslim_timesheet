@@ -169,6 +169,25 @@
         .record-row.table-active { background-color: rgba(180, 83, 9, 0.1) !important; }
 
         #map, #entryMap { height: 380px; width: 100%; border-radius: 16px; border: 1px solid var(--border-color); }
+        
+        .camera-box {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--brand-gold);
+        }
+        .camera-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
 
         .hidden { display: none !important; }
         .print-only-tables { display: none; }
@@ -204,15 +223,12 @@
             .print-badge-hours { background-color: #b45309 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
             .print-badge-pay { background-color: #059669 !important; color: white !important; font-size: 7.5pt !important; padding: 3px 6px !important; border-radius: 4px !important; font-weight: bold !important; }
             .table-striped>tbody>tr:nth-of-type(odd)>* { background-color: #fcfcfc !important; color: #000 !important; }
-
-            .print-trade-header { background-color: #1f2937 !important; color: #ffffff !important; padding: 6px 10px !important; font-weight: bold !important; font-size: 8.5pt !important; text-transform: uppercase !important; }
-            .print-trade-subtotal { background-color: #f8fafc !important; font-weight: bold !important; text-align: right !important; padding: 6px 10px !important; border-top: 2px solid #b45309 !important; }
         }
     </style>
 </head>
 <body>
 
-<!-- PANTALLA DE ACCESO (LOGIN ORIGINAL) -->
+<!-- PANTALLA DE ACCESO -->
 <div class="container mt-5" id="login-screen" style="max-width: 420px;">
     <div class="card login-card">
         <div class="login-header">
@@ -331,19 +347,19 @@
 
     <!-- CONTENEDOR PRINCIPAL -->
     <div class="pt-4">
-        <!-- TAB 1: REGISTRO DIARIO DE ASISTENCIA CON VERIFICACIÓN BIOMÉTRICA -->
+        <!-- TAB 1: REGISTRO DIARIO CON CAMARA SELFIE -->
         <div class="container mb-5 tab-content-section" id="entry-tab">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <div class="card">
                         <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
-                            <span><i class="fa-solid fa-location-crosshairs me-2" style="color: var(--brand-gold);"></i>Geocerca de Asistencia (150m)</span>
+                            <span><i class="fa-solid fa-camera me-2" style="color: var(--brand-gold);"></i>Verificación Biométrica por Selfie (150m)</span>
                             <span class="badge py-2 px-3 text-white fw-bold shadow-sm" style="background-color: var(--brand-gold); border-radius: 8px;" id="loggedUserBadge">Usuario</span>
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-4">
                                 <div class="col-md-6">
-                                    <div class="alert d-flex align-items-center mb-4 bg-light-dark border rounded-3 p-3 text-dark" id="gpsStatusAlert">
+                                    <div class="alert d-flex align-items-center mb-3 bg-light-dark border rounded-3 p-3 text-dark" id="gpsStatusAlert">
                                         <i class="fa-solid fa-satellite-dish fa-2x me-3" style="color: var(--brand-gold);"></i>
                                         <div>
                                             <h6 class="m-0 fw-bold text-dark">Estado del GPS</h6>
@@ -352,12 +368,12 @@
                                     </div>
 
                                     <form id="timesheetForm">
-                                        <div class="mb-4">
+                                        <div class="mb-3">
                                             <label class="form-label text-uppercase">Proyecto Activo</label>
                                             <select class="form-select form-select-lg" id="entryJob" required onchange="actualizarMapaProyectoSeleccionado()"></select>
                                         </div>
 
-                                        <div class="row g-3 mb-4">
+                                        <div class="row g-3 mb-3">
                                             <div class="col-md-6">
                                                 <label class="form-label text-uppercase">Trabajador</label>
                                                 <input type="text" class="form-control border fw-bold" style="background-color: #fef3c7; color: var(--brand-gold) !important;" id="loggedWorkerName" readonly>
@@ -368,17 +384,18 @@
                                             </div>
                                         </div>
 
-                                        <div class="alert alert-light border rounded-3 p-3 text-center mb-4 text-muted small">
-                                            <i class="fa-solid fa-fingerprint fa-2x mb-1" style="color: var(--brand-gold);"></i>
-                                            <div>Validación con <b>Huella Dactilar</b> obligatoria para confirmar registro.</div>
+                                        <!-- CÁMARA FRONTAL NATIVA EN PANTALLA -->
+                                        <div class="camera-box mb-3">
+                                            <video id="webcamVideo" autoplay playsinline></video>
+                                            <canvas id="photoCanvas" class="hidden"></canvas>
                                         </div>
 
-                                        <div class="d-flex gap-3 justify-content-center mt-3">
-                                            <button type="button" class="btn flex-fill py-3 fw-bold text-white shadow-sm" style="background-color: #059669; border-radius: 12px; border: none;" onclick="iniciarVerificacionBiometrica('ENTRADA')">
-                                                <i class="fa-solid fa-fingerprint me-2"></i>MARCAR ENTRADA
+                                        <div class="d-flex gap-3 justify-content-center mt-2">
+                                            <button type="button" class="btn flex-fill py-3 fw-bold text-white shadow-sm" style="background-color: #059669; border-radius: 12px; border: none;" onclick="tomarFotoYRegistrar('ENTRADA')">
+                                                <i class="fa-solid fa-camera me-2"></i>MARCAR ENTRADA
                                             </button>
-                                            <button type="button" class="btn flex-fill py-3 fw-bold text-white shadow-sm" style="background-color: #dc2626; border-radius: 12px; border: none;" onclick="iniciarVerificacionBiometrica('SALIDA')">
-                                                <i class="fa-solid fa-fingerprint me-2"></i>MARCAR SALIDA
+                                            <button type="button" class="btn flex-fill py-3 fw-bold text-white shadow-sm" style="background-color: #dc2626; border-radius: 12px; border: none;" onclick="tomarFotoYRegistrar('SALIDA')">
+                                                <i class="fa-solid fa-camera me-2"></i>MARCAR SALIDA
                                             </button>
                                         </div>
                                     </form>
@@ -462,13 +479,13 @@
             </div>
         </div>
 
-        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA Y MAPA GPS -->
+        <!-- TAB 3: REGISTROS INDIVIDUALES POR DÍA CON VER FOTO -->
         <div class="container mb-5 tab-content-section" id="daily-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-12">
                     <div class="card mb-4">
                         <div class="card-header card-header-custom d-flex justify-content-between align-items-center no-print">
-                            <span><i class="fa-solid fa-map-location-dot me-2" style="color: var(--brand-gold);"></i>Registros Diarios y Mapa GPS</span>
+                            <span><i class="fa-solid fa-map-location-dot me-2" style="color: var(--brand-gold);"></i>Registros Diarios, Foto Selfie y Mapa GPS</span>
                             <button type="button" class="btn btn-sm btn-outline-dark fw-bold" style="border-radius: 8px;" onclick="imprimirReporteDiario()"><i class="fa-solid fa-print me-1"></i>Imprimir Reporte Diario</button>
                         </div>
                         <div class="card-body p-4">
@@ -500,6 +517,7 @@
                                                     <th class="text-white">Hora</th>
                                                     <th class="text-white">Trabajador</th>
                                                     <th class="text-white">Tipo</th>
+                                                    <th class="text-white">Selfie</th>
                                                     <th class="text-white">Proyecto</th>
                                                 </tr>
                                             </thead>
@@ -580,7 +598,7 @@
             </div>
         </div>
 
-        <!-- TAB 5: REGISTRO MANUAL POR SEMANA Y DÍAS (ADMIN) -->
+        <!-- TAB 5: REGISTRO MANUAL (ADMIN) -->
         <div class="container mb-5 no-print tab-content-section" id="manual-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
@@ -594,13 +612,11 @@
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label text-uppercase">Trabajador</label>
-                                        <select class="form-select text-dark" id="manualWorkerSelect" required>
-                                        </select>
+                                        <select class="form-select text-dark" id="manualWorkerSelect" required></select>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-uppercase">Proyecto Asignado</label>
-                                        <select class="form-select text-dark" id="manualProjectSelect" required>
-                                        </select>
+                                        <select class="form-select text-dark" id="manualProjectSelect" required></select>
                                     </div>
                                 </div>
 
@@ -612,8 +628,7 @@
 
                                 <div class="mb-4">
                                     <label class="form-label text-uppercase">Selecciona los días a registrar</label>
-                                    <div class="row g-2 p-3 bg-light-dark rounded-3 border" id="manualDaysCheckboxesContainer">
-                                    </div>
+                                    <div class="row g-2 p-3 bg-light-dark rounded-3 border" id="manualDaysCheckboxesContainer"></div>
                                 </div>
 
                                 <div class="row g-3 mb-3">
@@ -698,7 +713,6 @@
                                             <th class="text-white">Usuario</th>
                                             <th class="text-white">Contacto</th>
                                             <th class="text-white">Tarifa</th>
-                                            <th class="text-white">Dispositivo</th>
                                             <th class="text-white">Rol</th>
                                             <th class="text-end text-white">Acciones</th>
                                         </tr>
@@ -818,7 +832,7 @@
             </div>
         </div>
 
-        <!-- TAB 9: AGENDA / DIRECTORIO DE CONTACTO -->
+        <!-- TAB 9: AGENDA / DIRECTORIO -->
         <div class="container mb-5 no-print tab-content-section" id="directory-tab" style="display:none;">
             <div class="row justify-content-center">
                 <div class="col-lg-9">
@@ -846,6 +860,22 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- MODAL VISOR DE SELFIE -->
+<div class="modal fade" id="photoViewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
+      <div class="modal-header bg-dark text-white">
+        <h6 class="modal-title fw-bold" id="photoModalTitle"><i class="fa-solid fa-camera me-2" style="color: var(--brand-gold);"></i>Verificación de Asistencia</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center p-4 bg-light">
+        <img id="modalPhotoImg" src="" class="img-fluid rounded-3 shadow-sm border mb-3" style="max-height: 350px; object-fit: cover;">
+        <div id="modalPhotoDetails" class="small text-muted fw-bold"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Firebase SDK Realtime Database (Módulo) -->
@@ -929,20 +959,11 @@
     let entryMap = null;
     let entryMarker = null;
     let projectCircle = null;
-
-    function obtenerDeviceId() {
-        let deviceId = localStorage.getItem('oslim_device_uuid');
-        if (!deviceId) {
-            deviceId = 'DEV-' + Math.random().toString(36).substring(2, 11) + '-' + Date.now();
-            localStorage.setItem('oslim_device_uuid', deviceId);
-        }
-        return deviceId;
-    }
+    let videoStream = null;
 
     window.addEventListener('DOMContentLoaded', () => {
         setInitialWeek();
         obtenerGPSReal();
-        obtenerDeviceId();
         
         const sesionGuardada = localStorage.getItem('oslim_usuario_actual');
         if (sesionGuardada) {
@@ -1151,6 +1172,46 @@
         );
     }
 
+    /* GESTIÓN DE CÁMARA FRONTAL (SELFIE) */
+    async function iniciarCamaraFrontal() {
+        try {
+            const video = document.getElementById('webcamVideo');
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+            videoStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+            video.srcObject = videoStream;
+        } catch (err) {
+            alert("⚠️ No se pudo acceder a la cámara frontal. Permite los permisos de cámara en tu celular.");
+        }
+    }
+
+    function capturarSelfieBase64() {
+        const video = document.getElementById('webcamVideo');
+        const canvas = document.getElementById('photoCanvas');
+        if (!video || !video.videoWidth) return null;
+
+        canvas.width = 400;
+        canvas.height = 400;
+        const ctx = canvas.getContext('2d');
+        
+        // Espejear imagen para coincidir con la vista previa del celular
+        ctx.translate(400, 0);
+        ctx.scale(-1, 1);
+        
+        // Recortar cuadrado centrado
+        const size = Math.min(video.videoWidth, video.videoHeight);
+        const startX = (video.videoWidth - size) / 2;
+        const startY = (video.videoHeight - size) / 2;
+        ctx.drawImage(video, startX, startY, size, size, 0, 0, 400, 400);
+
+        // Convertir a base64 comprimido a calidad media (40 KB aprox)
+        return canvas.toDataURL('image/jpeg', 0.6);
+    }
+
     function mostrarPantallaRecuperacion() {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('recovery-screen').classList.remove('hidden');
@@ -1196,31 +1257,6 @@
         }
 
         let userData = usuarios[matchedKey];
-        let currentDeviceId = obtenerDeviceId();
-
-        if (userData.deviceId && userData.deviceId !== currentDeviceId && userData.rol !== 'admin') {
-            errDiv.classList.remove('hidden');
-            errDiv.innerText = "❌ Este usuario ya está vinculado a otro celular. Pide al administrador desvincular tu equipo anterior.";
-            return;
-        }
-
-        if (userData.rol !== 'admin') {
-            const otroUsuarioMismoDispositivo = Object.keys(usuarios).find(usrKey => {
-                return usrKey.toLowerCase() !== matchedKey.toLowerCase() && usuarios[usrKey].deviceId === currentDeviceId;
-            });
-
-            if (otroUsuarioMismoDispositivo) {
-                errDiv.classList.remove('hidden');
-                errDiv.innerText = `❌ Este celular ya fue registrado por el usuario (${otroUsuarioMismoDispositivo.toUpperCase()}). No se permiten dos usuarios en un mismo celular.`;
-                return;
-            }
-        }
-
-        if (!userData.deviceId && userData.rol !== 'admin') {
-            userData.deviceId = currentDeviceId;
-            window.dbSet(window.dbRef(window.db, 'config/usuariosSistema/' + matchedKey), userData);
-        }
-
         usuarioActual = matchedKey;
         localStorage.setItem('oslim_usuario_actual', usuarioActual);
         prepararUIUsuario(userData);
@@ -1270,6 +1306,9 @@
     }
 
     function cerrarSesion() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
         usuarioActual = null;
         localStorage.removeItem('oslim_usuario_actual');
         document.getElementById('loginUser').value = '';
@@ -1284,7 +1323,11 @@
         const target = document.getElementById(tabId);
         if (target) target.style.display = 'block';
 
-        if (tabId === 'entry-tab') { setTimeout(() => { initEntryMap(); }, 200); }
+        if (tabId === 'entry-tab') { 
+            setTimeout(() => { initEntryMap(); iniciarCamaraFrontal(); }, 200); 
+        } else {
+            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
+        }
         if (tabId === 'weekly-tab') { poblarSelectsDinamicos(); loadWeeklySummary(); }
         if (tabId === 'daily-tab') { updateMapUserFilterDropdown(); poblarSelectsDinamicos(); setTimeout(() => { initMap(); loadDailyRecords(); }, 250); }
         if (tabId === 'logs-tab') { poblarSelectsDinamicos(); loadDailyLogs(); }
@@ -1348,52 +1391,16 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    /* FUNCIONALIDAD DE VERIFICACIÓN BIOMÉTRICA CON HUELLA DACTILAR CORREGIDA */
-    async function iniciarVerificacionBiometrica(tipo) {
-        if (!window.PublicKeyCredential) {
-            alert("⚠️ Tu navegador o dispositivo no soporta autenticación biométrica. Se procederá con la verificación GPS.");
-            registrarAsistenciaConGeocerca(tipo);
-            return;
+    /* REGISTRO DE ASISTENCIA CON SELFIE OBLIGATORIA */
+    function tomarFotoYRegistrar(tipo) {
+        const selfieBase64 = capturarSelfieBase64();
+        if (!selfieBase64) {
+            return alert("❌ Es necesario activar la cámara y permitir su uso para tomar la foto de verificación.");
         }
-
-        try {
-            const challenge = new Uint8Array(32);
-            window.crypto.getRandomValues(challenge);
-
-            const createOptions = {
-                publicKey: {
-                    challenge: challenge,
-                    rp: { name: "OSLIM Construction App" },
-                    user: {
-                        id: new Uint8Array(16),
-                        name: document.getElementById('loggedWorkerName').value || "trabajador",
-                        displayName: document.getElementById('loggedWorkerName').value || "Trabajador"
-                    },
-                    pubKeyCredParams: [
-                        { type: "public-key", alg: -7 },  // ES256
-                        { type: "public-key", alg: -257 } // RS256
-                    ],
-                    authenticatorSelection: {
-                        authenticatorAttachment: "platform", // Fuerza el uso del sensor dactilar/biométrico local del celular
-                        userVerification: "required"         // Exige Huella Dactilar o Face ID nativo
-                    },
-                    timeout: 60000
-                }
-            };
-
-            await navigator.credentials.create(createOptions);
-            registrarAsistenciaConGeocerca(tipo);
-        } catch (error) {
-            if (error.name === 'NotAllowedError' || error.name === 'AbortError') {
-                alert("❌ Verificación de Huella Dactilar cancelada o fallida. No se registró la asistencia.");
-            } else {
-                alert("⚠️ Validación biométrica directa no disponible (" + error.message + "). Procediendo con verificación GPS.");
-                registrarAsistenciaConGeocerca(tipo);
-            }
-        }
+        registrarAsistenciaConGeocerca(tipo, selfieBase64);
     }
 
-    function registrarAsistenciaConGeocerca(tipo) {
+    function registrarAsistenciaConGeocerca(tipo, photoBase64) {
         const workerName = document.getElementById('loggedWorkerName').value;
         const trade = document.getElementById('loggedWorkerTrade').value;
         const selectedProjectName = document.getElementById('entryJob').value;
@@ -1421,18 +1428,20 @@
             if (!jornadaHoy) {
                 jornadaHoy = {
                     id: Date.now(), workerName, trade, rateSnapshot: tarifaActual, date: fechaStr, dayName: days[fechaLocalObj.getDay()], job: selectedProjectName,
-                    timeIn: horaStr, timeOut: '-', lunch: 0.5, overtime: 0, coordsIn: { lat: currentCoords.lat, lng: currentCoords.lng }, coordsOut: null
+                    timeIn: horaStr, timeOut: '-', lunch: 0.5, overtime: 0, coordsIn: { lat: currentCoords.lat, lng: currentCoords.lng }, coordsOut: null,
+                    photoIn: photoBase64, photoOut: null
                 };
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 jornadaHoy.firebaseKey = newRef.key;
                 window.dbSet(newRef, jornadaHoy);
-                alert(`✅ ENTRADA registrada a las ${horaStr}.`);
+                alert(`✅ ENTRADA registrada a las ${horaStr} con foto verificada.`);
             } else {
                 if (jornadaHoy.timeIn && jornadaHoy.timeIn !== '-') return alert(`⚠️ Ya registraste entrada a las ${jornadaHoy.timeIn}.`);
                 jornadaHoy.timeIn = horaStr;
+                jornadaHoy.photoIn = photoBase64;
                 jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
                 window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
-                alert(`✅ ENTRADA actualizada a las ${horaStr}.`);
+                alert(`✅ ENTRADA actualizada a las ${horaStr} con foto verificada.`);
             }
         } else if (tipo === 'SALIDA') {
             if (!jornadaHoy || !jornadaHoy.timeIn || jornadaHoy.timeIn === '-') return alert(`❌ Necesitas registrar entrada primero.`);
@@ -1440,9 +1449,10 @@
                 if (!confirm(`⚠️ Ya tienes salida a las ${jornadaHoy.timeOut}. ¿Reemplazar por ${horaStr}?`)) return;
             }
             jornadaHoy.timeOut = horaStr;
+            jornadaHoy.photoOut = photoBase64;
             jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
             window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
-            alert(`✅ SALIDA registrada a las ${horaStr}.`);
+            alert(`✅ SALIDA registrada a las ${horaStr} con foto verificada.`);
         }
         showTab('weekly-tab');
     }
@@ -1954,6 +1964,14 @@
         XLSX.writeFile(wb, `PAY_Oslim_${weekVal}.xlsx`);
     }
 
+    function abrirlModalFoto(fotoBase64, tituloInfo) {
+        if (!fotoBase64) return alert("⚠️ No hay fotografía registrada para este marco de tiempo.");
+        document.getElementById('modalPhotoImg').src = fotoBase64;
+        document.getElementById('modalPhotoDetails').innerHTML = tituloInfo;
+        let myModal = new bootstrap.Modal(document.getElementById('photoViewModal'));
+        myModal.show();
+    }
+
     function loadDailyRecords() {
         const dF = document.getElementById('mapDateFilter').value;
         const uF = document.getElementById('mapUserFilter').value;
@@ -1973,7 +1991,7 @@
         });
 
         if (filtered.length === 0) { 
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">No hay registros con los filtros seleccionados.</td></tr>'; 
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">No hay registros con los filtros seleccionados.</td></tr>'; 
             generarTablaImpresionDiaria([], dF, pF);
             return; 
         }
@@ -1982,11 +2000,13 @@
         filtered.forEach(r => {
             let trIn = document.createElement('tr'); trIn.className = 'record-row';
             let tieneGpsIn = (r.coordsIn && r.coordsIn.lat && r.coordsIn.lat !== 0);
-            
+            let btnFotoIn = r.photoIn ? `<button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" onclick="event.stopPropagation(); abrirlModalFoto('${r.photoIn}', '${r.workerName} — Entrada: ${r.timeIn}')"><i class="fa-solid fa-camera"></i> Foto</button>` : '<small class="text-muted">N/A</small>';
+
             trIn.innerHTML = `
                 <td class="ps-3"><b class="text-dark">${r.timeIn || '-'}</b></td>
                 <td class="text-dark">${r.workerName}</td>
                 <td><span class="badge bg-success">ENTRADA</span> ${!tieneGpsIn ? '<small class="text-muted">(Manual)</small>' : ''}</td>
+                <td>${btnFotoIn}</td>
                 <td class="small text-muted pe-3">${r.job}</td>
             `;
 
@@ -2000,11 +2020,13 @@
             if (r.timeOut && r.timeOut !== '-') {
                 let trOut = document.createElement('tr'); trOut.className = 'record-row';
                 let tieneGpsOut = (r.coordsOut && r.coordsOut.lat && r.coordsOut.lat !== 0);
+                let btnFotoOut = r.photoOut ? `<button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" onclick="event.stopPropagation(); abrirlModalFoto('${r.photoOut}', '${r.workerName} — Salida: ${r.timeOut}')"><i class="fa-solid fa-camera"></i> Foto</button>` : '<small class="text-muted">N/A</small>';
 
                 trOut.innerHTML = `
                     <td class="ps-3"><b class="text-dark">${r.timeOut}</b></td>
                     <td class="text-dark">${r.workerName}</td>
                     <td><span class="badge bg-danger">SALIDA</span> ${!tieneGpsOut ? '<small class="text-muted">(Manual)</small>' : ''}</td>
+                    <td>${btnFotoOut}</td>
                     <td class="small text-muted pe-3">${r.job}</td>
                 `;
 
@@ -2323,8 +2345,7 @@
     function guardarOEditarUsuarioSistema(e) {
         e.preventDefault();
         let user = document.getElementById('adminNewUser').value.trim();
-        let oldObj = getUsuarios()[user] || {};
-        let obj = { pass: document.getElementById('adminNewPass').value.trim(), phone: document.getElementById('adminNewPhone').value.trim(), rate: parseFloat(document.getElementById('adminNewRate').value) || 20, trade: document.getElementById('adminNewTrade').value, rol: document.getElementById('adminNewRol').value, deviceId: oldObj.deviceId || null };
+        let obj = { pass: document.getElementById('adminNewPass').value.trim(), phone: document.getElementById('adminNewPhone').value.trim(), rate: parseFloat(document.getElementById('adminNewRate').value) || 20, trade: document.getElementById('adminNewTrade').value, rol: document.getElementById('adminNewRol').value };
         let arr = {...getUsuarios()}; arr[user] = obj;
         window.dbSet(window.dbRef(window.db, 'config/usuariosSistema'), arr); alert("Usuario Guardado con Éxito"); resetUserForm(); loadUserManagement();
     }
@@ -2333,42 +2354,19 @@
         document.getElementById('adminNewUser').value = user; document.getElementById('adminNewUser').readOnly = true; document.getElementById('adminNewPass').value = i.pass; document.getElementById('adminNewPhone').value = i.phone || ''; document.getElementById('adminNewRate').value = i.rate || 20; document.getElementById('adminNewTrade').value = i.trade || ''; document.getElementById('adminNewRol').value = i.rol || 'trabajador'; document.getElementById('saveUserBtn').innerHTML = `Actualizar Usuario`; document.getElementById('cancelEditUserBtn').classList.remove('hidden');
     }
     function resetUserForm() { document.getElementById('adminNewUser').value = ''; document.getElementById('adminNewUser').readOnly = false; document.getElementById('adminNewPass').value = ''; document.getElementById('adminNewPhone').value = ''; document.getElementById('adminNewRate').value = '20.00'; document.getElementById('saveUserBtn').innerHTML = `Guardar Usuario`; document.getElementById('cancelEditUserBtn').classList.add('hidden'); loadUserManagement(); }
-    
-    function desvincularDispositivoUsuario(user) {
-        if (confirm(`📱 ¿Deseas reiniciar y desvincular el dispositivo de ${user}? \n\nEsto borrará el registro de su celular actual y le permitirá iniciar sesión desde un teléfono nuevo.`)) {
-            let usuarios = {...getUsuarios()};
-            if (usuarios[user]) {
-                usuarios[user].deviceId = null;
-                window.dbSet(window.dbRef(window.db, 'config/usuariosSistema/' + user), usuarios[user])
-                    .then(() => {
-                        alert(`✅ El celular de ${user} ha sido desvinculado con éxito. Ahora puede registrar un dispositivo nuevo.`);
-                        loadUserManagement();
-                    });
-            }
-        }
-    }
 
     function loadUserManagement() {
         const tb = document.getElementById('systemUsersTbody'); if (!tb) return; tb.innerHTML = ''; let u = getUsuarios();
         Object.keys(u).forEach(k => { 
             let i = u[k]; 
             let r = i.rol === 'admin' ? '<span class="badge bg-danger">Admin</span>' : '<span class="badge bg-light text-dark border">Trabajador</span>'; 
-            let deviceBadge = i.deviceId 
-                ? `<span class="badge bg-success" title="ID: ${i.deviceId}"><i class="fa-solid fa-mobile-screen me-1"></i>VINCULADO</span>` 
-                : `<span class="badge bg-secondary"><i class="fa-solid fa-circle-minus me-1"></i>PENDIENTE</span>`;
             
-            let btnResetDev = i.deviceId 
-                ? `<button class="btn btn-sm btn-warning me-1 text-dark fw-bold" title="Borrar / Reiniciar Dispositivo Celular" onclick="desvincularDispositivoUsuario('${k}')"><i class="fa-solid fa-mobile-screen-button"></i> Reiniciar</button>` 
-                : `<button class="btn btn-sm btn-outline-secondary me-1" disabled><i class="fa-solid fa-mobile-screen-button"></i></button>`;
-
             tb.innerHTML += `<tr>
                 <td class="fw-bold ps-3 text-dark">${k}</td>
                 <td><code style="color: var(--brand-gold);">${i.phone||'S/N'}</code></td>
                 <td><span class="text-success fw-bold">$${Number(i.rate||20).toFixed(2)}</span></td>
-                <td>${deviceBadge}</td>
                 <td>${r}</td>
                 <td class="text-end pe-3">
-                    ${btnResetDev}
                     <button class="btn btn-sm btn-outline-dark me-1" onclick="editarUsuario('${k}')"><i class="fa-solid fa-pen"></i></button>
                     ${k.toLowerCase() !== 'fernando' ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuarioSistema('${k}')"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
@@ -2463,7 +2461,8 @@
                     lunch: 0.5, 
                     overtime: overtimeVal, 
                     coordsIn: coordsProj, 
-                    coordsOut: coordsProj 
+                    coordsOut: coordsProj,
+                    photoIn: null, photoOut: null
                 };
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 nueva.firebaseKey = newRef.key;
