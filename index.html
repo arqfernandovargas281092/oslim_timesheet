@@ -1348,10 +1348,10 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    /* FUNCIONALIDAD DE VERIFICACIÓN BIOMÉTRICA CON HUELLA DACTILAR */
+    /* FUNCIONALIDAD DE VERIFICACIÓN BIOMÉTRICA CON HUELLA DACTILAR CORREGIDA */
     async function iniciarVerificacionBiometrica(tipo) {
         if (!window.PublicKeyCredential) {
-            alert("⚠️ Este navegador no soporta autenticación biométrica. Se procederá con la verificación de geocerca.");
+            alert("⚠️ Tu navegador o dispositivo no soporta autenticación biométrica. Se procederá con la verificación GPS.");
             registrarAsistenciaConGeocerca(tipo);
             return;
         }
@@ -1360,22 +1360,34 @@
             const challenge = new Uint8Array(32);
             window.crypto.getRandomValues(challenge);
 
-            const options = {
+            const createOptions = {
                 publicKey: {
                     challenge: challenge,
-                    timeout: 60000,
-                    userVerification: "required",
-                    rpId: window.location.hostname || "localhost"
+                    rp: { name: "OSLIM Construction App" },
+                    user: {
+                        id: new Uint8Array(16),
+                        name: document.getElementById('loggedWorkerName').value || "trabajador",
+                        displayName: document.getElementById('loggedWorkerName').value || "Trabajador"
+                    },
+                    pubKeyCredParams: [
+                        { type: "public-key", alg: -7 },  // ES256
+                        { type: "public-key", alg: -257 } // RS256
+                    ],
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform", // Fuerza el uso del sensor dactilar/biométrico local del celular
+                        userVerification: "required"         // Exige Huella Dactilar o Face ID nativo
+                    },
+                    timeout: 60000
                 }
             };
 
-            await navigator.credentials.get(options);
+            await navigator.credentials.create(createOptions);
             registrarAsistenciaConGeocerca(tipo);
         } catch (error) {
             if (error.name === 'NotAllowedError' || error.name === 'AbortError') {
                 alert("❌ Verificación de Huella Dactilar cancelada o fallida. No se registró la asistencia.");
             } else {
-                alert("⚠️ Validación de huella dactilar requerida por el celular. Confirmando por geocerca GPS.");
+                alert("⚠️ Validación biométrica directa no disponible (" + error.message + "). Procediendo con verificación GPS.");
                 registrarAsistenciaConGeocerca(tipo);
             }
         }
