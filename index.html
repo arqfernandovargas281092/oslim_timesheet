@@ -871,7 +871,8 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-center p-4 bg-light">
-        <img id="modalPhotoImg" src="" class="img-fluid rounded-3 shadow-sm border mb-3" style="max-height: 350px; object-fit: cover;">
+        <div id="modalPhotoLoading" class="py-4"><i class="fa-solid fa-spinner fa-spin fa-2x text-muted"></i><br><small class="text-muted fw-bold mt-2 d-block">Cargando fotografía...</small></div>
+        <img id="modalPhotoImg" src="" class="img-fluid rounded-3 shadow-sm border mb-3 hidden" style="max-height: 350px; object-fit: cover;">
         <div id="modalPhotoDetails" class="small text-muted fw-bold"></div>
       </div>
     </div>
@@ -881,7 +882,7 @@
 <!-- Firebase SDK Realtime Database (Módulo) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-  import { getDatabase, ref, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+  import { getDatabase, ref, set, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "TU_API_KEY_PROPIA",
@@ -902,6 +903,7 @@
   window.dbPush = push;
   window.dbUpdate = update;
   window.dbRemove = remove;
+  window.dbGet = get;
 
   window.registrosGlobales = [];
   onValue(ref(db, 'jornadas'), (snapshot) => {
@@ -1198,17 +1200,14 @@
         canvas.height = 400;
         const ctx = canvas.getContext('2d');
         
-        // Espejear imagen para coincidir con la vista previa del celular
         ctx.translate(400, 0);
         ctx.scale(-1, 1);
         
-        // Recortar cuadrado centrado
         const size = Math.min(video.videoWidth, video.videoHeight);
         const startX = (video.videoWidth - size) / 2;
         const startY = (video.videoHeight - size) / 2;
         ctx.drawImage(video, startX, startY, size, size, 0, 0, 400, 400);
 
-        // Convertir a base64 comprimido a calidad media (40 KB aprox)
         return canvas.toDataURL('image/jpeg', 0.6);
     }
 
@@ -1391,7 +1390,7 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    /* REGISTRO DE ASISTENCIA CON SELFIE OBLIGATORIA */
+    /* REGISTRO DE ASISTENCIA CON SELFIE OPTIMIZADA (SEPARADA DE BASE64) */
     function tomarFotoYRegistrar(tipo) {
         const selfieBase64 = capturarSelfieBase64();
         if (!selfieBase64) {
@@ -1429,17 +1428,21 @@
                 jornadaHoy = {
                     id: Date.now(), workerName, trade, rateSnapshot: tarifaActual, date: fechaStr, dayName: days[fechaLocalObj.getDay()], job: selectedProjectName,
                     timeIn: horaStr, timeOut: '-', lunch: 0.5, overtime: 0, coordsIn: { lat: currentCoords.lat, lng: currentCoords.lng }, coordsOut: null,
-                    photoIn: photoBase64, photoOut: null
+                    hasPhotoIn: true, hasPhotoOut: false
                 };
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 jornadaHoy.firebaseKey = newRef.key;
+                
+                // Guardar la foto en el nodo independiente /fotosJornadas para no saturar las descargas
+                window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoIn'), photoBase64);
                 window.dbSet(newRef, jornadaHoy);
                 alert(`✅ ENTRADA registrada a las ${horaStr} con foto verificada.`);
             } else {
                 if (jornadaHoy.timeIn && jornadaHoy.timeIn !== '-') return alert(`⚠️ Ya registraste entrada a las ${jornadaHoy.timeIn}.`);
                 jornadaHoy.timeIn = horaStr;
-                jornadaHoy.photoIn = photoBase64;
+                jornadaHoy.hasPhotoIn = true;
                 jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
+                window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoIn'), photoBase64);
                 window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
                 alert(`✅ ENTRADA actualizada a las ${horaStr} con foto verificada.`);
             }
@@ -1449,8 +1452,9 @@
                 if (!confirm(`⚠️ Ya tienes salida a las ${jornadaHoy.timeOut}. ¿Reemplazar por ${horaStr}?`)) return;
             }
             jornadaHoy.timeOut = horaStr;
-            jornadaHoy.photoOut = photoBase64;
+            jornadaHoy.hasPhotoOut = true;
             jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
+            window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoOut'), photoBase64);
             window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
             alert(`✅ SALIDA registrada a las ${horaStr} con foto verificada.`);
         }
@@ -1964,12 +1968,36 @@
         XLSX.writeFile(wb, `PAY_Oslim_${weekVal}.xlsx`);
     }
 
-    function abrirlModalFoto(fotoBase64, tituloInfo) {
-        if (!fotoBase64) return alert("⚠️ No hay fotografía registrada para este marco de tiempo.");
-        document.getElementById('modalPhotoImg').src = fotoBase64;
-        document.getElementById('modalPhotoDetails').innerHTML = tituloInfo;
+    /* DESCARGA OPTIMIZADA DE FOTO BAJO DEMANDA VIA GET() */
+    function abrirlModalFoto(firebaseKey, tipoFoto, tituloInfo) {
+        if (!firebaseKey) return alert("⚠️ No hay clave de registro vinculada.");
+        
+        let imgEl = document.getElementById('modalPhotoImg');
+        let loaderEl = document.getElementById('modalPhotoLoading');
+        let detailsEl = document.getElementById('modalPhotoDetails');
+
+        imgEl.classList.add('hidden');
+        imgEl.src = '';
+        loaderEl.classList.remove('hidden');
+        detailsEl.innerHTML = tituloInfo;
+
         let myModal = new bootstrap.Modal(document.getElementById('photoViewModal'));
         myModal.show();
+
+        // Consulta puntual get() solo para la foto seleccionada sin descargar toda la DB
+        const fotoRef = window.dbRef(window.db, `fotosJornadas/${firebaseKey}/${tipoFoto}`);
+        window.dbGet(fotoRef).then((snapshot) => {
+            loaderEl.classList.add('hidden');
+            if (snapshot.exists() && snapshot.val()) {
+                imgEl.src = snapshot.val();
+                imgEl.classList.remove('hidden');
+            } else {
+                detailsEl.innerHTML = tituloInfo + "<br><span class='text-danger'>Foto no encontrada en el servidor.</span>";
+            }
+        }).catch((err) => {
+            loaderEl.classList.add('hidden');
+            alert("❌ Error al descargar la fotografía: " + err.message);
+        });
     }
 
     function loadDailyRecords() {
@@ -2000,7 +2028,9 @@
         filtered.forEach(r => {
             let trIn = document.createElement('tr'); trIn.className = 'record-row';
             let tieneGpsIn = (r.coordsIn && r.coordsIn.lat && r.coordsIn.lat !== 0);
-            let btnFotoIn = r.photoIn ? `<button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" onclick="event.stopPropagation(); abrirlModalFoto('${r.photoIn}', '${r.workerName} — Entrada: ${r.timeIn}')"><i class="fa-solid fa-camera"></i> Foto</button>` : '<small class="text-muted">N/A</small>';
+            
+            // Botón con consulta ligera que solo pide la foto si la persona hace clic
+            let btnFotoIn = r.hasPhotoIn || r.photoIn ? `<button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" onclick="event.stopPropagation(); abrirlModalFoto('${r.firebaseKey}', 'photoIn', '${r.workerName} — Entrada: ${r.timeIn}')"><i class="fa-solid fa-camera"></i> Foto</button>` : '<small class="text-muted">N/A</small>';
 
             trIn.innerHTML = `
                 <td class="ps-3"><b class="text-dark">${r.timeIn || '-'}</b></td>
@@ -2020,7 +2050,7 @@
             if (r.timeOut && r.timeOut !== '-') {
                 let trOut = document.createElement('tr'); trOut.className = 'record-row';
                 let tieneGpsOut = (r.coordsOut && r.coordsOut.lat && r.coordsOut.lat !== 0);
-                let btnFotoOut = r.photoOut ? `<button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" onclick="event.stopPropagation(); abrirlModalFoto('${r.photoOut}', '${r.workerName} — Salida: ${r.timeOut}')"><i class="fa-solid fa-camera"></i> Foto</button>` : '<small class="text-muted">N/A</small>';
+                let btnFotoOut = r.hasPhotoOut || r.photoOut ? `<button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" onclick="event.stopPropagation(); abrirlModalFoto('${r.firebaseKey}', 'photoOut', '${r.workerName} — Salida: ${r.timeOut}')"><i class="fa-solid fa-camera"></i> Foto</button>` : '<small class="text-muted">N/A</small>';
 
                 trOut.innerHTML = `
                     <td class="ps-3"><b class="text-dark">${r.timeOut}</b></td>
@@ -2299,9 +2329,14 @@
         r.overtime = parseFloat(document.getElementById(`ot_${id}`).value) || 0;
         window.dbSet(window.dbRef(window.db, 'jornadas/' + r.firebaseKey), r);
     }
+    
     function eliminarJornada(firebaseKey) {
         if (firebaseKey && confirm("¿Eliminar este registro?")) {
-            window.dbRemove(window.dbRef(window.db, 'jornadas/' + firebaseKey)).then(() => { loadDailyLogs(); loadWeeklySummary(); });
+            window.dbRemove(window.dbRef(window.db, 'jornadas/' + firebaseKey));
+            window.dbRemove(window.dbRef(window.db, 'fotosJornadas/' + firebaseKey)).then(() => { 
+                loadDailyLogs(); 
+                loadWeeklySummary(); 
+            });
         }
     }
 
@@ -2462,7 +2497,7 @@
                     overtime: overtimeVal, 
                     coordsIn: coordsProj, 
                     coordsOut: coordsProj,
-                    photoIn: null, photoOut: null
+                    hasPhotoIn: false, hasPhotoOut: false
                 };
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 nueva.firebaseKey = newRef.key;
