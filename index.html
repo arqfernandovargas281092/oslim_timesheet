@@ -326,17 +326,17 @@
             
             <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px;">General</p>
             <button type="button" class="nav-menu-btn" onclick="showTab('entry-tab'); closeMenu();"><i class="fa-solid fa-user-clock"></i>Registrar Asistencia</button>
-            <button type="button" class="nav-menu-btn" onclick="showTab('weekly-tab'); loadWeeklySummary(); closeMenu();"><i class="fa-solid fa-calendar-week"></i>Resumen Semanal</button>
+            <button type="button" class="nav-menu-btn" onclick="showTab('weekly-tab'); closeMenu();"><i class="fa-solid fa-calendar-week"></i>Resumen Semanal</button>
             
             <div id="admin-menu-section" class="hidden mt-3 d-flex flex-column gap-1">
                 <p class="text-muted small fw-bold mb-2 ps-2 text-uppercase" style="letter-spacing: 1px; color: var(--brand-gold) !important;">Administración</p>
-                <button type="button" id="admin-daily-btn" class="nav-menu-btn hidden" onclick="showTab('daily-tab'); loadDailyRecords(); closeMenu();"><i class="fa-solid fa-map-location-dot"></i>Registros por Día y Mapa</button>
-                <button type="button" id="admin-logs-btn" class="nav-menu-btn hidden" onclick="showTab('logs-tab'); loadDailyLogs(); closeMenu();"><i class="fa-solid fa-pen-to-square"></i>Edición de Horas</button>
+                <button type="button" id="admin-daily-btn" class="nav-menu-btn hidden" onclick="showTab('daily-tab'); closeMenu();"><i class="fa-solid fa-map-location-dot"></i>Registros por Día y Mapa</button>
+                <button type="button" id="admin-logs-btn" class="nav-menu-btn hidden" onclick="showTab('logs-tab'); closeMenu();"><i class="fa-solid fa-pen-to-square"></i>Edición de Horas</button>
                 <button type="button" id="admin-manual-btn" class="nav-menu-btn hidden" onclick="showTab('manual-tab'); closeMenu();"><i class="fa-solid fa-calendar-plus"></i>Registro Manual Admin</button>
-                <button type="button" id="admin-users-btn" class="nav-menu-btn hidden" onclick="showTab('admin-users-tab'); loadUserManagement(); closeMenu();"><i class="fa-solid fa-users-gear"></i>Usuarios</button>
-                <button type="button" id="admin-projects-btn" class="nav-menu-btn hidden" onclick="showTab('admin-projects-tab'); loadProjectsManagement(); closeMenu();"><i class="fa-solid fa-building"></i>Proyectos</button>
-                <button type="button" id="admin-trades-btn" class="nav-menu-btn hidden" onclick="showTab('admin-trades-tab'); loadTradesManagement(); closeMenu();"><i class="fa-solid fa-briefcase"></i>Funciones</button>
-                <button type="button" id="admin-directory-btn" class="nav-menu-btn hidden" onclick="showTab('directory-tab'); loadDirectory(); closeMenu();"><i class="fa-solid fa-address-book"></i>Agenda</button>
+                <button type="button" id="admin-users-btn" class="nav-menu-btn hidden" onclick="showTab('admin-users-tab'); closeMenu();"><i class="fa-solid fa-users-gear"></i>Usuarios</button>
+                <button type="button" id="admin-projects-btn" class="nav-menu-btn hidden" onclick="showTab('admin-projects-tab'); closeMenu();"><i class="fa-solid fa-building"></i>Proyectos</button>
+                <button type="button" id="admin-trades-btn" class="nav-menu-btn hidden" onclick="showTab('admin-trades-tab'); closeMenu();"><i class="fa-solid fa-briefcase"></i>Funciones</button>
+                <button type="button" id="admin-directory-btn" class="nav-menu-btn hidden" onclick="showTab('directory-tab'); closeMenu();"><i class="fa-solid fa-address-book"></i>Agenda</button>
             </div>
             
             <div class="mt-auto pt-3 border-top" style="border-color: var(--border-color) !important;">
@@ -882,7 +882,7 @@
 <!-- Firebase SDK Realtime Database (Módulo) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-  import { getDatabase, ref, set, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+  import { getDatabase, ref, set, push, onValue, update, remove, get, query, orderByChild, startAt, endAt, equalTo, orderByKey } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "TU_API_KEY_PROPIA",
@@ -897,6 +897,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // Exponemos las funciones necesarias al entorno global de la ventana
   window.db = db;
   window.dbRef = ref;
   window.dbSet = set;
@@ -904,22 +905,18 @@
   window.dbUpdate = update;
   window.dbRemove = remove;
   window.dbGet = get;
-
-  window.registrosGlobales = [];
-  onValue(ref(db, 'jornadas'), (snapshot) => {
-      const data = snapshot.val();
-      window.registrosGlobales = data ? Object.values(data) : [];
-      if (typeof loadWeeklySummary === 'function') loadWeeklySummary();
-      if (typeof loadDailyRecords === 'function') loadDailyRecords();
-      if (typeof loadDailyLogs === 'function') loadDailyLogs();
-  });
+  
+  // Exponemos las consultas
+  window.dbQuery = query;
+  window.dbOrderByChild = orderByChild;
+  window.dbOrderByKey = orderByKey;
+  window.dbStartAt = startAt;
+  window.dbEndAt = endAt;
+  window.dbEqualTo = equalTo;
 
   window.ajustesSemanalesNube = {};
-  onValue(ref(db, 'ajustesSemanales'), (snapshot) => {
-      window.ajustesSemanalesNube = snapshot.val() || {};
-      if (typeof loadWeeklySummary === 'function') loadWeeklySummary();
-  });
 
+  // Solo mantenemos listeners globales para los catálogos (que son extremadamente ligeros)
   onValue(ref(db, 'config/usuariosSistema'), (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -1390,16 +1387,16 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    /* REGISTRO DE ASISTENCIA CON SELFIE OPTIMIZADA (SEPARADA DE BASE64) */
-    function tomarFotoYRegistrar(tipo) {
+    /* REGISTRO DE ASISTENCIA CON GEOCERCA Y SELFIE OPTIMIZADA ASYNC */
+    async function tomarFotoYRegistrar(tipo) {
         const selfieBase64 = capturarSelfieBase64();
         if (!selfieBase64) {
             return alert("❌ Es necesario activar la cámara y permitir su uso para tomar la foto de verificación.");
         }
-        registrarAsistenciaConGeocerca(tipo, selfieBase64);
+        await registrarAsistenciaConGeocerca(tipo, selfieBase64);
     }
 
-    function registrarAsistenciaConGeocerca(tipo, photoBase64) {
+    async function registrarAsistenciaConGeocerca(tipo, photoBase64) {
         const workerName = document.getElementById('loggedWorkerName').value;
         const trade = document.getElementById('loggedWorkerTrade').value;
         const selectedProjectName = document.getElementById('entryJob').value;
@@ -1418,10 +1415,21 @@
         const horaStr = String(fechaLocalObj.getHours()).padStart(2, '0') + ":" + String(fechaLocalObj.getMinutes()).padStart(2, '0');
         const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
+        // Consulta Firebase asíncrona: Solo trae los registros de HOY para verificar si ya marcó
+        const q = window.dbQuery(window.dbRef(window.db, 'jornadas'), window.dbOrderByChild('date'), window.dbEqualTo(fechaStr));
+        const snapshot = await window.dbGet(q);
+        let registrosHoy = [];
+        if(snapshot.exists()){
+            snapshot.forEach(child => {
+                let v = child.val();
+                v.firebaseKey = child.key;
+                registrosHoy.push(v);
+            });
+        }
+        
+        let jornadaHoy = registrosHoy.find(j => j.workerName === workerName && j.job === selectedProjectName);
         let usuarios = getUsuarios();
         let tarifaActual = parseFloat((usuarios[workerName] || {}).rate) || 20.00;
-        let registros = window.registrosGlobales || [];
-        let jornadaHoy = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === selectedProjectName);
 
         if (tipo === 'ENTRADA') {
             if (!jornadaHoy) {
@@ -1433,17 +1441,17 @@
                 const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
                 jornadaHoy.firebaseKey = newRef.key;
                 
-                // Guardar la foto en el nodo independiente /fotosJornadas para no saturar las descargas
-                window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoIn'), photoBase64);
-                window.dbSet(newRef, jornadaHoy);
+                // Guardar la foto en el nodo independiente /fotosJornadas
+                await window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoIn'), photoBase64);
+                await window.dbSet(newRef, jornadaHoy);
                 alert(`✅ ENTRADA registrada a las ${horaStr} con foto verificada.`);
             } else {
                 if (jornadaHoy.timeIn && jornadaHoy.timeIn !== '-') return alert(`⚠️ Ya registraste entrada a las ${jornadaHoy.timeIn}.`);
                 jornadaHoy.timeIn = horaStr;
                 jornadaHoy.hasPhotoIn = true;
                 jornadaHoy.coordsIn = { lat: currentCoords.lat, lng: currentCoords.lng };
-                window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoIn'), photoBase64);
-                window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
+                await window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoIn'), photoBase64);
+                await window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
                 alert(`✅ ENTRADA actualizada a las ${horaStr} con foto verificada.`);
             }
         } else if (tipo === 'SALIDA') {
@@ -1454,8 +1462,8 @@
             jornadaHoy.timeOut = horaStr;
             jornadaHoy.hasPhotoOut = true;
             jornadaHoy.coordsOut = { lat: currentCoords.lat, lng: currentCoords.lng };
-            window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoOut'), photoBase64);
-            window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
+            await window.dbSet(window.dbRef(window.db, 'fotosJornadas/' + jornadaHoy.firebaseKey + '/photoOut'), photoBase64);
+            await window.dbSet(window.dbRef(window.db, 'jornadas/' + jornadaHoy.firebaseKey), jornadaHoy);
             alert(`✅ SALIDA registrada a las ${horaStr} con foto verificada.`);
         }
         showTab('weekly-tab');
@@ -1528,7 +1536,8 @@
         document.getElementById('totalWeeklyPayBadge').innerText = `Total a Pagar: $${totalM.toFixed(2)}`;
     }
 
-    function loadWeeklySummary() {
+    /* RESUMEN SEMANAL - CONSULTA FIREBASE ASYNC */
+    async function loadWeeklySummary() {
         const weekPicker = document.getElementById('weekPicker');
         if (!weekPicker || !weekPicker.value) return;
         
@@ -1540,25 +1549,36 @@
 
         document.getElementById('weekRangeLabel').innerText = `${formatDateShort(mon)} al ${formatDateShort(sun)}`;
 
-        let registros = window.registrosGlobales || [];
-        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
-        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+        const dInicio = `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, '0')}-${String(mon.getDate()).padStart(2, '0')}`;
+        const dFin = `${sun.getFullYear()}-${String(sun.getMonth() + 1).padStart(2, '0')}-${String(sun.getDate()).padStart(2, '0')}`;
+
+        document.getElementById('resumenGeneralContainer').innerHTML = '<div class="text-center p-4 text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Obteniendo datos de la semana...</div>';
+
+        // Consulta Firebase: Solo registros de la semana seleccionada
+        const q = window.dbQuery(window.dbRef(window.db, 'jornadas'), window.dbOrderByChild('date'), window.dbStartAt(dInicio), window.dbEndAt(dFin));
+        const snapshot = await window.dbGet(q);
+        let registrosDeLaSemana = [];
+        if(snapshot.exists()){
+            snapshot.forEach(child => { let v = child.val(); v.firebaseKey = child.key; registrosDeLaSemana.push(v); });
+        }
+
+        // Descargar ajustes de la semana (se consulta por prefijo usando startAt y endAt con límite)
+        window.ajustesSemanalesNube = {};
+        const qAjustes = window.dbQuery(window.dbRef(window.db, 'ajustesSemanales'), window.dbOrderByKey(), window.dbStartAt(weekVal), window.dbEndAt(weekVal + "\uf8ff"));
+        const ajustesSnapshot = await window.dbGet(qAjustes);
+        if (ajustesSnapshot.exists()) {
+            window.ajustesSemanalesNube = ajustesSnapshot.val();
+        }
 
         let usuarios = getUsuarios();
         let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
 
-        const filtered = registros.filter(r => {
-            const parts = r.date.split('-');
-            if(parts.length < 3) return false;
-            const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
-            let dateMatch = (rDate >= monTime && rDate <= sunTime);
+        const filtered = registrosDeLaSemana.filter(r => {
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
-            
             let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
             let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
-
-            return dateMatch && projMatch && tradeMatch && userMatch;
+            return projMatch && tradeMatch && userMatch;
         });
 
         const resumenContainer = document.getElementById('resumenGeneralContainer');
@@ -1809,7 +1829,8 @@
         document.getElementById('totalWeeklyPayBadge').innerText = `Total a Pagar: $${grandTotalMoney.toFixed(2)}`;
     }
 
-    function exportWeeklyExcelWithFormulas() {
+    /* EXPORTAR EXCEL - CONSULTA FIREBASE ASYNC */
+    async function exportWeeklyExcelWithFormulas() {
         const weekPicker = document.getElementById('weekPicker');
         if (!weekPicker || !weekPicker.value) return alert("Seleccione una semana.");
         const weekVal = weekPicker.value;
@@ -1818,22 +1839,25 @@
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
 
-        let registros = window.registrosGlobales || [];
-        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
-        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+        const dInicio = `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, '0')}-${String(mon.getDate()).padStart(2, '0')}`;
+        const dFin = `${sun.getFullYear()}-${String(sun.getMonth() + 1).padStart(2, '0')}-${String(sun.getDate()).padStart(2, '0')}`;
+
+        const q = window.dbQuery(window.dbRef(window.db, 'jornadas'), window.dbOrderByChild('date'), window.dbStartAt(dInicio), window.dbEndAt(dFin));
+        const snapshot = await window.dbGet(q);
+        let registros = [];
+        if(snapshot.exists()) {
+            snapshot.forEach(child => { let v = child.val(); v.firebaseKey = child.key; registros.push(v); });
+        }
+
         let usuarios = getUsuarios();
         let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
 
         const filtered = registros.filter(r => {
-            const parts = r.date.split('-');
-            if(parts.length < 3) return false;
-            let rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
-            let dateMatch = (rDate >= monTime && rDate <= sunTime);
             let projMatch = (selectedProjects.length === 0 || (r.job && selectedProjects.includes(r.job.trim())));
             let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
             let tradeMatch = (!isAdmin || selectedTrades.length === 0 || selectedTrades.includes(workerTrade));
             let userMatch = (isAdmin || r.workerName.toLowerCase() === usuarioActual.toLowerCase());
-            return dateMatch && projMatch && tradeMatch && userMatch;
+            return projMatch && tradeMatch && userMatch;
         });
 
         if (filtered.length === 0) return alert("No hay datos para exportar.");
@@ -1984,7 +2008,6 @@
         let myModal = new bootstrap.Modal(document.getElementById('photoViewModal'));
         myModal.show();
 
-        // Consulta puntual get() solo para la foto seleccionada sin descargar toda la DB
         const fotoRef = window.dbRef(window.db, `fotosJornadas/${firebaseKey}/${tipoFoto}`);
         window.dbGet(fotoRef).then((snapshot) => {
             loaderEl.classList.add('hidden');
@@ -2000,24 +2023,38 @@
         });
     }
 
-    function loadDailyRecords() {
+    /* REGISTROS DIARIOS - CONSULTA FIREBASE ASYNC */
+    async function loadDailyRecords() {
         const dF = document.getElementById('mapDateFilter').value;
         const uF = document.getElementById('mapUserFilter').value;
         const pF = document.getElementById('mapProjectFilter') ? document.getElementById('mapProjectFilter').value : 'ALL';
-        let registros = window.registrosGlobales || [];
+        
         let tbody = document.getElementById('dailyRecordsTbody');
         if (!tbody) return;
-        tbody.innerHTML = '';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center p-3 text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Consultando registros del día...</td></tr>';
         
         if (markersLayer) markersLayer.clearLayers();
 
-        let filtered = registros.filter(r => {
-            let dateMatch = (!dF || r.date === dF);
+        // Consulta Firebase: Traer SOLO los registros de esta fecha
+        const q = window.dbQuery(window.dbRef(window.db, 'jornadas'), window.dbOrderByChild('date'), window.dbEqualTo(dF));
+        const snapshot = await window.dbGet(q);
+        let registrosDelDia = [];
+        if(snapshot.exists()) {
+            snapshot.forEach(child => {
+                let v = child.val();
+                v.firebaseKey = child.key;
+                registrosDelDia.push(v);
+            });
+        }
+
+        let filtered = registrosDelDia.filter(r => {
             let userMatch = (uF === 'ALL' || r.workerName.toLowerCase() === uF.toLowerCase());
             let projMatch = (pF === 'ALL' || (r.job && r.job.trim() === pF.trim()));
-            return dateMatch && userMatch && projMatch;
+            return userMatch && projMatch;
         });
 
+        tbody.innerHTML = '';
+        
         if (filtered.length === 0) { 
             tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">No hay registros con los filtros seleccionados.</td></tr>'; 
             generarTablaImpresionDiaria([], dF, pF);
@@ -2029,7 +2066,6 @@
             let trIn = document.createElement('tr'); trIn.className = 'record-row';
             let tieneGpsIn = (r.coordsIn && r.coordsIn.lat && r.coordsIn.lat !== 0);
             
-            // Botón con consulta ligera que solo pide la foto si la persona hace clic
             let btnFotoIn = r.hasPhotoIn || r.photoIn ? `<button class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-bold" onclick="event.stopPropagation(); abrirlModalFoto('${r.firebaseKey}', 'photoIn', '${r.workerName} — Entrada: ${r.timeIn}')"><i class="fa-solid fa-camera"></i> Foto</button>` : '<small class="text-muted">N/A</small>';
 
             trIn.innerHTML = `
@@ -2258,10 +2294,10 @@
     }
 
     function imprimirReporteDiario() {
-        loadDailyRecords();
-        setTimeout(() => {
-            window.print();
-        }, 150);
+        // Como loadDailyRecords ahora es asíncrono, esperamos que termine antes de imprimir
+        loadDailyRecords().then(() => {
+            setTimeout(() => { window.print(); }, 200);
+        });
     }
 
     function seleccionarRegistroEnMapa(lat, lng, popupText, rowElement) {
@@ -2270,76 +2306,174 @@
         if (map) { map.setView([lat, lng], 17); L.popup().setLatLng([lat, lng]).setContent(popupText).openOn(map); }
     }
 
-    function loadDailyLogs() {
+    /* EDICIÓN DE JORNADAS - CONSULTA FIREBASE ASYNC */
+    async function loadDailyLogs() {
         const weekVal = document.getElementById('logsWeekPicker').value;
         const uF = document.getElementById('logsUserFilter') ? document.getElementById('logsUserFilter').value : 'ALL';
         const pF = document.getElementById('logsProjectFilter') ? document.getElementById('logsProjectFilter').value : 'ALL';
         const tF = document.getElementById('logsTradeFilter') ? document.getElementById('logsTradeFilter').value : 'ALL';
+        
         if (!weekVal) return;
         const { mon, sun } = getMonToSunRange(weekVal);
         if (!mon || !sun) return;
         document.getElementById('logsWeekRangeLabel').innerText = `${formatDateShort(mon)} al ${formatDateShort(sun)}`;
 
-        let registros = window.registrosGlobales || [];
-        const monTime = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()).getTime();
-        const sunTime = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59).getTime();
+        let tbody = document.getElementById('logsTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4"><i class="fa-solid fa-spinner fa-spin"></i> Cargando jornadas...</td></tr>';
+
+        const dInicio = `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, '0')}-${String(mon.getDate()).padStart(2, '0')}`;
+        const dFin = `${sun.getFullYear()}-${String(sun.getMonth() + 1).padStart(2, '0')}-${String(sun.getDate()).padStart(2, '0')}`;
+
+        const q = window.dbQuery(window.dbRef(window.db, 'jornadas'), window.dbOrderByChild('date'), window.dbStartAt(dInicio), window.dbEndAt(dFin));
+        const snapshot = await window.dbGet(q);
+        let registros = [];
+        if(snapshot.exists()) {
+            snapshot.forEach(child => { let v = child.val(); v.firebaseKey = child.key; registros.push(v); });
+        }
+
         let usuarios = getUsuarios();
         let isAdmin = (usuarios[usuarioActual]?.rol === 'admin');
 
         const filtered = registros.filter(r => {
-            const parts = r.date.split('-');
-            const rDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
             let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
-            return (rDate >= monTime && rDate <= sunTime) &&
-                   (isAdmin ? (uF === 'ALL' || r.workerName.toLowerCase() === uF.toLowerCase()) : r.workerName.toLowerCase() === usuarioActual.toLowerCase()) &&
+            return (isAdmin ? (uF === 'ALL' || r.workerName.toLowerCase() === uF.toLowerCase()) : r.workerName.toLowerCase() === usuarioActual.toLowerCase()) &&
                    (pF === 'ALL' || (r.job && r.job.trim() === pF.trim())) &&
                    (tF === 'ALL' || workerTrade === tF);
         });
 
-        let tbody = document.getElementById('logsTbody');
-        if (!tbody) return;
         tbody.innerHTML = '';
-        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas.</td></tr>'; return; }
+        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted p-4">No hay jornadas registradas con estos filtros.</td></tr>'; return; }
 
-        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach((r, idx) => {
             let workerTrade = r.trade || (usuarios[r.workerName]||{}).trade || 'Carpintero';
             let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
             let totalPago = netHours + (parseFloat(r.overtime) || 0);
+            
+            // Usamos el firebaseKey para poder actualizar directo a la BD sin depender de variables globales
             tbody.innerHTML += `<tr>
                 <td class="ps-3"><strong class="text-dark">${r.date}</strong></td>
                 <td class="small text-muted text-truncate" style="max-width: 100px;">${r.job}</td>
                 <td class="text-dark fw-semibold">${r.workerName}</td><td class="small text-muted">${workerTrade}</td>
-                <td><input type="time" class="form-control form-control-sm border text-center" style="width: 105px;" id="in_${r.id}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="time" class="form-control form-control-sm border text-center" style="width: 105px;" id="out_${r.id}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada(${r.id})"></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border" style="width: 70px;" id="lunch_${r.id}" value="${r.lunch}" onchange="actualizarJornada(${r.id})"></td>
-                <td><span class="badge bg-light text-dark py-2 px-2 border" id="net_${r.id}">${netHours.toFixed(2)}h</span></td>
-                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border" style="width: 70px;" id="ot_${r.id}" value="${parseFloat(r.overtime)||0}" onchange="actualizarJornada(${r.id})"></td>
-                <td><span class="badge bg-success fs-6 py-2 px-2" id="total_${r.id}">${totalPago.toFixed(2)}h</span></td>
+                <td><input type="time" class="form-control form-control-sm border text-center" style="width: 105px;" id="in_${idx}" value="${r.timeIn !== '-' ? r.timeIn : ''}" onchange="actualizarJornada('${r.firebaseKey}', '${idx}')"></td>
+                <td><input type="time" class="form-control form-control-sm border text-center" style="width: 105px;" id="out_${idx}" value="${r.timeOut !== '-' ? r.timeOut : ''}" onchange="actualizarJornada('${r.firebaseKey}', '${idx}')"></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border" style="width: 70px;" id="lunch_${idx}" value="${r.lunch}" onchange="actualizarJornada('${r.firebaseKey}', '${idx}')"></td>
+                <td><span class="badge bg-light text-dark py-2 px-2 border" id="net_${idx}">${netHours.toFixed(2)}h</span></td>
+                <td><input type="number" step="0.25" min="0" class="form-control form-control-sm text-center fw-bold border" style="width: 70px;" id="ot_${idx}" value="${parseFloat(r.overtime)||0}" onchange="actualizarJornada('${r.firebaseKey}', '${idx}')"></td>
+                <td><span class="badge bg-success fs-6 py-2 px-2" id="total_${idx}">${totalPago.toFixed(2)}h</span></td>
                 <td class="text-end pe-3"><button class="btn btn-sm btn-outline-danger" onclick="eliminarJornada('${r.firebaseKey}')"><i class="fa-solid fa-trash"></i></button></td>
             </tr>`;
         });
     }
 
-    function actualizarJornada(id) {
-        let r = window.registrosGlobales.find(item => item.id === id);
-        if (!r || !r.firebaseKey) return;
-        r.timeIn = document.getElementById(`in_${id}`).value || '-';
-        r.timeOut = document.getElementById(`out_${id}`).value || '-';
-        r.lunch = parseFloat(document.getElementById(`lunch_${id}`).value) || 0.5;
-        r.overtime = parseFloat(document.getElementById(`ot_${id}`).value) || 0;
-        window.dbSet(window.dbRef(window.db, 'jornadas/' + r.firebaseKey), r);
+    async function actualizarJornada(firebaseKey, domIdx) {
+        if (!firebaseKey) return;
+        const refObj = window.dbRef(window.db, 'jornadas/' + firebaseKey);
+        const snapshot = await window.dbGet(refObj);
+        if (!snapshot.exists()) return;
+        
+        let r = snapshot.val();
+        r.timeIn = document.getElementById(`in_${domIdx}`).value || '-';
+        r.timeOut = document.getElementById(`out_${domIdx}`).value || '-';
+        r.lunch = parseFloat(document.getElementById(`lunch_${domIdx}`).value) || 0.5;
+        r.overtime = parseFloat(document.getElementById(`ot_${domIdx}`).value) || 0;
+        
+        await window.dbSet(refObj, r);
+        
+        // Actualiza etiquetas en UI visualmente
+        let netHours = calcularHorasNetas(r.timeIn, r.timeOut, r.lunch);
+        let totalPago = netHours + r.overtime;
+        document.getElementById(`net_${domIdx}`).innerText = `${netHours.toFixed(2)}h`;
+        document.getElementById(`total_${domIdx}`).innerText = `${totalPago.toFixed(2)}h`;
     }
     
-    function eliminarJornada(firebaseKey) {
+    async function eliminarJornada(firebaseKey) {
         if (firebaseKey && confirm("¿Eliminar este registro?")) {
-            window.dbRemove(window.dbRef(window.db, 'jornadas/' + firebaseKey));
-            window.dbRemove(window.dbRef(window.db, 'fotosJornadas/' + firebaseKey)).then(() => { 
-                loadDailyLogs(); 
-                loadWeeklySummary(); 
-            });
+            await window.dbRemove(window.dbRef(window.db, 'jornadas/' + firebaseKey));
+            await window.dbRemove(window.dbRef(window.db, 'fotosJornadas/' + firebaseKey));
+            loadDailyLogs(); 
         }
     }
 
+    /* REGISTRO MANUAL DE ADMIN - CONSULTA FIREBASE ASYNC */
+    async function registrarAsistenciaManualAdmin(e) {
+        e.preventDefault();
+        const workerName = document.getElementById('manualWorkerSelect').value;
+        const projectName = document.getElementById('manualProjectSelect').value;
+        const timeIn = document.getElementById('manualTimeInInput').value;
+        const timeOut = document.getElementById('manualTimeOutInput').value;
+        const overtimeVal = parseFloat(document.getElementById('manualOvertimeInput').value) || 0;
+        const checkboxes = document.querySelectorAll('.manual-day-checkbox:checked');
+        if (checkboxes.length === 0) return alert("❌ Debes seleccionar al menos un día.");
+
+        let usuarios = getUsuarios();
+        let trade = (usuarios[workerName]||{}).trade || 'Carpintero';
+        let tarifaActual = parseFloat((usuarios[workerName]||{}).rate) || 20.00;
+
+        let proyectos = getProyectos();
+        let proyectoObj = proyectos.find(p => p.name === projectName);
+        let coordsProj = { 
+            lat: proyectoObj && proyectoObj.lat ? parseFloat(proyectoObj.lat) : 0, 
+            lng: proyectoObj && proyectoObj.lng ? parseFloat(proyectoObj.lng) : 0 
+        };
+
+        let count = 0;
+
+        // Por cada día seleccionado, verificamos si ya existe en la BD
+        for (let i = 0; i < checkboxes.length; i++) {
+            let fechaStr = checkboxes[i].value;
+            let dObj = new Date(...fechaStr.split('-').map((v,k)=>k===1?v-1:v));
+            let dayName = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][dObj.getDay()];
+            
+            const q = window.dbQuery(window.dbRef(window.db, 'jornadas'), window.dbOrderByChild('date'), window.dbEqualTo(fechaStr));
+            const snap = await window.dbGet(q);
+            let j = null;
+            if (snap.exists()) {
+                snap.forEach(c => {
+                    let v = c.val(); v.firebaseKey = c.key;
+                    if (v.workerName === workerName && v.job === projectName) j = v;
+                });
+            }
+
+            if (j) {
+                j.timeIn = timeIn; 
+                j.timeOut = timeOut; 
+                j.overtime = overtimeVal; 
+                j.trade = trade; 
+                j.rateSnapshot = tarifaActual; 
+                j.dayName = dayName;
+                j.coordsIn = coordsProj;
+                j.coordsOut = coordsProj;
+                await window.dbSet(window.dbRef(window.db, 'jornadas/' + j.firebaseKey), j);
+            } else {
+                let nueva = { 
+                    id: Date.now() + i, 
+                    workerName, 
+                    trade, 
+                    rateSnapshot: tarifaActual, 
+                    date: fechaStr, 
+                    dayName, 
+                    job: projectName, 
+                    timeIn, 
+                    timeOut, 
+                    lunch: 0.5, 
+                    overtime: overtimeVal, 
+                    coordsIn: coordsProj, 
+                    coordsOut: coordsProj,
+                    hasPhotoIn: false, hasPhotoOut: false
+                };
+                const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
+                nueva.firebaseKey = newRef.key;
+                await window.dbSet(newRef, nueva);
+            }
+            count++;
+        }
+        
+        alert(`✅ ¡Registros guardados con éxito para ${count} día(s) con las coordenadas de ${projectName}!`);
+        showTab('weekly-tab');
+    }
+
+    /* CRUD DE PROYECTOS, TRADES Y USUARIOS */
     function guardarOEditarProyecto(e) {
         e.preventDefault();
         let p = { name: document.getElementById('newProjectName').value.trim(), address: document.getElementById('newProjectAddress').value.trim(), lat: parseFloat(document.getElementById('newProjectLat').value), lng: parseFloat(document.getElementById('newProjectLng').value) };
@@ -2442,72 +2576,6 @@
         });
     }
 
-    function registrarAsistenciaManualAdmin(e) {
-        e.preventDefault();
-        const workerName = document.getElementById('manualWorkerSelect').value;
-        const projectName = document.getElementById('manualProjectSelect').value;
-        const timeIn = document.getElementById('manualTimeInInput').value;
-        const timeOut = document.getElementById('manualTimeOutInput').value;
-        const overtimeVal = parseFloat(document.getElementById('manualOvertimeInput').value) || 0;
-        const checkboxes = document.querySelectorAll('.manual-day-checkbox:checked');
-        if (checkboxes.length === 0) return alert("❌ Debes seleccionar al menos un día.");
-
-        let usuarios = getUsuarios();
-        let trade = (usuarios[workerName]||{}).trade || 'Carpintero';
-        let tarifaActual = parseFloat((usuarios[workerName]||{}).rate) || 20.00;
-
-        let proyectos = getProyectos();
-        let proyectoObj = proyectos.find(p => p.name === projectName);
-        let coordsProj = { 
-            lat: proyectoObj && proyectoObj.lat ? parseFloat(proyectoObj.lat) : 0, 
-            lng: proyectoObj && proyectoObj.lng ? parseFloat(proyectoObj.lng) : 0 
-        };
-
-        let count = 0;
-
-        checkboxes.forEach((cb, index) => {
-            let fechaStr = cb.value;
-            let dObj = new Date(...fechaStr.split('-').map((v,i)=>i===1?v-1:v));
-            let dayName = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][dObj.getDay()];
-            let registros = window.registrosGlobales || [];
-            let j = registros.find(j => j.workerName === workerName && j.date === fechaStr && j.job === projectName);
-
-            if (j) {
-                j.timeIn = timeIn; 
-                j.timeOut = timeOut; 
-                j.overtime = overtimeVal; 
-                j.trade = trade; 
-                j.rateSnapshot = tarifaActual; 
-                j.dayName = dayName;
-                j.coordsIn = coordsProj;
-                j.coordsOut = coordsProj;
-                window.dbSet(window.dbRef(window.db, 'jornadas/' + j.firebaseKey), j);
-            } else {
-                let nueva = { 
-                    id: Date.now() + index, 
-                    workerName, 
-                    trade, 
-                    rateSnapshot: tarifaActual, 
-                    date: fechaStr, 
-                    dayName, 
-                    job: projectName, 
-                    timeIn, 
-                    timeOut, 
-                    lunch: 0.5, 
-                    overtime: overtimeVal, 
-                    coordsIn: coordsProj, 
-                    coordsOut: coordsProj,
-                    hasPhotoIn: false, hasPhotoOut: false
-                };
-                const newRef = window.dbPush(window.dbRef(window.db, 'jornadas'));
-                nueva.firebaseKey = newRef.key;
-                window.dbSet(newRef, nueva);
-            }
-            count++;
-        });
-        alert(`✅ ¡Registros guardados con éxito para ${count} día(s) con las coordenadas de ${projectName}!`);
-        showTab('weekly-tab');
-    }
 </script>
 </body>
 </html>
